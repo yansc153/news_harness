@@ -9,18 +9,18 @@ services:
       dockerfile: Dockerfile
     container_name: news-harness
     restart: unless-stopped
-    ports:
-      # ponytail: one high host port; change NEWS_HARNESS_HTTP_PORT if this VPS already uses it.
-      - "${NEWS_HARNESS_HTTP_PORT:-18765}:8765"
+    # ponytail: Hostinger's Docker NAT drops external traffic here; host networking keeps one app port direct.
+    network_mode: host
     volumes:
       - news_harness_artifacts:/app/artifacts
     environment:
       - PYTHONUNBUFFERED=1
+      - NEWS_HARNESS_SITE_PORT=18765
       - NEWS_HARNESS_X_COOKIE_FILE=/run/news-harness/secrets/x-list-reader-cookie
       - NEWS_HARNESS_REDDIT_COOKIE_FILE=/run/news-harness/secrets/reddit-reader-cookie
       - DEEPSEEK_API_KEY_FILE=/run/news-harness/secrets/deepseek-api-key
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/api/health')"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18765/api/health')"]
       interval: 60s
       timeout: 10s
       retries: 3

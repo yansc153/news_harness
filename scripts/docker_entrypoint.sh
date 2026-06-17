@@ -18,6 +18,7 @@ mkdir -p /app/web/radar-timeline
 
 CYCLE_MODE="${NEWS_HARNESS_CYCLE_MODE:-dry-run}"
 CYCLE_BACKEND="${NEWS_HARNESS_CYCLE_BACKEND:-builtin}"
+SITE_PORT="${NEWS_HARNESS_SITE_PORT:-8765}"
 
 # Run cycle once immediately, then every 30 minutes in background
 (
@@ -44,6 +45,6 @@ echo "  cycle runner PID=$CYCLE_PID"
 # Run site server in foreground (keeps container alive)
 exec python3 -m news_harness serve \
     --host 0.0.0.0 \
-    --port 8765 \
+    --port "$SITE_PORT" \
     --feed web/radar-timeline/timeline_feed.json \
     --artifact-dir artifacts/manual_smoke/latest
