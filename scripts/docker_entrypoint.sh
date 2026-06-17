@@ -16,9 +16,24 @@ fi
 mkdir -p /app/artifacts/manual_smoke/latest
 mkdir -p /app/web/radar-timeline
 
-CYCLE_MODE="${NEWS_HARNESS_CYCLE_MODE:-dry-run}"
-CYCLE_BACKEND="${NEWS_HARNESS_CYCLE_BACKEND:-builtin}"
+CYCLE_MODE="${NEWS_HARNESS_CYCLE_MODE:-manual-smoke}"
+CYCLE_BACKEND="${NEWS_HARNESS_CYCLE_BACKEND:-direct-cli}"
 SITE_PORT="${NEWS_HARNESS_SITE_PORT:-8765}"
+
+if [ "$CYCLE_MODE" = "manual-smoke" ]; then
+    for artifact in \
+        /app/web/radar-timeline/timeline_feed.json \
+        /app/artifacts/manual_smoke/latest/source_run.json \
+        /app/artifacts/manual_smoke/latest/deepseek_scoring.json \
+        /app/artifacts/manual_smoke/latest/revisit_schedule.json \
+        /app/artifacts/manual_smoke/latest/outcome.json \
+        /app/artifacts/manual_smoke/latest/eval.json \
+        /app/artifacts/manual_smoke/latest/image_assets.json; do
+        if [ -f "$artifact" ] && grep -Eq 'fixture_|fixture-only|fixture_backed|"fixture_only": true|"mode": "dry_run"|"feed_status": "demo"' "$artifact"; then
+            rm -f "$artifact"
+        fi
+    done
+fi
 
 # Run cycle once immediately, then every 30 minutes in background
 (

@@ -31,8 +31,6 @@ const FALLBACK_FEED = {
 const feedCandidates = [
   "/api/timeline",
   "./timeline_feed.json",
-  "../../artifacts/replay/latest/timeline_feed.json",
-  "../../fixtures/sample_radar_timeline_feed.json",
 ];
 
 const state = {
@@ -123,8 +121,20 @@ async function loadFeed() {
       const response = await fetch(url, { cache: "no-store" });
       if (response.ok) return { feed: await response.json(), loadedFrom: url };
     } catch {
-      // ponytail: embedded fixture is enough for static file previews.
+      // ponytail: static local previews can use the embedded fixture; deployed HTTP cannot.
     }
+  }
+  if (!["localhost", "127.0.0.1", ""].includes(window.location.hostname)) {
+    return {
+      feed: {
+        auto_refresh: { enabled: true, poll_interval_seconds: 60 },
+        generated_at: new Date().toISOString(),
+        items: [],
+        status: "blocked",
+        view_config: FALLBACK_FEED.view_config,
+      },
+      loadedFrom: "no live feed",
+    };
   }
   return { feed: FALLBACK_FEED, loadedFrom: "embedded fixture" };
 }
