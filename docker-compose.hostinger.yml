@@ -7,7 +7,6 @@ services:
     build:
       context: https://github.com/yansc153/news_harness.git
       dockerfile: Dockerfile
-    container_name: news-harness
     restart: unless-stopped
     # ponytail: Hostinger drops high external ports here; bind standard HTTP directly.
     network_mode: host
