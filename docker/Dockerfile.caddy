@@ -1,0 +1,3 @@
+# News Harness — Caddy sidecar
+FROM caddy:alpine
+COPY docker/Caddyfile /etc/caddy/Caddyfile

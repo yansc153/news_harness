@@ -16,14 +16,14 @@ services:
     ports:
       - "8765:8765"
     volumes:
-      # Secrets (read-only)
       - ./docker/secrets:/run/news-harness/secrets:ro
-      - ./docker/news_harness.env:/run/news-harness/news_harness.env:ro
-      # Persistent artifacts
       - ./docker/artifacts:/app/artifacts
       - ./docker/feed:/app/web/radar-timeline
     environment:
       - PYTHONUNBUFFERED=1
+      - NEWS_HARNESS_X_COOKIE_FILE=/run/news-harness/secrets/x-list-reader-cookie
+      - NEWS_HARNESS_REDDIT_COOKIE_FILE=/run/news-harness/secrets/reddit-reader-cookie
+      - DEEPSEEK_API_KEY_FILE=/run/news-harness/secrets/deepseek-api-key
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/api/health')"]
       interval: 60s
@@ -31,14 +31,15 @@ services:
       retries: 3
 
   caddy:
-    image: caddy:alpine
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.caddy
     container_name: news-harness-caddy
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./web:/srv/web:ro
       - caddy_data:/data
     depends_on:

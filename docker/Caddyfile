@@ -7,7 +7,7 @@
 :80 {
     # Static files served directly by Caddy
     handle_path /web/* {
-        root * /srv
+        root * /srv/web
         file_server
     }
 
