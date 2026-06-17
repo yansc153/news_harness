@@ -37,8 +37,8 @@ services:
     container_name: news-harness-caddy
     restart: unless-stopped
     ports:
-      # ponytail: Hostinger often owns 80/443; change NEWS_HARNESS_HTTP_PORT if 8080 is busy.
-      - "${NEWS_HARNESS_HTTP_PORT:-8080}:80"
+      # ponytail: Hostinger often owns 80/443/8080; change NEWS_HARNESS_HTTP_PORT if 18765 is busy.
+      - "${NEWS_HARNESS_HTTP_PORT:-18765}:80"
     volumes:
       - ./web:/srv/web:ro
       - caddy_data:/data
