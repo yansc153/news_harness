@@ -13,8 +13,8 @@ services:
     build: .
     container_name: news-harness
     restart: unless-stopped
-    ports:
-      - "8765:8765"
+    expose:
+      - "8765"
     volumes:
       - ./docker/secrets:/run/news-harness/secrets:ro
       - ./docker/artifacts:/app/artifacts
@@ -37,8 +37,8 @@ services:
     container_name: news-harness-caddy
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      # ponytail: Hostinger often owns 80/443; change NEWS_HARNESS_HTTP_PORT if 8080 is busy.
+      - "${NEWS_HARNESS_HTTP_PORT:-8080}:80"
     volumes:
       - ./web:/srv/web:ro
       - caddy_data:/data
