@@ -1,0 +1,35 @@
+{
+  "object_type": "CandidateItem",
+  "candidate_id": "candidate_fixture_001",
+  "source_entrance_id": "src_fixture_market_001",
+  "evidence_id": "evidence_fixture_001",
+  "dedupe_key": "fixture_source:post:001",
+  "candidate_score": 0.64,
+  "eligibility_status": "eligible",
+  "filter_reasons": [],
+  "risk_flags": [
+    "fixture_only",
+    "not_investment_advice"
+  ],
+  "source_score_ref": "source_score_fixture_001",
+  "discovered_at": "2026-06-14T00:10:00Z",
+  "selected_at": "2026-06-14T00:12:00Z",
+  "candidate_score_record": {
+    "candidate_score_id": "candidate_score_fixture_001",
+    "candidate_id": "candidate_fixture_001",
+    "score_version": "candidate_score.fixture.v1",
+    "candidate_score": 0.64,
+    "source_score_ref": "source_score_fixture_001",
+    "eligibility_status": "eligible",
+    "filter_reasons": [],
+    "dedupe_key": "fixture_source:post:001",
+    "early_velocity": "fixture_moderate",
+    "information_density": "fixture_medium",
+    "evidence_completeness": "fixture_complete",
+    "risk_flags": [
+      "fixture_only",
+      "not_investment_advice"
+    ],
+    "decision_version": "filter_rules.fixture.v1"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ConnectorQualityReport",
+  "description": "Per-source-run quality report. Determines whether data from this connector run can feed into learning. degraded → read model only; blocked → no successful outcomes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "object_type", "connector_id", "run_id", "quality_status",
+    "item_count", "item_count_vs_rolling_median", "required_field_presence",
+    "metric_completeness", "duplicate_rate", "truncation_suspected",
+    "structured_error_count"
+  ],
+  "properties": {
+    "object_type": { "type": "string", "const": "ConnectorQualityReport" },
+    "connector_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "quality_status": { "type": "string", "enum": ["ok", "degraded", "blocked"] },
+    "item_count": { "type": "integer", "minimum": 0 },
+    "item_count_vs_rolling_median": { "type": "number", "minimum": 0 },
+    "required_field_presence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_url", "copy_text", "published_at", "engagement_snapshot"],
+      "properties": {
+        "source_url": { "type": "number", "minimum": 0, "maximum": 1 },
+        "copy_text": { "type": "number", "minimum": 0, "maximum": 1 },
+        "published_at": { "type": "number", "minimum": 0, "maximum": 1 },
+        "engagement_snapshot": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "metric_completeness": { "type": "number", "minimum": 0, "maximum": 1 },
+    "duplicate_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "truncation_suspected": { "type": "boolean" },
+    "structured_error_count": { "type": "integer", "minimum": 0 }
+  }
+}

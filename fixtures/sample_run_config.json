@@ -1,0 +1,45 @@
+{
+  "object_type": "RunConfig",
+  "run_id": "run_fixture_replay_seed",
+  "run_type": "fixture_replay",
+  "thread_id": "thread_fixture_first_mvp",
+  "harness_version": "harness.fixture.v1",
+  "strategy_version": "strategy.fixture.v1",
+  "event_schema_version": "event_schema.v1",
+  "persistence_schema_version": "persistence_schema.v1",
+  "tool_contract_version": "tool_contract.fixture.v1",
+  "promotion_gate_version": "promotion_gate.fixture.v1",
+  "source_entrance_id": "src_fixture_market_001",
+  "max_turns": 6,
+  "tool_budget": 8,
+  "failure_budget": 1,
+  "timeout_ms": 30000,
+  "retry_policy": {
+    "max_retries": 0,
+    "retryable_errors": []
+  },
+  "stop_conditions": [
+    "fixture_closed_loop_completed",
+    "schema_validation_failed",
+    "replay_mismatch"
+  ],
+  "promotion_trigger": "fixture_eval_completed",
+  "dataset_split_ref": "split_fixture_dev_2026_06_14",
+  "holdout_access_policy": {
+    "holdout_refs_allowed_in_generator_context": false,
+    "label_visibility": "hidden_until_eval"
+  },
+  "replay_policy": {
+    "mode": "deterministic_fixture",
+    "on_missing_manifest": "replay_unverifiable",
+    "compare_fields": [
+      "source_status",
+      "candidate_score",
+      "structure_score",
+      "12h_score",
+      "24h_score",
+      "eval_verdict",
+      "promotion_decision"
+    ]
+  }
+}

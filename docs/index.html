@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>News Harness Docs</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #132033;
+        --muted: #5f6c7d;
+        --paper: #f7f9fc;
+        --card: #ffffff;
+        --line: #d8e0ea;
+        --blue: #0f5eaa;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+      }
+
+      main {
+        width: min(1040px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 42px 0 72px;
+      }
+
+      h1 {
+        max-width: 760px;
+        margin: 0;
+        font-size: clamp(38px, 7vw, 72px);
+        line-height: 0.98;
+        letter-spacing: 0;
+      }
+
+      p {
+        max-width: 720px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.65;
+      }
+
+      .paths {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 28px;
+      }
+
+      a {
+        color: var(--blue);
+      }
+
+      .path {
+        display: grid;
+        gap: 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--card);
+        padding: 18px;
+        text-decoration: none;
+      }
+
+      .path strong {
+        color: var(--ink);
+        font-size: 21px;
+      }
+
+      .path small {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      section {
+        margin-top: 34px;
+      }
+
+      li {
+        margin: 8px 0;
+        color: var(--muted);
+      }
+
+      @media (max-width: 780px) {
+        .paths {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>News Harness V1 docs</h1>
+      <p>
+        Outcome-first prediction harness. 1h early momentum / 4h primary outcome.
+      </p>
+
+      <nav class="paths" aria-label="Documentation paths">
+        <a class="path" href="./superpowers/specs/2026-06-16-harness-v1-design.md">
+          <strong>V1 Architecture Spec</strong>
+          <small>Authoritative design: contracts, evaluator, rulebook, MCP whitelist, runtime guardrails.</small>
+        </a>
+        <a class="path" href="./OPERATIONS.md">
+          <strong>VPS Operations</strong>
+          <small>Healthcheck, systemd, troubleshooting freshness and source failures.</small>
+        </a>
+        <a class="path" href="./MCP_CONNECTOR.md">
+          <strong>MCP Connector</strong>
+          <small>Read-only stdio server: tools, boundaries, client config.</small>
+        </a>
+      </nav>
+
+      <section>
+        <h2>Other</h2>
+        <ul>
+          <li><a href="../LEGACY.md">Legacy assets</a> — 12h/24h era fixtures, tests, configs (not V1 compatible).</li>
+          <li><a href="./radar-brandkit.md">Radar brand kit</a> — visual identity reference.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

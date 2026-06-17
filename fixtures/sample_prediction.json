@@ -1,0 +1,36 @@
+{
+  "object_type": "PredictionRecord",
+  "prediction_id": "prediction_fixture_001",
+  "candidate_id": "candidate_fixture_001",
+  "source_evidence_ref": "fixtures/sample_evidence.json",
+  "12h_score": 0.62,
+  "24h_score": 0.71,
+  "confidence": 0.44,
+  "uncertainty": 0.36,
+  "rationale": "Fixture-only propagation score based on preserved evidence refs, candidate score, structure score, and risk penalties. This is not an investment or trading recommendation.",
+  "feature_contributions": {
+    "source_score": 0.12,
+    "candidate_score": 0.18,
+    "structure_score": 0.16,
+    "early_engagement_fixture": 0.08,
+    "risk_penalty": -0.05
+  },
+  "risk_flags": [
+    "fixture_only",
+    "not_investment_advice",
+    "financial_amplification_review_required"
+  ],
+  "prediction_timestamp": "2026-06-14T00:16:00Z",
+  "evaluated_at": "2026-06-14T00:15:00Z",
+  "strategy_version": "strategy.fixture.v1",
+  "harness_version": "harness.fixture.v1",
+  "scoring_version": "scoring.fixture.v1",
+  "prompt_version": "prompt.fixture.prediction.v1",
+  "model_version": "fixture_rules_only.v1",
+  "rule_version": "rules.fixture.v1",
+  "evaluator_version": "evaluator.fixture.v1",
+  "dataset_split_ref": "split_fixture_dev_2026_06_14",
+  "split_role": "dev",
+  "context_manifest_ref": "fixtures/sample_context_manifest.json",
+  "replay_manifest_ref": "fixtures/sample_replay_manifest.json"
+}

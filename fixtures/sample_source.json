@@ -1,0 +1,67 @@
+{
+  "object_type": "SourceEntrance",
+  "source_entrance_id": "src_fixture_market_001",
+  "source": "fixture_source",
+  "entrance_type": "rss_or_list_fixture",
+  "entrance_url": "fixture://sources/market-watchlist",
+  "account_or_kol_id": null,
+  "board_or_subreddit": "fixture-board",
+  "list_id": "fixture-list-001",
+  "search_query": null,
+  "connector_config_ref": "fixtures/sample_run_config.json#connector",
+  "auth_requirement": "not_required",
+  "auth_status": "not_required",
+  "crawl_strategy": "fixture_only_no_network",
+  "filter_rules_ref": "filter_rules.fixture.v1",
+  "status": "fixture_only",
+  "failure_state": null,
+  "source_registry": {
+    "source_registry_id": "registry_fixture_source_v1",
+    "source": "fixture_source",
+    "supported_entrance_types": [
+      "rss_or_list_fixture"
+    ],
+    "connector_ids": [
+      "fixture.fetch_candidates.v1"
+    ],
+    "capability_matrix": {
+      "healthcheck": "fixture",
+      "auth_status": "fixture",
+      "fetch_candidates": "fixture",
+      "fetch_evidence": "fixture",
+      "fetch_metrics": "fixture"
+    },
+    "auth_modes": [
+      "none"
+    ],
+    "rate_limits": {
+      "policy": "fixture_no_network",
+      "remaining": "unlimited_fixture"
+    },
+    "structure_stability": "stable_fixture",
+    "legal_risk": "fixture_only",
+    "tos_risk": "not_applicable_fixture",
+    "historical_hit_rate": null,
+    "noise_rate": null,
+    "status": "fixture_only"
+  },
+  "source_score": {
+    "source_score_id": "source_score_fixture_001",
+    "source_entrance_id": "src_fixture_market_001",
+    "source_registry_id": "registry_fixture_source_v1",
+    "score_version": "source_score.fixture.v1",
+    "source_score": 0.58,
+    "watch_priority": "fixture_medium",
+    "scan_frequency": "manual_fixture",
+    "historical_hit_rate": null,
+    "noise_rate": null,
+    "kol_quality": null,
+    "metrics_observability": "fixture_snapshot_only",
+    "auth_risk": "none_fixture",
+    "structure_stability": "stable_fixture",
+    "legal_tos_risk": "not_applicable_fixture",
+    "early_alpha_potential": "not_claimed",
+    "connector_reliability": "fixture_deterministic",
+    "reason": "Fixture source is only used to prove the closed evidence and replay contract."
+  }
+}

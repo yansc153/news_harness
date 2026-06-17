@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OutcomeEvaluation",
+  "description": "Deterministic verdict on prediction hit/miss, success grade, outcome labels, and rulebook learning eligibility. The SINGLE entry point for rulebook consumption.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "object_type", "evaluation_id", "evaluation_version", "prediction_id",
+    "outcome_id", "candidate_id", "source_evidence_ref", "window", "window_role",
+    "evaluated_at", "collected_at", "platform", "metric_map_version",
+    "threshold_version", "raw_delta", "relative_growth",
+    "platform_normalized_growth", "author_normalized_growth", "baseline_status",
+    "confidence_band", "outcome_labels", "success_grade", "hit",
+    "calibration_error", "quality_gates", "learning_eligibility",
+    "failure_state", "input_refs"
+  ],
+  "properties": {
+    "object_type": { "type": "string", "const": "OutcomeEvaluation" },
+    "evaluation_id": { "type": "string", "minLength": 1 },
+    "evaluation_version": { "type": "string", "minLength": 1 },
+    "prediction_id": { "type": "string", "minLength": 1 },
+    "outcome_id": { "type": "string", "minLength": 1 },
+    "candidate_id": { "type": "string", "minLength": 1 },
+    "source_evidence_ref": { "type": "string", "minLength": 1 },
+    "window": { "type": "string", "enum": ["1h", "4h", "24h"] },
+    "window_role": { "type": "string", "enum": ["early_momentum", "primary_outcome", "audit"] },
+    "evaluated_at": { "type": "string", "format": "date-time" },
+    "collected_at": { "type": "string", "format": "date-time" },
+    "platform": { "type": "string", "enum": ["x", "reddit", "xueqiu"] },
+    "metric_map_version": { "type": "string", "minLength": 1 },
+    "threshold_version": { "type": "string", "minLength": 1 },
+    "raw_delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["likes", "comments", "shares", "views"],
+      "properties": {
+        "likes": { "type": ["number", "null"] },
+        "comments": { "type": ["number", "null"] },
+        "shares": { "type": ["number", "null"] },
+        "views": { "type": ["number", "null"] }
+      }
+    },
+    "relative_growth": { "type": "number" },
+    "platform_normalized_growth": { "type": "number", "minimum": 0, "maximum": 3 },
+    "author_normalized_growth": {
+      "oneOf": [{ "type": "null" }, { "type": "number", "minimum": 0, "maximum": 3 }]
+    },
+    "baseline_status": {
+      "type": "string",
+      "enum": ["baseline_ready", "baseline_cold_start", "baseline_missing", "author_baseline_missing", "baseline_invalid"]
+    },
+    "confidence_band": { "type": "string", "enum": ["low", "medium", "high"] },
+    "outcome_labels": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "source_available", "source_deleted", "metrics_available", "metrics_unavailable",
+          "raw_growth_observed", "hotlist_observed", "cross_source_observed",
+          "insufficient_denominator", "weak_signal", "baseline_normal",
+          "platform_local_lift", "author_baseline_outperform",
+          "early_momentum_1h", "primary_spread_4h", "cross_source_spread",
+          "sustained_spread", "false_positive", "late_bloom"
+        ]
+      },
+      "minItems": 1
+    },
+    "success_grade": {
+      "type": "string",
+      "enum": ["not_measurable", "not_meaningful", "weak", "meaningful", "breakout"]
+    },
+    "hit": { "type": "boolean" },
+    "calibration_error": { "type": "number", "minimum": 0, "maximum": 1 },
+    "quality_gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_complete", "metrics_available", "source_available", "not_duplicate", "risk_allowed", "no_holdout_leakage"],
+      "properties": {
+        "evidence_complete": { "type": "boolean" },
+        "metrics_available": { "type": "boolean" },
+        "source_available": { "type": "boolean" },
+        "not_duplicate": { "type": "boolean" },
+        "risk_allowed": { "type": "boolean" },
+        "no_holdout_leakage": { "type": "boolean" }
+      }
+    },
+    "learning_eligibility": {
+      "type": "string",
+      "enum": ["not_learnable", "learn_neutral", "learn_negative", "learn_positive_shadow", "learn_positive_verified"]
+    },
+    "failure_state": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "enum": [
+          "missing_outcome", "metrics_unavailable", "auth_failed", "source_deleted",
+          "window_missed", "metric_invalid", "leakage_detected", "risk_blocked", "connector_unsupported"
+        ]}
+      ]
+    },
+    "input_refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prediction_ref", "outcome_ref", "strategy_version", "rule_version"],
+      "properties": {
+        "prediction_ref": { "type": "string", "minLength": 1 },
+        "outcome_ref": { "type": "string", "minLength": 1 },
+        "strategy_version": { "type": "string", "minLength": 1 },
+        "rule_version": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "failure_state": { "type": "string", "minLength": 1 } } },
+      "then": { "properties": { "learning_eligibility": { "const": "not_learnable" } } }
+    },
+    {
+      "if": {
+        "properties": {
+          "failure_state": { "type": "null" },
+          "success_grade": { "enum": ["not_measurable", "not_meaningful"] }
+        }
+      },
+      "then": { "properties": { "learning_eligibility": { "const": "not_learnable" } } }
+    },
+    {
+      "if": {
+        "properties": {
+          "failure_state": { "type": "null" },
+          "success_grade": { "const": "weak" }
+        }
+      },
+      "then": { "properties": { "learning_eligibility": { "const": "learn_neutral" } } }
+    },
+    {
+      "if": {
+        "properties": {
+          "failure_state": { "type": "null" },
+          "success_grade": { "const": "meaningful" }
+        }
+      },
+      "then": { "properties": { "learning_eligibility": { "const": "learn_positive_shadow" } } }
+    },
+    {
+      "if": {
+        "properties": {
+          "failure_state": { "type": "null" },
+          "success_grade": { "const": "breakout" }
+        }
+      },
+      "then": { "properties": { "learning_eligibility": { "const": "learn_positive_shadow" } } }
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EvaluatorMetaReport",
+  "description": "Rolling daily audit of the evaluator itself. Detects label distribution skew, baseline drift, learning starvation, and platform bias. Outputs meta_action that can freeze rulebook promotion.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "object_type", "meta_report_id", "report_period_start", "report_period_end",
+    "generated_at", "evaluator_version", "label_distribution", "platform_skew",
+    "baseline_drift", "learning_starvation", "meta_action"
+  ],
+  "properties": {
+    "object_type": { "type": "string", "const": "EvaluatorMetaReport" },
+    "meta_report_id": { "type": "string", "minLength": 1 },
+    "report_period_start": { "type": "string", "format": "date-time" },
+    "report_period_end": { "type": "string", "format": "date-time" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "evaluator_version": { "type": "string", "minLength": 1 },
+    "label_distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["by_platform_window"],
+      "properties": {
+        "by_platform_window": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "platform", "window", "total", "not_measurable", "not_meaningful",
+              "weak", "meaningful", "breakout", "not_learnable", "learn_positive_shadow"
+            ],
+            "properties": {
+              "platform": { "type": "string", "minLength": 1 },
+              "window": { "type": "string", "enum": ["1h", "4h", "24h"] },
+              "total": { "type": "integer", "minimum": 0 },
+              "not_measurable": { "type": "integer", "minimum": 0 },
+              "not_meaningful": { "type": "integer", "minimum": 0 },
+              "weak": { "type": "integer", "minimum": 0 },
+              "meaningful": { "type": "integer", "minimum": 0 },
+              "breakout": { "type": "integer", "minimum": 0 },
+              "not_learnable": { "type": "integer", "minimum": 0 },
+              "learn_positive_shadow": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "platform_skew": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dominant_platform_meaningful", "dominant_platform_not_learnable", "skew_detected"],
+      "properties": {
+        "dominant_platform_meaningful": { "type": ["string", "null"] },
+        "dominant_platform_not_learnable": { "type": ["string", "null"] },
+        "skew_detected": { "type": "boolean" }
+      }
+    },
+    "baseline_drift": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["p75_drift_factor", "p90_drift_factor", "drift_detected"],
+      "properties": {
+        "p75_drift_factor": { "type": "number" },
+        "p90_drift_factor": { "type": "number" },
+        "drift_detected": { "type": "boolean" }
+      }
+    },
+    "learning_starvation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rolling_days_with_zero_learn_positive", "starvation_detected", "affected_platform_windows"],
+      "properties": {
+        "rolling_days_with_zero_learn_positive": { "type": "integer", "minimum": 0 },
+        "starvation_detected": { "type": "boolean" },
+        "affected_platform_windows": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "meta_action": {
+      "type": "string",
+      "enum": ["ok", "watch", "freeze_learning"]
+    }
+  }
+}

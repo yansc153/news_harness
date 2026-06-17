@@ -1,0 +1,36 @@
+{
+  "object_type": "OutcomeRecord",
+  "outcome_id": "outcome_fixture_001",
+  "prediction_id": "prediction_fixture_001",
+  "candidate_id": "candidate_fixture_001",
+  "window": "24h",
+  "baseline_at": "2026-06-14T00:15:00Z",
+  "collected_at": "2026-06-15T00:15:00Z",
+  "raw_engagement_delta": {
+    "likes_delta": 35,
+    "comments_delta": 18,
+    "reshares_delta": 6,
+    "bookmarks_delta": 3,
+    "views_delta": null,
+    "is_fixture_observation": true,
+    "not_ground_truth": true
+  },
+  "normalized_growth": {
+    "value": 0.68,
+    "method": "fixture_normalization_not_ground_truth"
+  },
+  "platform_specific_growth": {
+    "fixture_source_growth": 0.7
+  },
+  "cross_source_spread": {
+    "observed": false,
+    "source_count": 1
+  },
+  "hotlist_status": "not_observed_fixture",
+  "kol_reshare_status": "not_observed_fixture",
+  "metrics_source": "fixture_declared_outcome_not_ground_truth",
+  "connector_run_id": "connector_run_fixture_001",
+  "observation_status": "fixture_observed",
+  "dataset_split_ref": "split_fixture_eval_2026_06_14",
+  "split_role": "eval"
+}

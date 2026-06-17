@@ -1,0 +1,343 @@
+{
+  "object_type": "ConnectorReadinessMatrix",
+  "matrix_id": "connector_readiness_matrix_fixture_001",
+  "matrix_version": "connector_readiness.fixture.v1",
+  "source_registry_ref": "fixtures/sample_source_registry.json",
+  "source_score_ref": "fixtures/sample_source_score.json",
+  "gate_policy": {
+    "gate_version": "connector_readiness_gate.fixture.v1",
+    "source_score_can_override": false,
+    "candidate_discovery_requires_readiness": true,
+    "fixture_only_not_real_production": true
+  },
+  "decisions": [
+    {
+      "readiness_decision_id": "readiness_fixture_allowed_001",
+      "source_entrance_id": "src_fixture_market_001",
+      "source": "fixture_source",
+      "registry_status": "fixture_allowed",
+      "requested_state": "production_eligible",
+      "decision": "production_eligible_fixture_only",
+      "production_eligible": true,
+      "candidate_discovery_allowed": true,
+      "candidate_discovery_decision": "allowed_fixture_only",
+      "eligibility_scope": "fixture_only_not_real_source",
+      "shadow_only": false,
+      "diagnostic_only": false,
+      "connector_success": true,
+      "connector_run_ref": "fixtures/sample_connector_result.json",
+      "source_score_ref": "source_score_fixture_001",
+      "source_score_can_override_gate": false,
+      "failure_codes": [],
+      "gate_results": [
+        {
+          "gate_id": "auth_boundary_review",
+          "status": "passed_fixture",
+          "failure_code": null
+        },
+        {
+          "gate_id": "legal_tos_review",
+          "status": "passed_fixture",
+          "failure_code": null
+        },
+        {
+          "gate_id": "rate_limit_review",
+          "status": "passed_fixture",
+          "failure_code": null
+        },
+        {
+          "gate_id": "image_reference_review",
+          "status": "passed_fixture",
+          "failure_code": null
+        },
+        {
+          "gate_id": "evidence_contract_review",
+          "status": "passed_fixture",
+          "failure_code": null
+        },
+        {
+          "gate_id": "connector_schema_review",
+          "status": "passed_fixture",
+          "failure_code": null
+        }
+      ],
+      "notes": "Allowed only inside deterministic fixture replay."
+    },
+    {
+      "readiness_decision_id": "readiness_xueqiu_planned_001",
+      "source_entrance_id": "src_xueqiu_planned_001",
+      "source": "xueqiu",
+      "registry_status": "planned",
+      "requested_state": "production_eligible",
+      "decision": "blocked",
+      "production_eligible": false,
+      "candidate_discovery_allowed": false,
+      "candidate_discovery_decision": "blocked_by_readiness",
+      "eligibility_scope": "none",
+      "shadow_only": false,
+      "diagnostic_only": false,
+      "connector_success": false,
+      "connector_run_ref": null,
+      "source_score_ref": "source_score_xueqiu_planned_001",
+      "source_score_can_override_gate": false,
+      "failure_codes": [
+        "planned",
+        "connector_not_ready",
+        "auth_boundary_failed"
+      ],
+      "gate_results": [
+        {
+          "gate_id": "auth_boundary_review",
+          "status": "failed",
+          "failure_code": "auth_boundary_failed"
+        },
+        {
+          "gate_id": "legal_tos_review",
+          "status": "not_reviewed",
+          "failure_code": "legal_access_unapproved"
+        },
+        {
+          "gate_id": "rate_limit_review",
+          "status": "not_reviewed",
+          "failure_code": "rate_limit_unverified"
+        },
+        {
+          "gate_id": "image_reference_review",
+          "status": "not_reviewed",
+          "failure_code": "image_unavailable"
+        },
+        {
+          "gate_id": "evidence_contract_review",
+          "status": "not_reviewed",
+          "failure_code": "insufficient_evidence"
+        },
+        {
+          "gate_id": "connector_schema_review",
+          "status": "not_ready",
+          "failure_code": "connector_not_ready"
+        }
+      ],
+      "notes": "Planned source is blocked even with a high future source score."
+    },
+    {
+      "readiness_decision_id": "readiness_eastmoney_unsupported_001",
+      "source_entrance_id": "src_eastmoney_unsupported_001",
+      "source": "eastmoney_guba",
+      "registry_status": "unsupported",
+      "requested_state": "production_eligible",
+      "decision": "blocked",
+      "production_eligible": false,
+      "candidate_discovery_allowed": false,
+      "candidate_discovery_decision": "blocked_by_readiness",
+      "eligibility_scope": "none",
+      "shadow_only": false,
+      "diagnostic_only": false,
+      "connector_success": false,
+      "connector_run_ref": null,
+      "source_score_ref": "source_score_eastmoney_unsupported_001",
+      "source_score_can_override_gate": false,
+      "failure_codes": [
+        "unsupported",
+        "connector_unsupported"
+      ],
+      "gate_results": [
+        {
+          "gate_id": "auth_boundary_review",
+          "status": "not_reviewed",
+          "failure_code": "auth_boundary_failed"
+        },
+        {
+          "gate_id": "legal_tos_review",
+          "status": "not_reviewed",
+          "failure_code": "legal_access_unapproved"
+        },
+        {
+          "gate_id": "rate_limit_review",
+          "status": "not_reviewed",
+          "failure_code": "rate_limit_unverified"
+        },
+        {
+          "gate_id": "image_reference_review",
+          "status": "not_reviewed",
+          "failure_code": "image_unavailable"
+        },
+        {
+          "gate_id": "evidence_contract_review",
+          "status": "not_reviewed",
+          "failure_code": "insufficient_evidence"
+        },
+        {
+          "gate_id": "connector_schema_review",
+          "status": "failed",
+          "failure_code": "connector_unsupported"
+        }
+      ],
+      "notes": "Unsupported source cannot enter discovery without a connector."
+    },
+    {
+      "readiness_decision_id": "readiness_reddit_auth_required_001",
+      "source_entrance_id": "src_reddit_auth_required_001",
+      "source": "reddit",
+      "registry_status": "auth_required",
+      "requested_state": "production_eligible",
+      "decision": "blocked",
+      "production_eligible": false,
+      "candidate_discovery_allowed": false,
+      "candidate_discovery_decision": "blocked_by_readiness",
+      "eligibility_scope": "none",
+      "shadow_only": false,
+      "diagnostic_only": false,
+      "connector_success": false,
+      "connector_run_ref": null,
+      "source_score_ref": "source_score_reddit_auth_required_001",
+      "source_score_can_override_gate": false,
+      "failure_codes": [
+        "auth_required",
+        "auth_boundary_failed"
+      ],
+      "gate_results": [
+        {
+          "gate_id": "auth_boundary_review",
+          "status": "failed",
+          "failure_code": "auth_boundary_failed"
+        },
+        {
+          "gate_id": "legal_tos_review",
+          "status": "not_reviewed",
+          "failure_code": "legal_access_unapproved"
+        },
+        {
+          "gate_id": "rate_limit_review",
+          "status": "not_reviewed",
+          "failure_code": "rate_limit_unverified"
+        },
+        {
+          "gate_id": "image_reference_review",
+          "status": "not_reviewed",
+          "failure_code": "image_unavailable"
+        },
+        {
+          "gate_id": "evidence_contract_review",
+          "status": "not_reviewed",
+          "failure_code": "insufficient_evidence"
+        },
+        {
+          "gate_id": "connector_schema_review",
+          "status": "not_ready",
+          "failure_code": "connector_not_ready"
+        }
+      ],
+      "notes": "Auth-required source has no reviewed auth boundary."
+    },
+    {
+      "readiness_decision_id": "readiness_shadow_rss_001",
+      "source_entrance_id": "src_shadow_rss_001",
+      "source": "shadow_rss_fixture",
+      "registry_status": "shadow_only",
+      "requested_state": "production_eligible",
+      "decision": "shadow_only",
+      "production_eligible": false,
+      "candidate_discovery_allowed": false,
+      "candidate_discovery_decision": "blocked_by_readiness",
+      "eligibility_scope": "shadow_observation_only",
+      "shadow_only": true,
+      "diagnostic_only": false,
+      "connector_success": false,
+      "connector_run_ref": null,
+      "source_score_ref": "source_score_shadow_rss_001",
+      "source_score_can_override_gate": false,
+      "failure_codes": [
+        "connector_not_ready"
+      ],
+      "gate_results": [
+        {
+          "gate_id": "auth_boundary_review",
+          "status": "passed_fixture",
+          "failure_code": null
+        },
+        {
+          "gate_id": "legal_tos_review",
+          "status": "passed_fixture",
+          "failure_code": null
+        },
+        {
+          "gate_id": "rate_limit_review",
+          "status": "passed_fixture",
+          "failure_code": null
+        },
+        {
+          "gate_id": "image_reference_review",
+          "status": "passed_fixture",
+          "failure_code": null
+        },
+        {
+          "gate_id": "evidence_contract_review",
+          "status": "shadow_only",
+          "failure_code": "connector_not_ready"
+        },
+        {
+          "gate_id": "connector_schema_review",
+          "status": "shadow_only",
+          "failure_code": "connector_not_ready"
+        }
+      ],
+      "notes": "Shadow-only remains out of production candidate discovery."
+    },
+    {
+      "readiness_decision_id": "readiness_x_risk_blocked_001",
+      "source_entrance_id": "src_x_risk_blocked_001",
+      "source": "x",
+      "registry_status": "risk_blocked",
+      "requested_state": "production_eligible",
+      "decision": "blocked",
+      "production_eligible": false,
+      "candidate_discovery_allowed": false,
+      "candidate_discovery_decision": "blocked_by_readiness",
+      "eligibility_scope": "none",
+      "shadow_only": false,
+      "diagnostic_only": false,
+      "connector_success": false,
+      "connector_run_ref": null,
+      "source_score_ref": "source_score_x_risk_blocked_001",
+      "source_score_can_override_gate": false,
+      "failure_codes": [
+        "risk_blocked",
+        "risk_unapproved",
+        "legal_access_unapproved"
+      ],
+      "gate_results": [
+        {
+          "gate_id": "auth_boundary_review",
+          "status": "failed",
+          "failure_code": "auth_boundary_failed"
+        },
+        {
+          "gate_id": "legal_tos_review",
+          "status": "failed",
+          "failure_code": "legal_access_unapproved"
+        },
+        {
+          "gate_id": "rate_limit_review",
+          "status": "not_reviewed",
+          "failure_code": "rate_limit_unverified"
+        },
+        {
+          "gate_id": "image_reference_review",
+          "status": "not_reviewed",
+          "failure_code": "image_unavailable"
+        },
+        {
+          "gate_id": "evidence_contract_review",
+          "status": "not_reviewed",
+          "failure_code": "insufficient_evidence"
+        },
+        {
+          "gate_id": "connector_schema_review",
+          "status": "not_ready",
+          "failure_code": "connector_not_ready"
+        }
+      ],
+      "notes": "Risk block holds even with the highest source score in this fixture."
+    }
+  ]
+}

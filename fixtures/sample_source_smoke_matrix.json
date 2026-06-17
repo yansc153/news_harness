@@ -1,0 +1,90 @@
+{
+  "object_type": "SourceSmokeMatrix",
+  "smoke_matrix_id": "source_smoke_matrix_fixture_001",
+  "smoke_matrix_version": "source_smoke.fixture.v1",
+  "source_registry_ref": "fixtures/sample_source_registry.json",
+  "connector_readiness_ref": "fixtures/sample_connector_readiness_matrix.json",
+  "gate_policy": {
+    "smoke_requires_source_registry": true,
+    "smoke_requires_connector_readiness": true,
+    "diagnostic_success_is_source_reach_success": false,
+    "real_engagement_allowed_in_fixture": false,
+    "fixture_only_not_real_source_reach": true
+  },
+  "decisions": [
+    {
+      "smoke_decision_id": "smoke_decision_rss_fixture_001",
+      "source_entrance_id": "src_fixture_market_001",
+      "source": "fixture_source",
+      "source_type": "rss",
+      "source_url": "fixture://future-smoke/rss/feed.xml",
+      "source_registry_id": "registry_fixture_source_v1",
+      "readiness_decision_id": "readiness_fixture_allowed_001",
+      "smoke_allowed": true,
+      "smoke_decision": "allowed_fixture_only_not_executed",
+      "smoke_result_ref": "fixtures/sample_source_smoke_result_rss.json",
+      "diagnostic_success": false,
+      "source_reach_success": false,
+      "failure_codes": [],
+      "reason": "Existing fixture source passes fixture-only readiness; no real RSS read is performed."
+    },
+    {
+      "smoke_decision_id": "smoke_decision_public_web_001",
+      "source_entrance_id": "src_public_web_candidate_001",
+      "source": "public_web",
+      "source_type": "public_web_page",
+      "source_url": "fixture://future-smoke/public-web/page",
+      "source_registry_id": null,
+      "readiness_decision_id": null,
+      "smoke_allowed": false,
+      "smoke_decision": "blocked_missing_source_registry_and_readiness",
+      "smoke_result_ref": "fixtures/sample_source_smoke_result_public_web.json",
+      "diagnostic_success": true,
+      "source_reach_success": false,
+      "failure_codes": [
+        "source_registry_missing",
+        "smoke_readiness_bypass"
+      ],
+      "reason": "Low-risk public web candidate still cannot skip registry/readiness admission."
+    },
+    {
+      "smoke_decision_id": "smoke_decision_xueqiu_blocked_001",
+      "source_entrance_id": "src_xueqiu_planned_001",
+      "source": "xueqiu",
+      "source_type": "xueqiu_hot_board",
+      "source_url": "fixture://future-smoke/xueqiu/hot-board",
+      "source_registry_id": "registry_xueqiu_planned_v1",
+      "readiness_decision_id": "readiness_xueqiu_planned_001",
+      "smoke_allowed": false,
+      "smoke_decision": "blocked_by_planned_source",
+      "smoke_result_ref": "fixtures/sample_source_smoke_result_xueqiu_blocked.json",
+      "diagnostic_success": false,
+      "source_reach_success": false,
+      "failure_codes": [
+        "planned",
+        "connector_not_ready",
+        "auth_boundary_failed"
+      ],
+      "reason": "Xueqiu remains planned and cannot be smoke-tested without auth/legal/rate/schema readiness."
+    },
+    {
+      "smoke_decision_id": "smoke_decision_reddit_auth_required_001",
+      "source_entrance_id": "src_reddit_auth_required_001",
+      "source": "reddit",
+      "source_type": "subreddit",
+      "source_url": "fixture://future-smoke/reddit/subreddit",
+      "source_registry_id": "registry_reddit_auth_required_v1",
+      "readiness_decision_id": "readiness_reddit_auth_required_001",
+      "smoke_allowed": false,
+      "smoke_decision": "blocked_by_auth_required",
+      "smoke_result_ref": "fixtures/sample_source_smoke_result_reddit_auth_required.json",
+      "diagnostic_success": false,
+      "source_reach_success": false,
+      "failure_codes": [
+        "auth_required",
+        "auth_boundary_failed"
+      ],
+      "reason": "Reddit cannot use fixture data to fake an authenticated source read."
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "object_type": "PromotionDecision",
+  "promotion_decision_id": "promotion_fixture_001",
+  "proposal_id": "proposal_fixture_001",
+  "from_version": "strategy.fixture.v1",
+  "to_version": "strategy.fixture.v1.shadow1",
+  "gate_results": [
+    {
+      "gate_id": "evidence_completeness",
+      "gate_version": "gate.fixture.v1",
+      "threshold_version": "threshold.fixture.v1",
+      "gate_command_ref": "scripts/validate_fixtures.py",
+      "artifact_schema_ref": "schemas/news_harness_mvp.schema.json",
+      "input_refs": [
+        "fixtures/sample_evidence.json"
+      ],
+      "output_artifact_ref": "artifacts/replay/latest/evidence_gate_report.json",
+      "status": "passed_fixture",
+      "failure_code": null,
+      "event_id": "evt_fixture_gate_evidence"
+    },
+    {
+      "gate_id": "replay_determinism",
+      "gate_version": "gate.fixture.v1",
+      "threshold_version": "threshold.fixture.v1",
+      "gate_command_ref": "scripts/replay_fixture.py",
+      "artifact_schema_ref": "schemas/news_harness_mvp.schema.json",
+      "input_refs": [
+        "fixtures/sample_replay_manifest.json"
+      ],
+      "output_artifact_ref": "artifacts/replay/latest/replay_report.json",
+      "status": "shadow_only_fixture",
+      "failure_code": "real_replay_gate_not_promotable_from_fixture",
+      "event_id": "evt_fixture_gate_replay"
+    },
+    {
+      "gate_id": "connector_readiness",
+      "gate_version": "gate.fixture.v1",
+      "threshold_version": "threshold.fixture.v1",
+      "gate_command_ref": "TODO: eval connector-readiness",
+      "artifact_schema_ref": "schemas/news_harness_mvp.schema.json",
+      "input_refs": [
+        "fixtures/sample_connector_result.json"
+      ],
+      "output_artifact_ref": "artifacts/replay/latest/connector_readiness_report.json",
+      "status": "not_implemented",
+      "failure_code": "connector_not_ready",
+      "event_id": "evt_fixture_gate_connector"
+    }
+  ],
+  "gate_command_refs": {
+    "evidence_completeness": "scripts/validate_fixtures.py",
+    "replay_determinism": "scripts/replay_fixture.py",
+    "connector_readiness": "TODO: eval connector-readiness"
+  },
+  "threshold_versions": {
+    "evidence_completeness": "threshold.fixture.v1",
+    "replay_determinism": "threshold.fixture.v1",
+    "connector_readiness": "threshold.fixture.v1"
+  },
+  "artifact_schema_refs": {
+    "evidence_completeness": "schemas/news_harness_mvp.schema.json",
+    "replay_determinism": "schemas/news_harness_mvp.schema.json",
+    "connector_readiness": "schemas/news_harness_mvp.schema.json"
+  },
+  "hard_gate_failures": [
+    "connector_not_ready",
+    "real_replay_gate_not_promotable_from_fixture"
+  ],
+  "guard_metrics": {
+    "evidence_completeness": 1.0,
+    "precision_at_k": 1.0,
+    "ndcg": 1.0,
+    "calibration_error": 0.09,
+    "risk_penalty": 0.05,
+    "connector_failure_rate": 0.0,
+    "regression_vs_prior": "not_applicable_first_fixture"
+  },
+  "decision": "shadow_only",
+  "decided_at": "2026-06-15T00:20:00Z",
+  "decision_artifact_ref": "artifacts/replay/latest/promotion_decision.json"
+}

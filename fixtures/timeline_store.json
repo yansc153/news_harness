@@ -1,0 +1,523 @@
+{
+  "dedupe_policy": {
+    "dedupe_keys": [
+      "source_url",
+      "canonical_url",
+      "content_hash"
+    ],
+    "duplicate_action": "update_allowed_fields_only",
+    "update_allowed_fields": [
+      "hotness_score",
+      "hotness_series",
+      "llm_scoring_refs",
+      "image_status",
+      "image_refs",
+      "outcome_status",
+      "revisit_status",
+      "latest_observation",
+      "last_observed_at"
+    ]
+  },
+  "duplicate_update_log": [
+    {
+      "changed_fields": [
+        "hotness_score",
+        "hotness_series",
+        "llm_scoring_refs",
+        "outcome_status",
+        "revisit_status",
+        "latest_observation",
+        "last_observed_at"
+      ],
+      "dedupe_key": "fixture://shadow/x/list/2056032482127175889/post/shadow-x-001",
+      "dedupe_key_type": "source_url",
+      "incoming_shadow_item_ref": "fixtures/sample_shadow_source_fetch_result.json#items[0]",
+      "insertion_performed": false,
+      "matched_item_id": "radar_shadow_x_list_001",
+      "update_reason": "same_source_item_observed_in_later_shadow_batch"
+    }
+  ],
+  "fixture_only": true,
+  "items": [
+    {
+      "author": "shadow_x_author",
+      "canonical_url": "fixture://shadow/x/list/2056032482127175889/post/shadow-x-001",
+      "content_hash": "sha256:fixture-shadow-x-list-001",
+      "copy_text": "Reliability is being reframed as packaging: runbooks, replay, and rollback paths are carrying trust before model size does.",
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[0]",
+      "expired": false,
+      "first_seen_at": "2026-06-14T00:12:00Z",
+      "hotness_score": 0.78,
+      "hotness_series": [
+        0.16,
+        0.24,
+        0.35,
+        0.46,
+        0.58,
+        0.67,
+        0.78
+      ],
+      "id": "radar_shadow_x_list_001",
+      "image_refs": [],
+      "image_status": "no_image",
+      "item_version": "radar.timeline.item.v1",
+      "last_observed_at": "2026-06-15T01:00:00Z",
+      "llm_scoring_refs": [
+        "fixtures/sample_deepseek_scoring_fixture.json#scored_candidates[0]"
+      ],
+      "latest_observation": {
+        "engagement_snapshot": {
+          "metrics": {
+            "like_count": 184,
+            "reply_count": 23,
+            "repost_count": 37
+          },
+          "metrics_are_fixture": true,
+          "observed_at": "2026-06-15T01:00:00Z",
+          "status": "shadow_fixture_metrics_not_ground_truth"
+        },
+        "source_batch_ref": "shadow_batch_x_list_20260615T010000Z"
+      },
+      "non_investment_advice": true,
+      "object_type": "RadarTimelineItem",
+      "outcome_status": "revisit_pending_fixture_not_ground_truth",
+      "prediction_status": "shadow_fixture_prediction_not_ground_truth",
+      "published_at": "2026-06-14T00:11:00Z",
+      "revisit_status": "12h_24h_registered_fixture",
+      "revisit_task_refs": [
+        "fixtures/revisit_schedule.json#tasks[0]",
+        "fixtures/revisit_schedule.json#tasks[1]"
+      ],
+      "shadow_source_item_id": "shadow_x_list_001",
+      "source": "x_list",
+      "source_channel": "list_2056032482127175889",
+      "source_entry_url": "https://x.com/i/lists/2056032482127175889?s=20",
+      "source_label": "X list",
+      "source_url": "fixture://shadow/x/list/2056032482127175889/post/shadow-x-001",
+      "timeline_status": "rolling_ranked_shadow_fixture",
+      "topic_or_hook": "operator_trust_reframe"
+    },
+    {
+      "author": "shadow_xueqiu_hot_author",
+      "canonical_url": "fixture://shadow/xueqiu/hot/post/shadow-hot-001",
+      "content_hash": "sha256:fixture-shadow-xueqiu-hot-001",
+      "copy_text": "热门讨论把预期差拆成信息差、拥挤度和叙事降速三个层级，争论焦点很集中。",
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[1]",
+      "expired": false,
+      "first_seen_at": "2026-06-14T00:12:10Z",
+      "hotness_score": 0.72,
+      "hotness_series": [
+        0.12,
+        0.2,
+        0.3,
+        0.43,
+        0.54,
+        0.63,
+        0.72
+      ],
+      "id": "radar_shadow_xueqiu_hot_001",
+      "image_refs": [
+        {
+          "access_status": "referenced_only_not_downloaded",
+          "alt": "shadow fixture chart reference",
+          "caption": "Shadow fixture preserves image reference only.",
+          "dimensions": {
+            "height": 540,
+            "width": 960
+          },
+          "download_status": "not_downloaded_reference_only",
+          "image_ref_id": "shadow_xueqiu_hot_image_001",
+          "original_image_ref": "fixture://shadow/xueqiu/hot/post/shadow-hot-001/image/original-ref-only",
+          "page_context_ref": "fixture://shadow/xueqiu/hot/post/shadow-hot-001#image-1",
+          "thumbnail_ref": "fixture://shadow/xueqiu/hot/post/shadow-hot-001/image/thumb-ref-only"
+        }
+      ],
+      "image_status": "available",
+      "item_version": "radar.timeline.item.v1",
+      "last_observed_at": "2026-06-15T00:45:00Z",
+      "llm_scoring_refs": [
+        "fixtures/sample_deepseek_scoring_fixture.json#scored_candidates[1]"
+      ],
+      "latest_observation": {
+        "engagement_snapshot": {
+          "metrics": {
+            "comment_count": 71,
+            "like_count": 239,
+            "reshare_count": 24
+          },
+          "metrics_are_fixture": true,
+          "observed_at": "2026-06-15T00:45:00Z",
+          "status": "shadow_fixture_metrics_not_ground_truth"
+        },
+        "source_batch_ref": "shadow_batch_xueqiu_20260615T004500Z"
+      },
+      "non_investment_advice": true,
+      "object_type": "RadarTimelineItem",
+      "outcome_status": "revisit_pending_fixture_not_ground_truth",
+      "prediction_status": "shadow_fixture_prediction_not_ground_truth",
+      "published_at": "2026-06-14T00:10:00Z",
+      "revisit_status": "12h_24h_registered_fixture",
+      "revisit_task_refs": [
+        "fixtures/revisit_schedule.json#tasks[2]",
+        "fixtures/revisit_schedule.json#tasks[3]"
+      ],
+      "shadow_source_item_id": "shadow_xueqiu_hot_001",
+      "source": "xueqiu_hot",
+      "source_channel": "xueqiu_hot",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_label": "雪球热门",
+      "source_url": "fixture://shadow/xueqiu/hot/post/shadow-hot-001",
+      "timeline_status": "rolling_ranked_shadow_fixture",
+      "topic_or_hook": "expectation_reset_stack"
+    },
+    {
+      "author": "shadow_reddit_wsb_author",
+      "canonical_url": "fixture://shadow/reddit/r/wallstreetbets/comments/shadow-reddit-wsb-001",
+      "content_hash": "sha256:fixture-shadow-reddit-wsb-001",
+      "copy_text": "A Reddit thread is clustering around the same trade narrative but the useful signal is the comment velocity, not a directional call.",
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[4]",
+      "expired": false,
+      "first_seen_at": "2026-06-15T00:40:00Z",
+      "hotness_score": 0.67,
+      "hotness_series": [
+        0.09,
+        0.15,
+        0.24,
+        0.38,
+        0.49,
+        0.58,
+        0.67
+      ],
+      "id": "radar_shadow_reddit_wallstreetbets_001",
+      "image_refs": [],
+      "image_status": "no_image",
+      "item_version": "radar.timeline.item.v1",
+      "last_observed_at": "2026-06-15T01:00:00Z",
+      "llm_scoring_refs": [
+        "fixtures/sample_deepseek_scoring_fixture.json#scored_candidates[4]"
+      ],
+      "latest_observation": {
+        "engagement_snapshot": {
+          "metrics": {
+            "comment_count": 126,
+            "score": 412,
+            "upvote_ratio": 0.84
+          },
+          "metrics_are_fixture": true,
+          "observed_at": "2026-06-15T01:00:00Z",
+          "status": "shadow_fixture_metrics_not_ground_truth"
+        },
+        "source_batch_ref": "shadow_batch_reddit_20260615T010000Z"
+      },
+      "non_investment_advice": true,
+      "object_type": "RadarTimelineItem",
+      "outcome_status": "revisit_pending_fixture_not_ground_truth",
+      "prediction_status": "shadow_fixture_prediction_not_ground_truth",
+      "published_at": "2026-06-15T00:35:00Z",
+      "revisit_status": "12h_24h_registered_fixture",
+      "revisit_task_refs": [
+        "fixtures/revisit_schedule.json#tasks[4]",
+        "fixtures/revisit_schedule.json#tasks[5]"
+      ],
+      "shadow_source_item_id": "shadow_reddit_wallstreetbets_001",
+      "source": "reddit",
+      "source_channel": "r/wallstreetbets",
+      "source_entry_url": "https://www.reddit.com/r/wallstreetbets/",
+      "source_label": "Reddit r/wallstreetbets",
+      "source_url": "fixture://shadow/reddit/r/wallstreetbets/comments/shadow-reddit-wsb-001",
+      "timeline_status": "rolling_ranked_shadow_fixture",
+      "topic_or_hook": "comment_velocity_signal"
+    },
+    {
+      "author": "shadow_xueqiu_daren_author",
+      "canonical_url": "fixture://shadow/xueqiu/daren/post/shadow-daren-001",
+      "content_hash": "sha256:fixture-shadow-xueqiu-daren-001",
+      "copy_text": "一条达人长帖把分歧点压缩成两个问题：共识何时形成，反身性何时退潮。",
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[2]",
+      "expired": false,
+      "first_seen_at": "2026-06-14T00:12:20Z",
+      "hotness_score": 0.64,
+      "hotness_series": [
+        0.08,
+        0.14,
+        0.26,
+        0.34,
+        0.46,
+        0.56,
+        0.64
+      ],
+      "id": "radar_shadow_xueqiu_daren_001",
+      "image_refs": [
+        {
+          "access_status": "image_unavailable",
+          "dimensions": null,
+          "download_status": "blocked_fixture_no_real_source_access",
+          "image_ref_id": "shadow_xueqiu_daren_image_unavailable_001",
+          "original_image_ref": "fixture://shadow/xueqiu/daren/post/shadow-daren-001/image/auth-gated",
+          "page_context_ref": "fixture://shadow/xueqiu/daren/post/shadow-daren-001#image-1",
+          "structured_error": {
+            "code": "image_unavailable",
+            "message": "Shadow fixture models an inaccessible image reference without downloading, caching, proxying, or replacing it."
+          }
+        }
+      ],
+      "image_status": "image_unavailable",
+      "item_version": "radar.timeline.item.v1",
+      "last_observed_at": "2026-06-15T00:45:00Z",
+      "llm_scoring_refs": [
+        "fixtures/sample_deepseek_scoring_fixture.json#scored_candidates[2]"
+      ],
+      "latest_observation": {
+        "engagement_snapshot": {
+          "metrics": {
+            "comment_count": 47,
+            "like_count": 149,
+            "reshare_count": 14
+          },
+          "metrics_are_fixture": true,
+          "observed_at": "2026-06-15T00:45:00Z",
+          "status": "shadow_fixture_metrics_not_ground_truth"
+        },
+        "source_batch_ref": "shadow_batch_xueqiu_20260615T004500Z"
+      },
+      "non_investment_advice": true,
+      "object_type": "RadarTimelineItem",
+      "outcome_status": "revisit_pending_fixture_not_ground_truth",
+      "prediction_status": "shadow_fixture_prediction_not_ground_truth",
+      "published_at": "2026-06-14T00:09:00Z",
+      "revisit_status": "12h_24h_registered_fixture",
+      "revisit_task_refs": [
+        "fixtures/revisit_schedule.json#tasks[6]",
+        "fixtures/revisit_schedule.json#tasks[7]"
+      ],
+      "shadow_source_item_id": "shadow_xueqiu_daren_001",
+      "source": "xueqiu_daren",
+      "source_channel": "xueqiu_daren",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_label": "雪球达人",
+      "source_url": "fixture://shadow/xueqiu/daren/post/shadow-daren-001",
+      "timeline_status": "rolling_ranked_shadow_fixture",
+      "topic_or_hook": "controversy_compression"
+    },
+    {
+      "author": "shadow_xueqiu_dispute_author",
+      "canonical_url": "fixture://shadow/xueqiu/dispute/post/shadow-dispute-001",
+      "content_hash": "sha256:fixture-shadow-xueqiu-dispute-001",
+      "copy_text": "争议讨论的传播点不是结论，而是反驳速度：每个观点都很快遇到对立证据。",
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[3]",
+      "expired": false,
+      "first_seen_at": "2026-06-14T00:12:30Z",
+      "hotness_score": 0.61,
+      "hotness_series": [
+        0.1,
+        0.18,
+        0.25,
+        0.37,
+        0.44,
+        0.55,
+        0.61
+      ],
+      "id": "radar_shadow_xueqiu_dispute_001",
+      "image_refs": [],
+      "image_status": "no_image",
+      "item_version": "radar.timeline.item.v1",
+      "last_observed_at": "2026-06-15T00:45:00Z",
+      "llm_scoring_refs": [
+        "fixtures/sample_deepseek_scoring_fixture.json#scored_candidates[3]"
+      ],
+      "latest_observation": {
+        "engagement_snapshot": {
+          "metrics": {
+            "comment_count": 96,
+            "like_count": 103,
+            "reshare_count": 11
+          },
+          "metrics_are_fixture": true,
+          "observed_at": "2026-06-15T00:45:00Z",
+          "status": "shadow_fixture_metrics_not_ground_truth"
+        },
+        "source_batch_ref": "shadow_batch_xueqiu_20260615T004500Z"
+      },
+      "non_investment_advice": true,
+      "object_type": "RadarTimelineItem",
+      "outcome_status": "revisit_pending_fixture_not_ground_truth",
+      "prediction_status": "shadow_fixture_prediction_not_ground_truth",
+      "published_at": "2026-06-14T00:08:00Z",
+      "revisit_status": "12h_24h_registered_fixture",
+      "revisit_task_refs": [
+        "fixtures/revisit_schedule.json#tasks[8]",
+        "fixtures/revisit_schedule.json#tasks[9]"
+      ],
+      "shadow_source_item_id": "shadow_xueqiu_dispute_001",
+      "source": "xueqiu_dispute",
+      "source_channel": "xueqiu_dispute",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_label": "雪球争议讨论",
+      "source_url": "fixture://shadow/xueqiu/dispute/post/shadow-dispute-001",
+      "timeline_status": "rolling_ranked_shadow_fixture",
+      "topic_or_hook": "fast_rebuttal_loop"
+    },
+    {
+      "author": "fixture_author",
+      "canonical_url": "fixture://source/post/001",
+      "content_hash": "sha256:fixture-base-timeline-001",
+      "copy_text": "The discussion is accelerating around a new policy interpretation.",
+      "evidence_ref": "fixtures/sample_evidence.json",
+      "expired": false,
+      "first_seen_at": "2026-06-14T00:00:00Z",
+      "hotness_score": 0.59,
+      "hotness_series": [
+        0.18,
+        0.22,
+        0.31,
+        0.39,
+        0.52,
+        0.56,
+        0.59
+      ],
+      "id": "radar_timeline_fixture_001",
+      "image_refs": [
+        {
+          "access_status": "referenced_only_not_downloaded",
+          "dimensions": {
+            "height": 720,
+            "width": 1280
+          },
+          "download_status": "not_downloaded_reference_only",
+          "image_ref_id": "image_fixture_001",
+          "original_image_ref": "fixture://source/post/001/image/original-ref-only",
+          "page_context_ref": "fixture://source/post/001#image-1",
+          "thumbnail_ref": "fixture://source/post/001/image/thumb-ref-only"
+        }
+      ],
+      "image_status": "available",
+      "item_version": "radar.timeline.item.v1",
+      "last_observed_at": "2026-06-15T00:30:00Z",
+      "llm_scoring_refs": [
+        "fixtures/sample_deepseek_scoring_fixture.json#scored_candidates[0]"
+      ],
+      "latest_observation": {
+        "engagement_snapshot": {
+          "metrics": {
+            "like_count": 88,
+            "reply_count": 12,
+            "share_count": 9
+          },
+          "metrics_are_fixture": true,
+          "observed_at": "2026-06-15T00:30:00Z",
+          "status": "fixture_metrics_not_ground_truth"
+        },
+        "source_batch_ref": "shadow_batch_fixture_source_20260615T003000Z"
+      },
+      "non_investment_advice": true,
+      "object_type": "RadarTimelineItem",
+      "outcome_status": "revisit_pending_fixture_not_ground_truth",
+      "prediction_status": "fixture_prediction_not_ground_truth",
+      "published_at": "2026-06-14T00:00:00Z",
+      "revisit_status": "12h_24h_registered_fixture",
+      "revisit_task_refs": [
+        "fixtures/revisit_schedule.json#tasks[10]",
+        "fixtures/revisit_schedule.json#tasks[11]"
+      ],
+      "source": "fixture_source",
+      "source_channel": "fixture_channel",
+      "source_entry_url": "fixture://source",
+      "source_label": "Fixture Source",
+      "source_url": "fixture://source/post/001",
+      "timeline_status": "rolling_ranked_fixture",
+      "topic_or_hook": "early_acceleration"
+    },
+    {
+      "author": "expired_fixture_author",
+      "canonical_url": "fixture://shadow/xueqiu/expired/post/001",
+      "content_hash": "sha256:fixture-expired-store-001",
+      "copy_text": "Expired fixture item retained only to prove the five day export exclusion rule.",
+      "evidence_ref": "fixtures/timeline_store.json#items[6]",
+      "expired": true,
+      "expiration_reason": "store_item_expired",
+      "first_seen_at": "2026-06-09T00:00:00Z",
+      "hotness_score": 0.91,
+      "hotness_series": [
+        0.91,
+        0.82,
+        0.7
+      ],
+      "id": "radar_expired_fixture_001",
+      "image_refs": [],
+      "image_status": "no_image",
+      "item_version": "radar.timeline.item.v1",
+      "last_observed_at": "2026-06-09T03:00:00Z",
+      "latest_observation": {
+        "engagement_snapshot": {
+          "metrics": {},
+          "metrics_are_fixture": true,
+          "observed_at": "2026-06-09T03:00:00Z",
+          "status": "expired_fixture_metrics_not_ground_truth"
+        },
+        "source_batch_ref": "shadow_batch_expired_20260609T030000Z"
+      },
+      "non_investment_advice": true,
+      "object_type": "RadarTimelineItem",
+      "outcome_status": "expired_fixture_not_exported",
+      "prediction_status": "fixture_prediction_not_ground_truth",
+      "published_at": "2026-06-09T00:00:00Z",
+      "revisit_status": "expired_fixture_not_scheduled",
+      "revisit_task_refs": [],
+      "source": "xueqiu_hot",
+      "source_channel": "xueqiu_hot",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_label": "雪球热门",
+      "source_url": "fixture://shadow/xueqiu/expired/post/001",
+      "timeline_status": "expired_excluded_from_export",
+      "topic_or_hook": "expired_retention_fixture"
+    }
+  ],
+  "no_real_source_access": true,
+  "object_type": "RollingTimelineStore",
+  "retention_policy": {
+    "export_window_hours": 120,
+    "expire_after_days": 5,
+    "expired_items_exported": false,
+    "reference_now": "2026-06-15T01:00:00Z"
+  },
+  "revisit_schedule_ref": "fixtures/revisit_schedule.json",
+  "shadow_batch_runs": [
+    {
+      "batch_id": "shadow_batch_x_list_20260615T010000Z",
+      "fixture_fetch_ref": "fixtures/sample_shadow_source_fetch_result.json#items[source=x_list]",
+      "max_items_per_source": 10,
+      "observed_item_count": 1,
+      "refresh_interval_seconds": 3600,
+      "source": "x_list"
+    },
+    {
+      "batch_id": "x_list_secret_ref_dry_run_fixture_001",
+      "fixture_fetch_ref": "fixtures/sample_x_list_secret_ref_dry_run.json#observation",
+      "max_items_per_source": 10,
+      "observed_item_count": 1,
+      "refresh_interval_seconds": 3600,
+      "source": "x_list"
+    },
+    {
+      "batch_id": "shadow_batch_xueqiu_20260615T004500Z",
+      "fixture_fetch_ref": "fixtures/sample_shadow_source_fetch_result.json#items[source^=xueqiu]",
+      "max_items_per_source": 10,
+      "observed_item_count": 3,
+      "refresh_interval_seconds": 1800,
+      "source": "xueqiu"
+    },
+    {
+      "batch_id": "shadow_batch_reddit_20260615T010000Z",
+      "fixture_fetch_ref": "fixtures/sample_shadow_source_fetch_result.json#items[source=reddit]",
+      "max_items_per_subreddit": 10,
+      "observed_item_count": 1,
+      "refresh_interval_seconds": 3600,
+      "source": "reddit",
+      "subreddit_count": 20
+    }
+  ],
+  "source_schedule_ref": "fixtures/rolling_source_schedule.json",
+  "store_id": "rolling_timeline_store_fixture_001",
+  "store_version": "rolling.timeline_store.fixture.v1",
+  "updated_at": "2026-06-15T01:00:00Z"
+}

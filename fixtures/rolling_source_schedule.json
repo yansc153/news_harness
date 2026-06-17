@@ -1,0 +1,80 @@
+{
+  "batch_policy": {
+    "batch_processing_required": true,
+    "max_items_per_source_per_run": 10,
+    "per_item_full_serial_pipeline_allowed": false,
+    "shadow_batch_only": true
+  },
+  "created_at": "2026-06-15T01:00:00Z",
+  "fixture_only": true,
+  "no_real_scheduler": true,
+  "no_real_source_access": true,
+  "object_type": "RollingSourceSchedule",
+  "schedule_id": "rolling_source_schedule_fixture_001",
+  "schedule_version": "rolling.source_schedule.fixture.v1",
+  "sources": [
+    {
+      "batch_limit": 10,
+      "fixture_fetch_ref": "fixtures/sample_shadow_source_fetch_result.json#items[source=x_list]",
+      "refresh_interval_seconds": 3600,
+      "source": "x_list",
+      "source_entry_url": "https://x.com/i/lists/2056032482127175889?s=20",
+      "source_label": "X list"
+    },
+    {
+      "batch_limit": 10,
+      "fixture_fetch_ref": "fixtures/sample_shadow_source_fetch_result.json#items[source=xueqiu_hot]",
+      "refresh_interval_seconds": 1800,
+      "source": "xueqiu_hot",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_label": "雪球热门"
+    },
+    {
+      "batch_limit": 10,
+      "fixture_fetch_ref": "fixtures/sample_shadow_source_fetch_result.json#items[source=xueqiu_daren]",
+      "refresh_interval_seconds": 1800,
+      "source": "xueqiu_daren",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_label": "雪球达人"
+    },
+    {
+      "batch_limit": 10,
+      "fixture_fetch_ref": "fixtures/sample_shadow_source_fetch_result.json#items[source=xueqiu_dispute]",
+      "refresh_interval_seconds": 1800,
+      "source": "xueqiu_dispute",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_label": "雪球争议讨论"
+    },
+    {
+      "batch_limit": 10,
+      "fixture_fetch_ref": "fixtures/sample_shadow_source_fetch_result.json#items[source=reddit]",
+      "max_items_per_subreddit_per_run": 10,
+      "refresh_interval_seconds": 3600,
+      "source": "reddit",
+      "source_entry_url": "https://www.reddit.com/",
+      "source_label": "Reddit source pool",
+      "subreddits": [
+        "wallstreetbets",
+        "stocks",
+        "investing",
+        "StockMarket",
+        "options",
+        "Daytrading",
+        "pennystocks",
+        "ValueInvesting",
+        "SecurityAnalysis",
+        "algotrading",
+        "trading",
+        "Stock_Picks",
+        "dividends",
+        "finance",
+        "personalfinance",
+        "Bogleheads",
+        "dividendinvesting",
+        "SPACs",
+        "Shortsqueeze",
+        "RobinHood"
+      ]
+    }
+  ]
+}

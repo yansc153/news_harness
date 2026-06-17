@@ -1,0 +1,53 @@
+{
+  "object_type": "ContextManifest",
+  "context_manifest_id": "context_manifest_fixture_001",
+  "context_manifest_version": "context_manifest.v1",
+  "included_refs": [
+    {
+      "ref": "fixtures/sample_evidence.json",
+      "object_type": "RawEvidence",
+      "split_role": "dev",
+      "label_visibility": "hidden"
+    },
+    {
+      "ref": "fixtures/sample_candidate.json",
+      "object_type": "CandidateItem",
+      "split_role": "dev",
+      "label_visibility": "hidden"
+    },
+    {
+      "ref": "fixtures/sample_structure.json",
+      "object_type": "StructureAnalysis",
+      "split_role": "dev",
+      "label_visibility": "hidden"
+    }
+  ],
+  "excluded_refs": [
+    {
+      "ref": "fixtures/sample_outcome.json",
+      "reason": "outcome_label_hidden_until_eval",
+      "split_role": "eval"
+    },
+    {
+      "ref": "fixtures/sample_eval.json",
+      "reason": "eval_result_not_available_to_predictor",
+      "split_role": "eval"
+    }
+  ],
+  "split_roles": {
+    "included": [
+      "dev"
+    ],
+    "excluded": [
+      "eval"
+    ]
+  },
+  "label_visibility": "hidden_until_eval",
+  "summary_hash": "sha256:fixture-context-summary-001",
+  "redaction_status": "not_required",
+  "holdout_access_policy": {
+    "holdout_refs_allowed_in_generator_context": false,
+    "holdout_refs_present": false
+  },
+  "created_at": "2026-06-14T00:15:00Z"
+}

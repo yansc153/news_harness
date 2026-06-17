@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>牛子强 · news hardness</title>
+    <link rel="stylesheet" href="./styles.css?v=20260617-cuser4" />
+  </head>
+  <body>
+    <main class="factory-page">
+      <header class="site-header">
+        <a class="site-brand" href="./index.html">
+          <img src="./assets/news-hardness-logo.png" alt="牛子强" />
+          <span>牛子强</span>
+        </a>
+        <nav class="site-nav" aria-label="页面导航">
+          <a href="#quickStats">总览</a>
+          <a href="#timeline">队列</a>
+          <a href="#telemetryPanels">指标</a>
+        </nav>
+        <div class="site-actions">
+          <a class="site-button light" href="#timeline">看队列</a>
+          <a class="site-button dark" href="#telemetryPanels">看指标</a>
+        </div>
+      </header>
+
+      <section class="hero-stage" aria-label="原文雷达工厂">
+        <div class="hero-copy">
+          <h1>牛子强</h1>
+          <p>news hardness，全网爆款预判机：先从原文里抓爆点，再猜它会不会爆，几小时后自动回看结果，猜错就修正下一轮。</p>
+          <div class="hero-actions">
+            <a class="site-button light" href="#timeline">看今天可能爆的</a>
+            <a class="site-button ghost" href="#quickStats">看它怎么判断</a>
+          </div>
+          <section class="source-strip" aria-label="支持来源">
+            <span>文案支持</span>
+            <div class="source-logos">
+              <span class="source-logo x-logo" aria-label="推特 X">
+                <img src="./assets/source-logos/x.svg" alt="" />
+                <b>推特 / X</b>
+              </span>
+              <span class="source-logo xueqiu-logo" aria-label="雪球">
+                <img src="./assets/source-logos/xueqiu.svg" alt="" />
+                <b>雪球</b>
+              </span>
+              <span class="source-logo eastmoney-logo" aria-label="东方财富">
+                <img src="./assets/source-logos/eastmoney.svg" alt="" />
+                <b>东方财富</b>
+              </span>
+              <span class="source-logo reddit-logo" aria-label="Reddit">
+                <img src="./assets/source-logos/reddit.svg" alt="" />
+                <b>Reddit</b>
+              </span>
+            </div>
+          </section>
+        </div>
+
+        <section class="product-frame sf-dashboard-frame-in" aria-label="牛子强控制台">
+          <div class="window-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="app-shell">
+            <aside class="side-rail" aria-label="主导航">
+              <a class="back-link" href="../..">回到应用</a>
+              <nav class="rail-nav">
+                <a class="rail-item active" href="./index.html">原文雷达</a>
+                <a class="rail-item" href="#timeline">可能爆的</a>
+              </nav>
+            </aside>
+
+            <div class="page">
+              <header class="command-bar">
+                <a class="brand" href="./index.html">
+                  <span>牛子强 · news hardness</span>
+                </a>
+                <div class="command-actions">
+                  <span class="feed-pill" id="feedStatus">加载中</span>
+                  <section class="controls" aria-label="筛选">
+                    <label>
+                      <span>看多久</span>
+                      <select id="recentHours"></select>
+                    </label>
+                    <label>
+                      <span>先看</span>
+                      <select id="sortMode"></select>
+                    </label>
+                    <label>
+                      <span>来源</span>
+                      <select id="sourceFilter"></select>
+                    </label>
+                    <label>
+                      <span>语言</span>
+                      <select id="languageFilter">
+                        <option value="all">全部</option>
+                        <option value="zh">中文</option>
+                        <option value="en">英文</option>
+                      </select>
+                    </label>
+                  </section>
+                </div>
+              </header>
+
+              <section class="console-intro" aria-label="页面说明">
+                <p>找爆点 → 猜会不会爆 → 回头看结果 → 下一轮更准</p>
+                <h2>它不是新闻列表，是会复盘的爆款雷达。</h2>
+                <span>绿色表示已经看过结果，橙色表示还在观察。你只看结论，不用读系统黑话。</span>
+              </section>
+
+              <section class="signal-board" id="quickStats" aria-label="今日概览"></section>
+              <section class="language-tabs" id="languageRadar" aria-label="语言筛选"></section>
+              <section class="chart-grid" id="telemetryPanels" aria-label="运行指标"></section>
+              <section class="timeline" id="timeline" aria-label="原文队列"></section>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <dialog class="item-dialog" id="itemDialog">
+      <div class="dialog-panel">
+        <button class="dialog-close" id="dialogClose" type="button">关闭</button>
+        <div id="dialogBody"></div>
+      </div>
+    </dialog>
+
+    <script src="./app.js?v=20260617-cuser4"></script>
+  </body>
+</html>

@@ -1,0 +1,388 @@
+{
+  "object_type": "ShadowSourceFetchResult",
+  "shadow_result_id": "shadow_source_fetch_result_x_xueqiu_001",
+  "result_version": "shadow.source_fetch.fixture.v1",
+  "created_at": "2026-06-14T00:12:00Z",
+  "fixture_only": true,
+  "no_real_source_access": true,
+  "no_cookie_session_material": true,
+  "real_source_smoke_executed": false,
+  "production_connector_ready": false,
+  "connector_identity": {
+    "connector_id": "shadow.x_xueqiu.fixture.v1",
+    "connector_type": "shadow_fixture_projector",
+    "tool_name": "fixture.shadow_source_loader",
+    "tool_version": "shadow.source_fetch.fixture.v1"
+  },
+  "source_boundary": {
+    "x_list_entry_url": "https://x.com/i/lists/2056032482127175889?s=20",
+    "xueqiu_entry_url": "https://xueqiu.com/",
+    "allowed_sources": [
+      "x_list",
+      "xueqiu_daren",
+      "xueqiu_hot",
+      "xueqiu_dispute",
+      "reddit"
+    ],
+    "real_source_reach_proven": false,
+    "real_engagement_proven": false,
+    "legal_tos_eligibility_proven": false,
+    "session_state_used": false,
+    "raw_cookie_used": false,
+    "image_downloaded": false,
+    "blocked_until": [
+      "auth_boundary_review",
+      "legal_tos_review",
+      "rate_limit_review",
+      "read_only_boundary_review",
+      "redaction_smoke",
+      "production_connector_review"
+    ]
+  },
+  "projection_contract": {
+    "projects_to": "RadarTimelineItem",
+    "projector_version": "fixture.timeline_projector.v1",
+    "evidence_ref_policy": "fixture_json_pointer",
+    "image_policy": "reference_only_no_download_cache_proxy",
+    "hotness_series_units": "relative_fixture_score_0_to_1",
+    "outcome_ground_truth": "not_ground_truth_fixture_only",
+    "non_investment_advice": true
+  },
+  "items": [
+    {
+      "shadow_item_id": "shadow_x_list_001",
+      "source": "x_list",
+      "source_label": "X list",
+      "source_channel": "list_2056032482127175889",
+      "source_section": "x_list",
+      "source_entry_url": "https://x.com/i/lists/2056032482127175889?s=20",
+      "source_url": "fixture://shadow/x/list/2056032482127175889/post/shadow-x-001",
+      "canonical_url": "fixture://shadow/x/list/2056032482127175889/post/shadow-x-001",
+      "title": "Shadow X list post about agent reliability packaging",
+      "author": "shadow_x_author",
+      "published_at": "2026-06-14T00:11:00Z",
+      "fetched_at": "2026-06-14T00:12:00Z",
+      "evaluated_at": "2026-06-14T00:13:00Z",
+      "text_snapshot_ref": "fixtures/sample_shadow_source_fetch_result.json#items[0].quoted_spans[0]",
+      "quoted_spans": [
+        {
+          "quote_id": "shadow_x_list_001_quote_001",
+          "text": "Reliability is becoming a packaging problem: teams trust the runbook, replay, and rollback path before they trust the model size.",
+          "source_offsets": {
+            "start": 0,
+            "end": 118
+          }
+        }
+      ],
+      "image_refs": [],
+      "engagement_snapshot": {
+        "status": "shadow_fixture_metrics_not_ground_truth",
+        "observed_at": "2026-06-14T00:12:00Z",
+        "metrics": {
+          "reply_count": 18,
+          "repost_count": 31,
+          "like_count": 156
+        },
+        "metrics_are_fixture": true
+      },
+      "evidence_status": "shadow_fixture_only",
+      "rights_risk_flags": [
+        "fixture_only",
+        "reference_only",
+        "not_real_source_reach"
+      ],
+      "timeline_projection": {
+        "copy_text": "Reliability is being reframed as packaging: runbooks, replay, and rollback paths are carrying trust before model size does.",
+        "topic_or_hook": "operator_trust_reframe",
+        "image_status": "no_image",
+        "hotness_score": 0.73,
+        "hotness_series": [
+          0.16,
+          0.24,
+          0.35,
+          0.46,
+          0.58,
+          0.67,
+          0.73
+        ],
+        "timeline_status": "ranked_shadow_fixture",
+        "prediction_status": "shadow_fixture_prediction_not_ground_truth",
+        "outcome_status": "shadow_fixture_outcome_not_ground_truth"
+      }
+    },
+    {
+      "shadow_item_id": "shadow_xueqiu_hot_001",
+      "source": "xueqiu_hot",
+      "source_label": "雪球热门",
+      "source_channel": "xueqiu_hot",
+      "source_section": "xueqiu_hot",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_url": "fixture://shadow/xueqiu/hot/post/shadow-hot-001",
+      "canonical_url": "fixture://shadow/xueqiu/hot/post/shadow-hot-001",
+      "title": "Shadow Xueqiu hot discussion on expectation reset",
+      "author": "shadow_xueqiu_hot_author",
+      "published_at": "2026-06-14T00:10:00Z",
+      "fetched_at": "2026-06-14T00:12:10Z",
+      "evaluated_at": "2026-06-14T00:13:10Z",
+      "text_snapshot_ref": "fixtures/sample_shadow_source_fetch_result.json#items[1].quoted_spans[0]",
+      "quoted_spans": [
+        {
+          "quote_id": "shadow_xueqiu_hot_001_quote_001",
+          "text": "热门讨论把预期差拆成三个层级：信息差、交易拥挤度、以及谁先承认叙事已经变慢。",
+          "source_offsets": {
+            "start": 0,
+            "end": 41
+          }
+        }
+      ],
+      "image_refs": [
+        {
+          "image_ref_id": "shadow_xueqiu_hot_image_001",
+          "original_image_ref": "fixture://shadow/xueqiu/hot/post/shadow-hot-001/image/original-ref-only",
+          "thumbnail_ref": "fixture://shadow/xueqiu/hot/post/shadow-hot-001/image/thumb-ref-only",
+          "page_context_ref": "fixture://shadow/xueqiu/hot/post/shadow-hot-001#image-1",
+          "dimensions": {
+            "width": 960,
+            "height": 540
+          },
+          "alt": "shadow fixture chart reference",
+          "caption": "Shadow fixture preserves image reference only.",
+          "access_status": "referenced_only_not_downloaded",
+          "download_status": "not_downloaded_reference_only"
+        }
+      ],
+      "engagement_snapshot": {
+        "status": "shadow_fixture_metrics_not_ground_truth",
+        "observed_at": "2026-06-14T00:12:10Z",
+        "metrics": {
+          "comment_count": 64,
+          "reshare_count": 22,
+          "like_count": 211
+        },
+        "metrics_are_fixture": true
+      },
+      "evidence_status": "shadow_fixture_only",
+      "rights_risk_flags": [
+        "fixture_only",
+        "reference_only",
+        "not_real_source_reach"
+      ],
+      "timeline_projection": {
+        "copy_text": "热门讨论把预期差拆成信息差、拥挤度和叙事降速三个层级，争论焦点很集中。",
+        "topic_or_hook": "expectation_reset_stack",
+        "image_status": "available",
+        "hotness_score": 0.69,
+        "hotness_series": [
+          0.12,
+          0.2,
+          0.3,
+          0.43,
+          0.54,
+          0.63,
+          0.69
+        ],
+        "timeline_status": "ranked_shadow_fixture",
+        "prediction_status": "shadow_fixture_prediction_not_ground_truth",
+        "outcome_status": "shadow_fixture_outcome_not_ground_truth"
+      }
+    },
+    {
+      "shadow_item_id": "shadow_xueqiu_daren_001",
+      "source": "xueqiu_daren",
+      "source_label": "雪球达人",
+      "source_channel": "xueqiu_daren",
+      "source_section": "xueqiu_daren",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_url": "fixture://shadow/xueqiu/daren/post/shadow-daren-001",
+      "canonical_url": "fixture://shadow/xueqiu/daren/post/shadow-daren-001",
+      "title": "Shadow Xueqiu expert post compressing the dispute",
+      "author": "shadow_xueqiu_daren_author",
+      "published_at": "2026-06-14T00:09:00Z",
+      "fetched_at": "2026-06-14T00:12:20Z",
+      "evaluated_at": "2026-06-14T00:13:20Z",
+      "text_snapshot_ref": "fixtures/sample_shadow_source_fetch_result.json#items[2].quoted_spans[0]",
+      "quoted_spans": [
+        {
+          "quote_id": "shadow_xueqiu_daren_001_quote_001",
+          "text": "一条达人长帖把分歧点压缩成两个问题：共识何时形成，反身性何时退潮。",
+          "source_offsets": {
+            "start": 0,
+            "end": 34
+          }
+        }
+      ],
+      "image_refs": [
+        {
+          "image_ref_id": "shadow_xueqiu_daren_image_unavailable_001",
+          "original_image_ref": "fixture://shadow/xueqiu/daren/post/shadow-daren-001/image/auth-gated",
+          "page_context_ref": "fixture://shadow/xueqiu/daren/post/shadow-daren-001#image-1",
+          "dimensions": null,
+          "access_status": "image_unavailable",
+          "download_status": "blocked_fixture_no_real_source_access",
+          "structured_error": {
+            "code": "image_unavailable",
+            "message": "Shadow fixture models an inaccessible image reference without downloading, caching, proxying, or replacing it."
+          }
+        }
+      ],
+      "engagement_snapshot": {
+        "status": "shadow_fixture_metrics_not_ground_truth",
+        "observed_at": "2026-06-14T00:12:20Z",
+        "metrics": {
+          "comment_count": 41,
+          "reshare_count": 13,
+          "like_count": 138
+        },
+        "metrics_are_fixture": true
+      },
+      "evidence_status": "shadow_fixture_only",
+      "rights_risk_flags": [
+        "fixture_only",
+        "reference_only",
+        "not_real_source_reach",
+        "image_unavailable"
+      ],
+      "timeline_projection": {
+        "copy_text": "一条达人长帖把分歧点压缩成两个问题：共识何时形成，反身性何时退潮。",
+        "topic_or_hook": "controversy_compression",
+        "image_status": "image_unavailable",
+        "hotness_score": 0.64,
+        "hotness_series": [
+          0.08,
+          0.14,
+          0.26,
+          0.34,
+          0.46,
+          0.56,
+          0.64
+        ],
+        "timeline_status": "ranked_shadow_fixture",
+        "prediction_status": "shadow_fixture_prediction_not_ground_truth",
+        "outcome_status": "shadow_fixture_outcome_not_ground_truth"
+      }
+    },
+    {
+      "shadow_item_id": "shadow_xueqiu_dispute_001",
+      "source": "xueqiu_dispute",
+      "source_label": "雪球争议讨论",
+      "source_channel": "xueqiu_dispute",
+      "source_section": "xueqiu_dispute",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_url": "fixture://shadow/xueqiu/dispute/post/shadow-dispute-001",
+      "canonical_url": "fixture://shadow/xueqiu/dispute/post/shadow-dispute-001",
+      "title": "Shadow Xueqiu dispute thread with fast rebuttal loop",
+      "author": "shadow_xueqiu_dispute_author",
+      "published_at": "2026-06-14T00:08:00Z",
+      "fetched_at": "2026-06-14T00:12:30Z",
+      "evaluated_at": "2026-06-14T00:13:30Z",
+      "text_snapshot_ref": "fixtures/sample_shadow_source_fetch_result.json#items[3].quoted_spans[0]",
+      "quoted_spans": [
+        {
+          "quote_id": "shadow_xueqiu_dispute_001_quote_001",
+          "text": "争议讨论的传播点不是结论，而是反驳速度：每个观点都能在几分钟内找到对立证据。",
+          "source_offsets": {
+            "start": 0,
+            "end": 39
+          }
+        }
+      ],
+      "image_refs": [],
+      "engagement_snapshot": {
+        "status": "shadow_fixture_metrics_not_ground_truth",
+        "observed_at": "2026-06-14T00:12:30Z",
+        "metrics": {
+          "comment_count": 89,
+          "reshare_count": 9,
+          "like_count": 97
+        },
+        "metrics_are_fixture": true
+      },
+      "evidence_status": "shadow_fixture_only",
+      "rights_risk_flags": [
+        "fixture_only",
+        "reference_only",
+        "not_real_source_reach"
+      ],
+      "timeline_projection": {
+        "copy_text": "争议讨论的传播点不是结论，而是反驳速度：每个观点都很快遇到对立证据。",
+        "topic_or_hook": "fast_rebuttal_loop",
+        "image_status": "no_image",
+        "hotness_score": 0.61,
+        "hotness_series": [
+          0.1,
+          0.18,
+          0.25,
+          0.37,
+          0.44,
+          0.55,
+          0.61
+        ],
+        "timeline_status": "ranked_shadow_fixture",
+        "prediction_status": "shadow_fixture_prediction_not_ground_truth",
+        "outcome_status": "shadow_fixture_outcome_not_ground_truth"
+      }
+    }
+    ,
+    {
+      "shadow_item_id": "shadow_reddit_wallstreetbets_001",
+      "source": "reddit",
+      "source_label": "Reddit r/wallstreetbets",
+      "source_channel": "r/wallstreetbets",
+      "source_section": "reddit",
+      "source_entry_url": "https://www.reddit.com/r/wallstreetbets/",
+      "source_url": "fixture://shadow/reddit/r/wallstreetbets/comments/shadow-reddit-wsb-001",
+      "canonical_url": "fixture://shadow/reddit/r/wallstreetbets/comments/shadow-reddit-wsb-001",
+      "title": "Shadow Reddit thread about comment velocity",
+      "author": "shadow_reddit_wsb_author",
+      "published_at": "2026-06-15T00:35:00Z",
+      "fetched_at": "2026-06-15T00:40:00Z",
+      "evaluated_at": "2026-06-15T00:41:00Z",
+      "text_snapshot_ref": "fixtures/sample_shadow_source_fetch_result.json#items[4].quoted_spans[0]",
+      "quoted_spans": [
+        {
+          "quote_id": "shadow_reddit_wallstreetbets_001_quote_001",
+          "text": "The thread is less useful as a call and more useful as a speedometer for how fast the same narrative is attracting rebuttals.",
+          "source_offsets": {
+            "start": 0,
+            "end": 122
+          }
+        }
+      ],
+      "image_refs": [],
+      "engagement_snapshot": {
+        "status": "shadow_fixture_metrics_not_ground_truth",
+        "observed_at": "2026-06-15T00:40:00Z",
+        "metrics": {
+          "score": 412,
+          "comment_count": 126,
+          "upvote_ratio": 0.84
+        },
+        "metrics_are_fixture": true
+      },
+      "evidence_status": "shadow_fixture_only",
+      "rights_risk_flags": [
+        "fixture_only",
+        "reference_only",
+        "not_real_source_reach"
+      ],
+      "timeline_projection": {
+        "copy_text": "A Reddit thread is clustering around the same trade narrative but the useful signal is the comment velocity, not a directional call.",
+        "topic_or_hook": "comment_velocity_signal",
+        "image_status": "no_image",
+        "hotness_score": 0.67,
+        "hotness_series": [
+          0.09,
+          0.15,
+          0.24,
+          0.38,
+          0.49,
+          0.58,
+          0.67
+        ],
+        "timeline_status": "ranked_shadow_fixture",
+        "prediction_status": "shadow_fixture_prediction_not_ground_truth",
+        "outcome_status": "shadow_fixture_outcome_not_ground_truth"
+      }
+    }
+  ]
+}

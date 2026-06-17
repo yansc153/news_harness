@@ -1,0 +1,28 @@
+{
+  "object_type": "DeepSeekProviderConfig",
+  "config_version": "deepseek_provider.v1",
+  "model_provider": "deepseek",
+  "llm_mode": "production",
+  "dry_run_default": false,
+  "network_calls_allowed": true,
+  "api_key_ref": "secret_ref:deepseek_api_key_v1",
+  "api_key_env_var_name": "DEEPSEEK_API_KEY",
+  "api_key_file_path_ref": "secret_ref:filesystem:/tmp/news-harness-secrets/deepseek-api-key",
+  "model_id": "deepseek-chat",
+  "prompt_version": "prompt.deepseek.source_observation_scoring.v1",
+  "scoring_version": "deepseek_scoring.v1",
+  "timeout_ms": 30000,
+  "max_retries": 3,
+  "fallback_policy": {
+    "missing_key": "heuristic",
+    "timeout": "heuristic",
+    "rate_limited": "heuristic",
+    "provider_error": "heuristic"
+  },
+  "output_classification": "model_inference_not_ground_truth",
+  "prompt_injection_policy": {
+    "source_text_is_untrusted": true,
+    "source_text_can_never_override_runner": true,
+    "risk_flag": "prompt_injection_risk"
+  }
+}

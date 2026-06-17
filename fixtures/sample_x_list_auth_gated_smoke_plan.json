@@ -1,0 +1,77 @@
+{
+  "artifact_policy": {
+    "artifact_root": "artifacts/vps_source_runner/vps_auth_gated_runner_plan_001/x_list/{run_id}",
+    "preserve_original_image_refs": true,
+    "raw_session_material_allowed": false,
+    "real_engagement_status": "not_verified",
+    "source_evidence_status": "planned_not_collected"
+  },
+  "auth_boundary": {
+    "auth_requirement": "required",
+    "legal_tos_status": "unreviewed",
+    "secret_ref": "secret_ref:vps/news-harness/x-list/reader-account",
+    "session_state_approval_status": "pending_review",
+    "session_state_ref": "session_ref:vps/news-harness/x-list/storage-state"
+  },
+  "fixture_only": true,
+  "no_real_source_access": true,
+  "object_type": "AuthGatedSourceSmokePlan",
+  "plan_version": "x_list_auth_gated_smoke.fixture.v1",
+  "rate_limit_policy": {
+    "backoff_policy": "exponential_with_jitter",
+    "failure_budget_ref": "fixtures/sample_vps_source_runner_plan.json#runner_contract.failure_budget",
+    "rate_limit_status": "unverified",
+    "refresh_interval_seconds": 900
+  },
+  "read_only_boundary": {
+    "approved": false,
+    "allowed_actions": [
+      "open_list_view",
+      "refresh_list",
+      "read_posts",
+      "record_source_urls",
+      "record_original_image_refs"
+    ],
+    "forbidden_actions": [
+      "post",
+      "like",
+      "repost",
+      "follow",
+      "comment",
+      "dm",
+      "download_image",
+      "cache_image",
+      "bypass_challenge"
+    ]
+  },
+  "readiness": {
+    "blocked_reason": [
+      "auth_required",
+      "session_state_unapproved",
+      "legal_access_unapproved",
+      "rate_limit_unverified",
+      "read_only_boundary_unapproved",
+      "connector_not_ready"
+    ],
+    "fixture_ready": true,
+    "production_connector_ready": false,
+    "real_source_smoke_not_executed": true,
+    "vps_runner_plan_ready": true
+  },
+  "runner_mode": "vps_auth_gated_read_only_plan",
+  "smoke_execution": {
+    "executed": false,
+    "network_access": false,
+    "scheduler_started": false,
+    "status": "planned_not_executed",
+    "structured_error_if_run_now": {
+      "code": "connector_not_ready",
+      "message": "X list runner is plan-ready only; session/legal/rate/read-only approvals are incomplete.",
+      "retryable": false
+    }
+  },
+  "smoke_plan_id": "x_list_auth_gated_smoke_plan_001",
+  "source": "x",
+  "source_url": "https://x.com/i/lists/2056032482127175889?s=20",
+  "vps_runner_plan_ref": "fixtures/sample_vps_source_runner_plan.json"
+}

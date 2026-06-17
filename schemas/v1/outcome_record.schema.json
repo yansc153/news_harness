@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OutcomeRecord",
+  "description": "Factual revisit record captured at the scheduled window. Contains raw delta, snapshots, observation status, and structured failure state. This is NOT a learning decision — OutcomeEvaluation makes that call.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "object_type",
+    "outcome_id",
+    "candidate_id",
+    "source_evidence_ref",
+    "window",
+    "window_role",
+    "scheduled_for",
+    "collected_at",
+    "observation_status",
+    "metrics_source",
+    "source_availability",
+    "baseline_snapshot",
+    "current_snapshot",
+    "raw_delta",
+    "connector_quality_ref",
+    "failure_state"
+  ],
+  "properties": {
+    "object_type": {
+      "type": "string",
+      "const": "OutcomeRecord"
+    },
+    "outcome_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidate_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_evidence_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "window": {
+      "type": "string",
+      "enum": ["1h", "4h", "24h"]
+    },
+    "window_role": {
+      "type": "string",
+      "enum": ["early_momentum", "primary_outcome", "audit"]
+    },
+    "scheduled_for": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "collected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "observation_status": {
+      "type": "string",
+      "enum": ["observed", "missed", "partial", "error", "pending"]
+    },
+    "metrics_source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_availability": {
+      "type": "string",
+      "enum": ["available", "unavailable", "deleted", "auth_required"]
+    },
+    "baseline_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["likes", "comments", "shares", "views"],
+      "properties": {
+        "likes": { "type": ["number", "null"] },
+        "comments": { "type": ["number", "null"] },
+        "shares": { "type": ["number", "null"] },
+        "views": { "type": ["number", "null"] }
+      }
+    },
+    "current_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["likes", "comments", "shares", "views"],
+      "properties": {
+        "likes": { "type": ["number", "null"] },
+        "comments": { "type": ["number", "null"] },
+        "shares": { "type": ["number", "null"] },
+        "views": { "type": ["number", "null"] }
+      }
+    },
+    "raw_delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["likes", "comments", "shares", "views"],
+      "properties": {
+        "likes": { "type": ["number", "null"] },
+        "comments": { "type": ["number", "null"] },
+        "shares": { "type": ["number", "null"] },
+        "views": { "type": ["number", "null"] }
+      }
+    },
+    "connector_quality_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "failure_state": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "string",
+          "enum": [
+            "missing_outcome",
+            "metrics_unavailable",
+            "auth_failed",
+            "source_deleted",
+            "window_missed",
+            "metric_invalid",
+            "leakage_detected",
+            "risk_blocked",
+            "connector_unsupported"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "object_type": "ConnectorRun",
+  "connector_run_id": "connector_run_fixture_001",
+  "run_id": "run_fixture_replay_seed",
+  "tool_id": "fixture.fetch_candidates.v1",
+  "tool_name": "Fixture Candidate Reader",
+  "tool_version": "0.1.0",
+  "source": "fixture_source",
+  "source_entrance_id": "src_fixture_market_001",
+  "started_at": "2026-06-14T00:00:00Z",
+  "completed_at": "2026-06-14T00:00:01Z",
+  "status": "completed",
+  "input_ref": "fixtures/sample_source.json",
+  "output_ref": "fixtures/sample_evidence.json",
+  "structured_error": null,
+  "rate_limit_snapshot": {
+    "policy": "fixture_no_network",
+    "remaining": "unlimited_fixture",
+    "reset_at": null
+  },
+  "connector_identity": {
+    "connector_id": "fixture.connector.v1",
+    "connector_version": "0.1.0",
+    "auth_mode": "none",
+    "auth_requirement": "not_required",
+    "permission": [
+      "read-only",
+      "no-post",
+      "no-download",
+      "no-cache"
+    ]
+  },
+  "result": {
+    "candidate_refs": [
+      "fixtures/sample_candidate.json"
+    ],
+    "evidence_refs": [
+      "fixtures/sample_evidence.json"
+    ],
+    "facts": {
+      "candidate_count": 1,
+      "evidence_snapshot_count": 1
+    },
+    "derived": {},
+    "model_inference": {},
+    "errors": []
+  }
+}

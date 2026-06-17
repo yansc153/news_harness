@@ -1,0 +1,22 @@
+{
+  "threshold_version": "outcome_thresholds.v1",
+  "description": "V1 outcome thresholds for the deterministic outcome evaluator. Contains platform_min_denominator (minimum baseline denominator), platform_min_delta (minimum effective delta), and prediction_threshold (score above which a prediction is considered 'positive'). Launch constants — changes require a new versioned threshold file.",
+  "platform_thresholds": [
+    { "platform": "x", "window": "1h", "platform_min_denominator": 20, "platform_min_delta": 8 },
+    { "platform": "x", "window": "4h", "platform_min_denominator": 30, "platform_min_delta": 15 },
+    { "platform": "reddit", "window": "1h", "platform_min_denominator": 15, "platform_min_delta": 6 },
+    { "platform": "reddit", "window": "4h", "platform_min_denominator": 25, "platform_min_delta": 12 },
+    { "platform": "xueqiu", "window": "1h", "platform_min_denominator": 20, "platform_min_delta": 8 },
+    { "platform": "xueqiu", "window": "4h", "platform_min_denominator": 30, "platform_min_delta": 15 }
+  ],
+  "prediction_thresholds": [
+    { "window": "1h", "role": "early_momentum", "prediction_threshold": 0.60 },
+    { "window": "4h", "role": "primary_outcome", "prediction_threshold": 0.65 }
+  ],
+  "formulas": {
+    "relative_growth": "weighted_delta / max(weighted_baseline, platform_min_denominator[platform][window])",
+    "platform_normalized_growth": "clamp(weighted_delta / max(platform_p75_delta[platform][window], platform_min_delta[platform][window]), 0, 3)",
+    "author_normalized_growth": "null unless author_baseline_status == baseline_ready; clamp(weighted_delta / max(author_p75_delta[author][window], platform_min_delta[platform][window]), 0, 3)",
+    "hit_definition": "predicted_positive = prediction_score[window] >= prediction_threshold[window]; actual_positive = success_grade in ['meaningful', 'breakout']; hit = predicted_positive == actual_positive"
+  }
+}

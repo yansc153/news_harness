@@ -1,0 +1,44 @@
+{
+  "metric_map_version": "platform_metrics.v1",
+  "description": "V1 platform metric weights for the outcome evaluator. Maps each platform's engagement metrics to numeric weights used in weighted_delta and weighted_baseline calculations. These are launch constants — changes require a new versioned metric map.",
+  "platforms": {
+    "x": {
+      "label": "X (Twitter)",
+      "weights": {
+        "likes": 1.0, "comments": 4.0, "reposts": 6.0,
+        "quotes": 6.0, "shares": 6.0, "views": 0.05,
+        "hotlist": 0.0, "rank": 0.0
+      },
+      "stronger_signals": ["reposts", "quotes"],
+      "notes": "likes/score=1, comments/replies=4, reposts/quotes/shares=6, views/reads=0.05, hotlist/rank=0"
+    },
+    "reddit": {
+      "label": "Reddit",
+      "weights": {
+        "score": 1.0, "likes": 1.0, "comments": 5.0,
+        "reposts": 0.0, "quotes": 0.0, "shares": 0.0,
+        "views": 0.0, "hotlist": 3.0, "rank": 3.0
+      },
+      "stronger_signals": ["comments", "rank"],
+      "notes": "likes/score=1, comments/replies=5, reposts/quotes/shares=0, views/reads=0, hotlist/rank=3"
+    },
+    "xueqiu": {
+      "label": "Xueqiu (雪球)",
+      "weights": {
+        "likes": 1.0, "comments": 4.0, "reposts": 6.0,
+        "quotes": 6.0, "shares": 6.0, "views": 0.03,
+        "hotlist": 5.0, "rank": 5.0
+      },
+      "stronger_signals": ["comments", "reposts", "hotlist"],
+      "notes": "likes/score=1, comments/replies=4, reposts/quotes/shares=6, views/reads=0.03, hotlist/rank=5"
+    }
+  },
+  "metric_keys": {
+    "likes": "likes or score (platform-dependent)",
+    "comments": "comments or replies",
+    "reposts": "reposts, quotes, or retweets",
+    "shares": "shares (includes reposts)",
+    "views": "views, reads, or impressions",
+    "hotlist": "hotlist presence or rank movement"
+  }
+}

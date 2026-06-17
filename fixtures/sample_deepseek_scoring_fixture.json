@@ -1,0 +1,177 @@
+{
+  "object_type": "DeepSeekScoringFixture",
+  "scoring_run_id": "deepseek_scoring_fixture_001",
+  "scoring_version": "deepseek_scoring.fixture.v1",
+  "prompt_version": "prompt.deepseek.source_observation_scoring.fixture.v1",
+  "created_at": "2026-06-15T03:01:00Z",
+  "fixture_only": true,
+  "llm_mode": "fixture",
+  "no_real_model_call": true,
+  "no_real_source_access": true,
+  "model_provider": "deepseek",
+  "model_id": "deepseek-chat-fixture",
+  "model_config": {
+    "network_calls_allowed": false,
+    "api_key_ref": "secret_ref:deepseek_api_key_v1",
+    "api_key_env_var_name": "DEEPSEEK_API_KEY",
+    "temperature": 0,
+    "max_output_tokens": 0
+  },
+  "input_ref": "fixtures/sample_all_source_runner_dry_run.json#observations",
+  "provider_status": {
+    "api_key_present": false,
+    "provider_called": false,
+    "fallback_used": "fixture_scoring",
+    "structured_error": {
+      "code": "auth_required",
+      "stage": "deepseek_fixture_mode",
+      "message": "No API key is read during fixture scoring.",
+      "retryable": false
+    }
+  },
+  "prompt_injection_policy": {
+    "source_text_is_untrusted": true,
+    "source_text_can_never_override_runner": true,
+    "risk_flag": "prompt_injection_risk"
+  },
+  "scored_candidates": [
+    {
+      "candidate_id": "scored_all_source_x_list_001",
+      "source_observation_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[0]",
+      "input_evidence_refs": [
+        "fixtures/sample_all_source_runner_dry_run.json#observations[0]"
+      ],
+      "model_provider": "deepseek",
+      "model_id": "deepseek-chat-fixture",
+      "prompt_version": "prompt.deepseek.source_observation_scoring.fixture.v1",
+      "scoring_version": "deepseek_scoring.fixture.v1",
+      "evaluated_at": "2026-06-15T03:01:00Z",
+      "topic_or_hook": "operator_trust_replay",
+      "hotness_score": 0.81,
+      "risk_flags": [
+        "model_inference_not_ground_truth"
+      ],
+      "rationale": "Fixture scoring marks the post as high-spread because it packages trust as a repeatable operator workflow.",
+      "feature_contributions": {
+        "novelty": 0.21,
+        "clarity": 0.2,
+        "discussion_potential": 0.22,
+        "evidence_integrity": 0.18
+      },
+      "output_hash": "sha256:deepseek-fixture-x-list-001",
+      "structured_error": null
+    },
+    {
+      "candidate_id": "scored_all_source_xueqiu_hot_001",
+      "source_observation_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[1]",
+      "input_evidence_refs": [
+        "fixtures/sample_all_source_runner_dry_run.json#observations[1]"
+      ],
+      "model_provider": "deepseek",
+      "model_id": "deepseek-chat-fixture",
+      "prompt_version": "prompt.deepseek.source_observation_scoring.fixture.v1",
+      "scoring_version": "deepseek_scoring.fixture.v1",
+      "evaluated_at": "2026-06-15T03:01:00Z",
+      "topic_or_hook": "discussion_quality_signal",
+      "hotness_score": 0.66,
+      "risk_flags": [
+        "model_inference_not_ground_truth"
+      ],
+      "rationale": "Fixture scoring sees debate quality as spreadable but keeps engagement unverified.",
+      "feature_contributions": {
+        "novelty": 0.15,
+        "clarity": 0.17,
+        "discussion_potential": 0.2,
+        "evidence_integrity": 0.14
+      },
+      "output_hash": "sha256:deepseek-fixture-xueqiu-hot-001",
+      "structured_error": null
+    },
+    {
+      "candidate_id": "scored_all_source_xueqiu_daren_001",
+      "source_observation_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[2]",
+      "input_evidence_refs": [
+        "fixtures/sample_all_source_runner_dry_run.json#observations[2]"
+      ],
+      "model_provider": "deepseek",
+      "model_id": "deepseek-chat-fixture",
+      "prompt_version": "prompt.deepseek.source_observation_scoring.fixture.v1",
+      "scoring_version": "deepseek_scoring.fixture.v1",
+      "evaluated_at": "2026-06-15T03:01:00Z",
+      "topic_or_hook": "expert_checklist_angle",
+      "hotness_score": 0.62,
+      "risk_flags": [
+        "model_inference_not_ground_truth"
+      ],
+      "rationale": "Fixture scoring favors checklist framing because it is easy to quote and debate.",
+      "feature_contributions": {
+        "novelty": 0.13,
+        "clarity": 0.21,
+        "discussion_potential": 0.16,
+        "evidence_integrity": 0.12
+      },
+      "output_hash": "sha256:deepseek-fixture-xueqiu-daren-001",
+      "structured_error": null
+    },
+    {
+      "candidate_id": "scored_all_source_xueqiu_dispute_001",
+      "source_observation_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[3]",
+      "input_evidence_refs": [
+        "fixtures/sample_all_source_runner_dry_run.json#observations[3]"
+      ],
+      "model_provider": "deepseek",
+      "model_id": "deepseek-chat-fixture",
+      "prompt_version": "prompt.deepseek.source_observation_scoring.fixture.v1",
+      "scoring_version": "deepseek_scoring.fixture.v1",
+      "evaluated_at": "2026-06-15T03:01:00Z",
+      "topic_or_hook": "controversy_without_ground_truth",
+      "hotness_score": 0.58,
+      "risk_flags": [
+        "model_inference_not_ground_truth",
+        "controversy_risk"
+      ],
+      "rationale": "Fixture scoring preserves dispute risk and does not treat the argument as factual ground truth.",
+      "feature_contributions": {
+        "novelty": 0.12,
+        "clarity": 0.12,
+        "discussion_potential": 0.22,
+        "evidence_integrity": 0.12
+      },
+      "output_hash": "sha256:deepseek-fixture-xueqiu-dispute-001",
+      "structured_error": null
+    },
+    {
+      "candidate_id": "scored_all_source_reddit_wallstreetbets_001",
+      "source_observation_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[4]",
+      "input_evidence_refs": [
+        "fixtures/sample_all_source_runner_dry_run.json#observations[4]"
+      ],
+      "model_provider": "deepseek",
+      "model_id": "deepseek-chat-fixture",
+      "prompt_version": "prompt.deepseek.source_observation_scoring.fixture.v1",
+      "scoring_version": "deepseek_scoring.fixture.v1",
+      "evaluated_at": "2026-06-15T03:01:00Z",
+      "topic_or_hook": "comment_velocity_meme_risk",
+      "hotness_score": 0.64,
+      "risk_flags": [
+        "model_inference_not_ground_truth",
+        "community_slang_risk",
+        "prompt_injection_risk"
+      ],
+      "rationale": "Fixture scoring treats rapid discussion as useful while flagging slang and prompt-injection risk.",
+      "feature_contributions": {
+        "novelty": 0.14,
+        "clarity": 0.11,
+        "discussion_potential": 0.25,
+        "evidence_integrity": 0.14
+      },
+      "output_hash": "sha256:deepseek-fixture-reddit-wsb-001",
+      "structured_error": null
+    }
+  ],
+  "ground_truth_policy": {
+    "llm_output_is_ground_truth": false,
+    "revisit_outcome_required_for_truth": true,
+    "do_not_replace_12h_24h_outcome": true
+  }
+}

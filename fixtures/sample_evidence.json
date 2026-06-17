@@ -1,0 +1,77 @@
+{
+  "object_type": "RawEvidence",
+  "evidence_id": "evidence_fixture_001",
+  "source_url": "fixture://source/post/001",
+  "canonical_url": "fixture://source/post/001",
+  "source": "fixture_source",
+  "source_channel": "fixture-board",
+  "title": "Fixture post with early discussion and chart reference",
+  "author": "fixture_author",
+  "published_at": "2026-06-14T00:00:00Z",
+  "fetched_at": "2026-06-14T00:10:00Z",
+  "evaluated_at": "2026-06-14T00:15:00Z",
+  "text_snapshot_ref": "fixture://snapshots/text/evidence_fixture_001",
+  "quoted_spans": [
+    {
+      "span_id": "quote_fixture_001",
+      "snapshot_ref": "fixture://snapshots/text/evidence_fixture_001",
+      "source_url": "fixture://source/post/001",
+      "quote": "The discussion is accelerating around a new policy interpretation.",
+      "start_char": 0,
+      "end_char": 67
+    }
+  ],
+  "image_refs": [
+    {
+      "image_ref_id": "image_fixture_001",
+      "original_image_ref": "fixture://source/post/001/image/original-ref-only",
+      "page_context_ref": "fixture://source/post/001#image-1",
+      "thumbnail_ref": "fixture://source/post/001/image/thumb-ref-only",
+      "dimensions": {
+        "width": 1280,
+        "height": 720
+      },
+      "alt": "fixture chart reference",
+      "caption": "Reference-only chart image; not downloaded or cached.",
+      "access_status": "referenced_only_not_downloaded",
+      "redaction_status": "not_required"
+    }
+  ],
+  "engagement_snapshot": {
+    "observed_at": "2026-06-14T00:15:00Z",
+    "metrics": {
+      "likes": 12,
+      "comments": 5,
+      "reshares": 1,
+      "bookmarks": 0,
+      "views": null
+    },
+    "metrics_status": "fixture_observed",
+    "is_fixture_observation": true,
+    "not_ground_truth": true
+  },
+  "connector_identity": {
+    "connector_run_id": "connector_run_fixture_001",
+    "tool_id": "fixture.fetch_candidates.v1",
+    "connector_id": "fixture.connector.v1"
+  },
+  "tool_name": "Fixture Candidate Reader",
+  "tool_version": "0.1.0",
+  "content_hash": "sha256:fixture-evidence-001",
+  "snapshot_id": "snapshot_fixture_001",
+  "rights_risk_flags": [
+    "fixture_only",
+    "image_reference_only"
+  ],
+  "evidence_status": "available_fixture",
+  "content_retention_policy": {
+    "text": "reference_and_short_quote_only",
+    "image": "reference_only_no_download_no_cache_no_proxy",
+    "full_text_snapshot": "fixture_ref_only"
+  },
+  "legal_access_mode": "fixture_synthetic",
+  "retention_reason": "fixture_contract_validation",
+  "retention_ttl": "not_applicable_fixture",
+  "dataset_split_ref": "split_fixture_dev_2026_06_14",
+  "split_role": "dev"
+}

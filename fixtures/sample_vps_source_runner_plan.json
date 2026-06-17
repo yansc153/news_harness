@@ -1,0 +1,193 @@
+{
+  "artifact_layout": {
+    "root": "artifacts/vps_source_runner/{runner_plan_id}/{run_id}",
+    "allowed_artifacts": [
+      "run_manifest.json",
+      "connector_run.json",
+      "structured_errors.jsonl",
+      "source_observations.jsonl",
+      "raw_evidence_refs.jsonl",
+      "image_reference_manifest.json",
+      "redaction_report.json"
+    ],
+    "forbidden_artifacts": [
+      "raw_session_state.json",
+      "raw_response_cookie_jar.json",
+      "downloaded_images/",
+      "cached_media/",
+      "screenshots_with_private_state/"
+    ],
+    "image_policy": "preserve_original_image_refs_only_no_download_cache_proxy_or_rehost",
+    "retention_policy": "append_only_refs_no_raw_session_material"
+  },
+  "config_ref": "configs/vps_auth_gated_sources.example.json",
+  "created_at": "2026-06-14T00:00:00Z",
+  "fixture_only": true,
+  "no_real_scheduler": true,
+  "no_real_source_access": true,
+  "object_type": "VpsAuthGatedSourceRunnerPlan",
+  "plan_version": "vps_auth_gated_runner.fixture.v1",
+  "readiness_summary": {
+    "fixture_ready": true,
+    "production_connector_ready": false,
+    "real_source_smoke_not_executed": true,
+    "vps_runner_plan_ready": true,
+    "x_list_blocked_until": [
+      "approved_session_state_ref",
+      "legal_tos_review",
+      "rate_limit_review",
+      "approved_read_only_boundary",
+      "connector_schema_review"
+    ],
+    "xueqiu_browser_assisted_does_not_override_readiness": true
+  },
+  "runner_contract": {
+    "backoff_policy": {
+      "initial_delay_seconds": 60,
+      "max_delay_seconds": 1800,
+      "mode": "exponential_with_jitter"
+    },
+    "failure_budget": {
+      "cooldown_seconds_after_budget_exhausted": 3600,
+      "max_consecutive_failures": 3,
+      "max_failures_per_hour": 5
+    },
+    "forbidden_actions": [
+      "post",
+      "like",
+      "repost",
+      "follow",
+      "comment",
+      "dm",
+      "download_image",
+      "cache_image",
+      "bypass_challenge"
+    ],
+    "lifecycle": [
+      "load_config_refs",
+      "resolve_session_refs_at_deploy_time",
+      "perform_read_only_healthcheck",
+      "refresh_source_view",
+      "emit_connector_run",
+      "write_structured_errors",
+      "write_evidence_and_image_refs",
+      "redact_and_validate_artifacts",
+      "stop_on_budget_or_boundary_violation"
+    ],
+    "permission_mode": "read_only",
+    "refresh_interval_seconds": 900,
+    "session_refresh_policy": {
+      "manual_rotation_required": true,
+      "refresh_on_auth_expired": "stop_and_request_human_session_refresh",
+      "silent_relogin_allowed": false
+    },
+    "stop_conditions": [
+      "raw_session_material_detected",
+      "read_only_boundary_violation",
+      "legal_tos_review_missing",
+      "rate_limit_policy_missing",
+      "captcha_or_login_challenge",
+      "account_risk_or_lock_warning",
+      "image_download_required",
+      "structured_error_budget_exhausted"
+    ]
+  },
+  "runner_plan_id": "vps_auth_gated_runner_plan_001",
+  "secret_redaction_policy": {
+    "raw_secret_values_allowed": false,
+    "redaction_guardrail": "fail_closed",
+    "secret_refs_only": true,
+    "session_state_refs_only": true,
+    "structured_errors_must_not_include_session_material": true
+  },
+  "smoke_plans": [
+    "fixtures/sample_x_list_auth_gated_smoke_plan.json",
+    "fixtures/sample_xueqiu_browser_assisted_smoke_plan.json"
+  ],
+  "sources": [
+    {
+      "auth_boundary": {
+        "auth_requirement": "required",
+        "legal_tos_status": "unreviewed",
+        "secret_ref": "secret_ref:vps/news-harness/x-list/reader-account",
+        "session_state_approval_status": "pending_review",
+        "session_state_ref": "session_ref:vps/news-harness/x-list/storage-state"
+      },
+      "blocked_reason": [
+        "auth_required",
+        "session_state_unapproved",
+        "legal_access_unapproved",
+        "rate_limit_unverified",
+        "read_only_boundary_unapproved",
+        "connector_not_ready"
+      ],
+      "production_connector_ready": false,
+      "read_only_boundary": {
+        "approved": false,
+        "allowed_actions": [
+          "open_list_view",
+          "refresh_list",
+          "read_posts",
+          "record_source_urls",
+          "record_original_image_refs"
+        ],
+        "forbidden_actions": [
+          "post",
+          "like",
+          "repost",
+          "follow",
+          "comment",
+          "dm",
+          "download_image",
+          "cache_image"
+        ]
+      },
+      "real_source_smoke_executed": false,
+      "runner_mode": "vps_auth_gated_read_only_plan",
+      "source": "x",
+      "source_url": "https://x.com/i/lists/2056032482127175889?s=20",
+      "target_content_types": [
+        "kol_original_opinion",
+        "hot_post",
+        "dispute_discussion",
+        "early_spread_candidate"
+      ],
+      "vps_runner_plan_ready": true
+    },
+    {
+      "blocked_reason": [
+        "planned",
+        "browser_assisted_required",
+        "session_optional_unverified",
+        "legal_access_unapproved",
+        "rate_limit_unverified",
+        "connector_not_ready",
+        "insufficient_evidence",
+        "image_unavailable"
+      ],
+      "browser_assisted_required": true,
+      "production_connector_ready": false,
+      "real_source_smoke_executed": false,
+      "runner_mode": "browser_assisted_plan_only",
+      "session_boundary": {
+        "auth_requirement": "session_optional_unverified",
+        "secret_ref": null,
+        "session_state_ref": null,
+        "session_state_approval_status": "not_configured"
+      },
+      "source": "xueqiu",
+      "source_url": "https://xueqiu.com/",
+      "target_content_types": [
+        "kol_original_opinion",
+        "hot_post",
+        "dispute_discussion"
+      ],
+      "target_sections": [
+        "达人",
+        "热门",
+        "争议讨论"
+      ],
+      "vps_runner_plan_ready": false
+    }
+  ]
+}

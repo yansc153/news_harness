@@ -1,0 +1,145 @@
+{
+  "created_at": "2026-06-15T01:00:00Z",
+  "fixture_only": true,
+  "no_real_source_access": true,
+  "object_type": "RevisitSchedule",
+  "schedule_id": "revisit_schedule_fixture_001",
+  "schedule_version": "rolling.revisit_schedule.fixture.v1",
+  "task_policy": {
+    "engagement_source": "same_source_link_fixture_sampling",
+    "fixture_outcomes_are_ground_truth": false,
+    "revisit_windows_hours": [
+      12,
+      24
+    ]
+  },
+  "tasks": [
+    {
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[0]",
+      "item_id": "radar_shadow_x_list_001",
+      "revisit_task_id": "revisit_radar_shadow_x_list_001_12h",
+      "revisit_window_hours": 12,
+      "scheduled_for": "2026-06-14T12:13:00Z",
+      "source_link": "fixture://shadow/x/list/2056032482127175889/post/shadow-x-001",
+      "status": "pending_fixture_revisit"
+    },
+    {
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[0]",
+      "item_id": "radar_shadow_x_list_001",
+      "revisit_task_id": "revisit_radar_shadow_x_list_001_24h",
+      "revisit_window_hours": 24,
+      "scheduled_for": "2026-06-15T00:13:00Z",
+      "source_link": "fixture://shadow/x/list/2056032482127175889/post/shadow-x-001",
+      "status": "sampled_fixture_revisit_not_ground_truth"
+    },
+    {
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[1]",
+      "item_id": "radar_shadow_xueqiu_hot_001",
+      "revisit_task_id": "revisit_radar_shadow_xueqiu_hot_001_12h",
+      "revisit_window_hours": 12,
+      "scheduled_for": "2026-06-14T12:13:10Z",
+      "source_link": "fixture://shadow/xueqiu/hot/post/shadow-hot-001",
+      "status": "sampled_fixture_revisit_not_ground_truth"
+    },
+    {
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[1]",
+      "item_id": "radar_shadow_xueqiu_hot_001",
+      "revisit_task_id": "revisit_radar_shadow_xueqiu_hot_001_24h",
+      "revisit_window_hours": 24,
+      "scheduled_for": "2026-06-15T00:13:10Z",
+      "source_link": "fixture://shadow/xueqiu/hot/post/shadow-hot-001",
+      "status": "pending_fixture_revisit"
+    },
+    {
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[4]",
+      "item_id": "radar_shadow_reddit_wallstreetbets_001",
+      "revisit_task_id": "revisit_radar_shadow_reddit_wallstreetbets_001_12h",
+      "revisit_window_hours": 12,
+      "scheduled_for": "2026-06-15T12:40:00Z",
+      "source_link": "fixture://shadow/reddit/r/wallstreetbets/comments/shadow-reddit-wsb-001",
+      "status": "pending_fixture_revisit"
+    },
+    {
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[4]",
+      "item_id": "radar_shadow_reddit_wallstreetbets_001",
+      "revisit_task_id": "revisit_radar_shadow_reddit_wallstreetbets_001_24h",
+      "revisit_window_hours": 24,
+      "scheduled_for": "2026-06-16T00:40:00Z",
+      "source_link": "fixture://shadow/reddit/r/wallstreetbets/comments/shadow-reddit-wsb-001",
+      "status": "pending_fixture_revisit"
+    },
+    {
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[2]",
+      "item_id": "radar_shadow_xueqiu_daren_001",
+      "revisit_task_id": "revisit_radar_shadow_xueqiu_daren_001_12h",
+      "revisit_window_hours": 12,
+      "scheduled_for": "2026-06-14T12:13:20Z",
+      "source_link": "fixture://shadow/xueqiu/daren/post/shadow-daren-001",
+      "status": "sampled_fixture_revisit_not_ground_truth"
+    },
+    {
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[2]",
+      "item_id": "radar_shadow_xueqiu_daren_001",
+      "revisit_task_id": "revisit_radar_shadow_xueqiu_daren_001_24h",
+      "revisit_window_hours": 24,
+      "scheduled_for": "2026-06-15T00:13:20Z",
+      "source_link": "fixture://shadow/xueqiu/daren/post/shadow-daren-001",
+      "status": "pending_fixture_revisit"
+    },
+    {
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[3]",
+      "item_id": "radar_shadow_xueqiu_dispute_001",
+      "revisit_task_id": "revisit_radar_shadow_xueqiu_dispute_001_12h",
+      "revisit_window_hours": 12,
+      "scheduled_for": "2026-06-14T12:13:30Z",
+      "source_link": "fixture://shadow/xueqiu/dispute/post/shadow-dispute-001",
+      "status": "sampled_fixture_revisit_not_ground_truth"
+    },
+    {
+      "evidence_ref": "fixtures/sample_shadow_source_fetch_result.json#items[3]",
+      "item_id": "radar_shadow_xueqiu_dispute_001",
+      "revisit_task_id": "revisit_radar_shadow_xueqiu_dispute_001_24h",
+      "revisit_window_hours": 24,
+      "scheduled_for": "2026-06-15T00:13:30Z",
+      "source_link": "fixture://shadow/xueqiu/dispute/post/shadow-dispute-001",
+      "status": "pending_fixture_revisit"
+    },
+    {
+      "evidence_ref": "fixtures/sample_evidence.json",
+      "item_id": "radar_timeline_fixture_001",
+      "revisit_task_id": "revisit_radar_timeline_fixture_001_12h",
+      "revisit_window_hours": 12,
+      "scheduled_for": "2026-06-14T12:00:00Z",
+      "source_link": "fixture://source/post/001",
+      "status": "sampled_fixture_revisit_not_ground_truth"
+    },
+    {
+      "evidence_ref": "fixtures/sample_evidence.json",
+      "item_id": "radar_timeline_fixture_001",
+      "revisit_task_id": "revisit_radar_timeline_fixture_001_24h",
+      "revisit_window_hours": 24,
+      "scheduled_for": "2026-06-15T00:00:00Z",
+      "source_link": "fixture://source/post/001",
+      "status": "pending_fixture_revisit"
+    },
+    {
+      "evidence_ref": "fixtures/sample_x_list_secret_ref_dry_run.json#observation",
+      "item_id": "radar_x_list_secret_ref_dry_run_001",
+      "revisit_task_id": "revisit_radar_x_list_secret_ref_dry_run_001_12h",
+      "revisit_window_hours": 12,
+      "scheduled_for": "2026-06-15T14:05:00Z",
+      "source_link": "fixture://dry-run/x/list/2056032482127175889/post/secret-ref-shadow-001",
+      "status": "pending_fixture_revisit"
+    },
+    {
+      "evidence_ref": "fixtures/sample_x_list_secret_ref_dry_run.json#observation",
+      "item_id": "radar_x_list_secret_ref_dry_run_001",
+      "revisit_task_id": "revisit_radar_x_list_secret_ref_dry_run_001_24h",
+      "revisit_window_hours": 24,
+      "scheduled_for": "2026-06-16T02:05:00Z",
+      "source_link": "fixture://dry-run/x/list/2056032482127175889/post/secret-ref-shadow-001",
+      "status": "pending_fixture_revisit"
+    }
+  ],
+  "timeline_store_ref": "fixtures/timeline_store.json"
+}

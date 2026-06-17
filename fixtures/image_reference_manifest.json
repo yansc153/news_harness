@@ -1,0 +1,6 @@
+{
+  "object_type": "ImageReferenceManifest",
+  "manifest_version": "image_refs.v1",
+  "policy": "preserve_original_image_refs_only_no_download_cache_proxy_or_rehost",
+  "images": []
+}

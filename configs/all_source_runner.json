@@ -1,0 +1,43 @@
+{
+  "object_type": "AllSourceRunnerConfig",
+  "config_version": "all_source_runner.v1",
+  "runtime_mode": "manual-smoke",
+  "dry_run_default": false,
+  "fixture_only": false,
+  "no_real_source_access": false,
+  "network_fetch_allowed": true,
+  "browser_automation_allowed": false,
+  "real_scheduler_allowed": true,
+  "source_observation_schema_version": "source_observation.v1",
+  "batch_policy": {
+    "batch_processing_required": true,
+    "per_item_full_serial_pipeline_allowed": false,
+    "max_items_per_source_per_run": 10,
+    "continue_on_source_error": true
+  },
+  "sources": [
+    {
+      "source": "x_list",
+      "source_label": "X list",
+      "source_entry_url": "https://x.com/i/lists/2056032482127175889?s=20",
+      "refresh_interval_seconds": 1800,
+      "batch_limit": 10,
+      "two_level_crawl": false,
+      "secret_ref": "secret_ref:x_list_reader_cookie_v1",
+      "cookie_file_env_var_name": "NEWS_HARNESS_X_COOKIE_FILE"
+    }
+  ],
+  "forbidden_actions": [
+    "login",
+    "open_chrome",
+    "post",
+    "like",
+    "repost",
+    "follow",
+    "comment",
+    "dm",
+    "download_image",
+    "cache_image",
+    "bypass_challenge"
+  ]
+}

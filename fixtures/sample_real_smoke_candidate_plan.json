@@ -1,0 +1,107 @@
+{
+  "allowed_next_source_types": [
+    "rss",
+    "public_web"
+  ],
+  "blocked_sources": {
+    "x": [
+      "auth_required",
+      "auth_boundary_failed",
+      "legal_access_unapproved",
+      "rate_limit_unverified",
+      "connector_not_ready"
+    ],
+    "xueqiu": [
+      "planned",
+      "legal_access_unapproved",
+      "rate_limit_unverified",
+      "connector_not_ready",
+      "insufficient_evidence",
+      "image_unavailable"
+    ]
+  },
+  "candidate_plan_id": "real_smoke_candidate_plan_001",
+  "candidates": [
+    {
+      "agent_reach_role": "not_executed_planned_capability_only",
+      "auth_mode": "session_optional_unverified",
+      "auth_requirement": "unverified",
+      "blocked_reason": [
+        "planned",
+        "legal_access_unapproved",
+        "rate_limit_unverified",
+        "connector_not_ready",
+        "insufficient_evidence",
+        "image_unavailable"
+      ],
+      "browser_requirement": "unverified_assumption_may_need_interaction_or_refresh",
+      "connector_readiness": "not_ready",
+      "engagement_observability": "unverified",
+      "image_evidence_status": "unverified_reference_only_required",
+      "legal_tos_status": "unreviewed",
+      "next_action": "Keep Xueqiu in source pool intake, then write connector/readiness fixtures before any source smoke.",
+      "rate_limit_status": "unverified",
+      "real_smoke_candidate_ready": false,
+      "recommendation": "not_recommended_for_first_real_smoke",
+      "secret_ref_policy": {
+        "raw_secret_allowed": false,
+        "secret_ref": null,
+        "session_state_ref": null,
+        "storage": "none_in_fixture_runtime"
+      },
+      "smoke_eligibility": "blocked_until_readiness",
+      "source": "xueqiu",
+      "source_pool_entry_id": "source_pool_xueqiu_001",
+      "source_status": "planned",
+      "source_url": "https://xueqiu.com/"
+    },
+    {
+      "agent_reach_role": "not_executed_planned_capability_only",
+      "auth_mode": "session_required",
+      "auth_requirement": "required",
+      "blocked_reason": [
+        "auth_required",
+        "auth_boundary_failed",
+        "legal_access_unapproved",
+        "rate_limit_unverified",
+        "connector_not_ready",
+        "insufficient_evidence"
+      ],
+      "browser_requirement": "not_allowed_in_fixture",
+      "connector_readiness": "blocked_auth_boundary_missing",
+      "engagement_observability": "auth_gated_unverified",
+      "image_evidence_status": "auth_gated_unverified",
+      "legal_tos_status": "unreviewed",
+      "next_action": "Do not smoke this X list until auth/session boundary, legal/ToS review, and connector contract are complete.",
+      "rate_limit_status": "unverified",
+      "real_smoke_candidate_ready": false,
+      "recommendation": "blocked_for_real_smoke",
+      "secret_ref_policy": {
+        "raw_secret_allowed": false,
+        "secret_ref": null,
+        "session_state_ref": null,
+        "storage": "none_in_fixture_runtime"
+      },
+      "smoke_eligibility": "blocked_for_real_smoke",
+      "source": "x",
+      "source_pool_entry_id": "source_pool_x_list_001",
+      "source_status": "auth_required",
+      "source_url": "https://x.com/i/lists/2056032482127175889?s=20"
+    }
+  ],
+  "created_at": "2026-06-14T00:00:00Z",
+  "decision_summary": "The user-provided Xueqiu and X list entrances are registered for audit only. Neither is ready for real-source smoke. The next low-risk read-only smoke candidate remains an RSS source type, with public web only after registry/readiness admission.",
+  "fixture_only": true,
+  "no_real_source_access": true,
+  "object_type": "RealSmokeCandidatePlan",
+  "plan_version": "real_smoke_candidate.fixture.v1",
+  "ready_user_sources": [],
+  "recommended_first_smoke_source_type": "rss",
+  "recommended_next_smoke_candidate": {
+    "reason": "The current user-provided entrances are blocked or unverified; a simple RSS source type has the lowest auth/session and image evidence risk for a first read-only smoke.",
+    "recommendation": "recommended_source_type_not_registered_in_user_intake",
+    "source_pool_entry_id": null,
+    "source_type": "rss"
+  },
+  "source_pool_intake_ref": "fixtures/sample_source_pool_intake.json"
+}

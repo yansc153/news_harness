@@ -1,0 +1,117 @@
+{
+  "object_type": "SourceScoreSet",
+  "source_score_set_id": "source_score_fixture_set_001",
+  "score_version": "source_score.fixture.v1",
+  "source_registry_ref": "fixtures/sample_source_registry.json",
+  "scoring_policy": {
+    "purpose": "watch_priority_scan_frequency_budget_only",
+    "can_override_readiness_gate": false,
+    "not_ground_truth": true
+  },
+  "scores": [
+    {
+      "source_score_id": "source_score_fixture_001",
+      "source_entrance_id": "src_fixture_market_001",
+      "source_registry_id": "registry_fixture_source_v1",
+      "source_score": 0.58,
+      "watch_priority": "fixture_medium",
+      "scan_frequency": "manual_fixture",
+      "budget_class": "fixture_small",
+      "required_auth_state": "not_required",
+      "min_connector_status": "fixture_connector_ready",
+      "can_override_readiness_gate": false,
+      "candidate_discovery_intent": "allow_if_readiness_allows",
+      "risk_flags": [
+        "fixture_only"
+      ],
+      "reason": "Fixture source score may prioritize local replay only after readiness allows it."
+    },
+    {
+      "source_score_id": "source_score_xueqiu_planned_001",
+      "source_entrance_id": "src_xueqiu_planned_001",
+      "source_registry_id": "registry_xueqiu_planned_v1",
+      "source_score": 0.72,
+      "watch_priority": "future_high",
+      "scan_frequency": "blocked_until_ready",
+      "budget_class": "none_until_ready",
+      "required_auth_state": "configured_session_reviewed",
+      "min_connector_status": "production_eligible",
+      "can_override_readiness_gate": false,
+      "candidate_discovery_intent": "blocked_by_readiness",
+      "risk_flags": [
+        "planned",
+        "auth_required"
+      ],
+      "reason": "High future interest cannot bypass planned/auth gates."
+    },
+    {
+      "source_score_id": "source_score_eastmoney_unsupported_001",
+      "source_entrance_id": "src_eastmoney_unsupported_001",
+      "source_registry_id": "registry_eastmoney_unsupported_v1",
+      "source_score": 0.61,
+      "watch_priority": "future_medium",
+      "scan_frequency": "blocked_until_connector_exists",
+      "budget_class": "none_until_ready",
+      "required_auth_state": "unknown",
+      "min_connector_status": "production_eligible",
+      "can_override_readiness_gate": false,
+      "candidate_discovery_intent": "blocked_by_readiness",
+      "risk_flags": [
+        "unsupported"
+      ],
+      "reason": "Unsupported source requires a custom connector before discovery."
+    },
+    {
+      "source_score_id": "source_score_reddit_auth_required_001",
+      "source_entrance_id": "src_reddit_auth_required_001",
+      "source_registry_id": "registry_reddit_auth_required_v1",
+      "source_score": 0.67,
+      "watch_priority": "future_high",
+      "scan_frequency": "blocked_until_auth_boundary_review",
+      "budget_class": "none_until_ready",
+      "required_auth_state": "reviewed_session_boundary",
+      "min_connector_status": "production_eligible",
+      "can_override_readiness_gate": false,
+      "candidate_discovery_intent": "blocked_by_readiness",
+      "risk_flags": [
+        "auth_required"
+      ],
+      "reason": "Auth-required source cannot be ready without auth boundary review."
+    },
+    {
+      "source_score_id": "source_score_shadow_rss_001",
+      "source_entrance_id": "src_shadow_rss_001",
+      "source_registry_id": "registry_shadow_rss_v1",
+      "source_score": 0.54,
+      "watch_priority": "shadow_only",
+      "scan_frequency": "manual_shadow",
+      "budget_class": "shadow_only",
+      "required_auth_state": "not_required_fixture",
+      "min_connector_status": "shadow_only",
+      "can_override_readiness_gate": false,
+      "candidate_discovery_intent": "blocked_by_readiness",
+      "risk_flags": [
+        "shadow_only"
+      ],
+      "reason": "Shadow-only observations cannot feed production candidate discovery."
+    },
+    {
+      "source_score_id": "source_score_x_risk_blocked_001",
+      "source_entrance_id": "src_x_risk_blocked_001",
+      "source_registry_id": "registry_x_risk_blocked_v1",
+      "source_score": 0.95,
+      "watch_priority": "blocked_high_score_example",
+      "scan_frequency": "blocked_until_risk_review",
+      "budget_class": "none_until_ready",
+      "required_auth_state": "reviewed_auth_boundary",
+      "min_connector_status": "production_eligible",
+      "can_override_readiness_gate": false,
+      "candidate_discovery_intent": "blocked_by_readiness",
+      "risk_flags": [
+        "risk_blocked",
+        "risk_unapproved"
+      ],
+      "reason": "High source score explicitly cannot bypass legal/ToS/auth/rate/image/evidence gates."
+    }
+  ]
+}

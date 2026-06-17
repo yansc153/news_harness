@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "news_harness"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+news_harness = "news_harness.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["news_harness*"]

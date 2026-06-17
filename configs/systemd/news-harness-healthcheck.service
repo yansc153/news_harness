@@ -1,0 +1,24 @@
+[Unit]
+Description=News Harness rolling runtime healthcheck
+After=news-harness-cycle.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/news_harness
+EnvironmentFile=/run/news-harness/news_harness.env
+ExecStart=/usr/bin/python3 -m news_harness healthcheck \
+    --feed web/radar-timeline/timeline_feed.json \
+    --source-run artifacts/manual_smoke/latest/source_run.json \
+    --deepseek artifacts/manual_smoke/latest/deepseek_scoring.json \
+    --revisit artifacts/manual_smoke/latest/revisit_schedule.json \
+    --outcome artifacts/manual_smoke/latest/outcome.json \
+    --eval artifacts/manual_smoke/latest/eval.json \
+    --max-age-minutes 90 \
+    --require-source x_list
+User=news-harness
+Group=news-harness
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/news_harness/artifacts /opt/news_harness/web/radar-timeline /run/news-harness

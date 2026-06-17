@@ -1,0 +1,25 @@
+{
+  "object_type": "StructureAnalysis",
+  "structure_analysis_id": "structure_fixture_001",
+  "candidate_id": "candidate_fixture_001",
+  "evidence_id": "evidence_fixture_001",
+  "taxonomy_version": "taxonomy.fixture.v1",
+  "hook": "early_acceleration",
+  "format": "short_post_with_chart_reference",
+  "cta": "none",
+  "angle": "policy_discussion",
+  "visual": "chart_reference_only",
+  "emotion": "curiosity",
+  "sentence_style": "concise",
+  "audience": "market_observers",
+  "risk": [
+    "fixture_only",
+    "financial_amplification_review_required"
+  ],
+  "third_party_perspective": "community_discussion",
+  "topic_framing": "event_driven",
+  "structure_score": 0.61,
+  "model_version": "fixture_rules_only.v1",
+  "prompt_version": "prompt.fixture.structure.v1",
+  "rationale_ref": "fixture://rationales/structure_fixture_001"
+}

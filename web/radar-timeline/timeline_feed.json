@@ -1,0 +1,614 @@
+{
+  "auto_refresh": {
+    "cache_mode": "no-store",
+    "enabled": true,
+    "poll_interval_seconds": 60
+  },
+  "display_contract": {
+    "first_screen_fields": [
+      "source_label",
+      "copy_text",
+      "image_refs",
+      "hotness_score",
+      "hotness_series"
+    ],
+    "hidden_audit_fields": [
+      "evidence_ref",
+      "prediction_status",
+      "outcome_status",
+      "revisit_status",
+      "non_investment_advice"
+    ]
+  },
+  "feed_id": "radar_timeline_feed_fixture_001",
+  "feed_version": "radar.timeline.feed.v1",
+  "fixture_only": false,
+  "generated_at": "2026-06-16T10:26:38Z",
+  "items": [
+    {
+      "article_detail_url": null,
+      "asset_refs": [],
+      "author": "fixture_x_list_author",
+      "canonical_url": "fixture://all-source/x/list/2056032482127175889/post/001",
+      "confidence": 0.45,
+      "copy_text": "A fixture X list post frames operator trust around replayable evidence and rollback paths.",
+      "detail_fetch_status": null,
+      "early_heat_score": 0.728,
+      "engagement_snapshot": {
+        "metrics": {
+          "like_count": 0,
+          "reply_count": 0,
+          "repost_count": 0
+        },
+        "metrics_are_fixture": true,
+        "observed_at": "2026-06-15T03:00:00Z",
+        "status": "dry_run_fixture_metrics_not_ground_truth"
+      },
+      "eval_status": "eval_joined_5_windows",
+      "evidence_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[0]",
+      "full_text_status": null,
+      "hotness_score": 0.758,
+      "hotness_series": [
+        0.2426,
+        0.379,
+        0.5154,
+        0.6367,
+        0.758
+      ],
+      "id": "manual_smoke_001_sha256:all-s",
+      "image_quality_status": "no_image",
+      "image_refs": [],
+      "image_status": "no_image",
+      "image_structured_errors": [],
+      "item_version": "radar.timeline.item.v1",
+      "lasting_score": 0.6869,
+      "manual_smoke": true,
+      "non_investment_advice": true,
+      "object_type": "RadarTimelineItem",
+      "outcome_status": "outcome_collected_24h",
+      "prediction_scores": {
+        "15m": 0.6732,
+        "1h": 0.7828,
+        "24h": 0.6869,
+        "3h": 0.7765,
+        "6h": 0.7395
+      },
+      "prediction_status": "manual_smoke_model_inference_not_ground_truth",
+      "published_at": "2026-06-15T02:45:00Z",
+      "quality_reasons": [],
+      "quality_status": "candidate",
+      "radar_score": 0.6308,
+      "revisit_status": "outcome_collected_24h",
+      "revisit_task_refs": [
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_x_list_001_15m",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_x_list_001_1h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_x_list_001_3h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_x_list_001_6h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_x_list_001_24h"
+      ],
+      "scoring_structured_error": null,
+      "source": "x_list",
+      "source_label": "X list",
+      "source_material_role": "original_source_candidate",
+      "source_quality_risk_flags": [],
+      "source_quality_status": "source_row_observed",
+      "source_url": "fixture://all-source/x/list/2056032482127175889/post/001",
+      "spread_score": 0.758,
+      "structured_error": null,
+      "timeline_status": "manual_smoke_observed",
+      "topic_or_hook": "operator_trust_replay",
+      "uncertainty": 0.55,
+      "visual_evidence_score": 0.18
+    },
+    {
+      "article_detail_url": null,
+      "asset_refs": [],
+      "author": "fixture_xueqiu_hot_author",
+      "canonical_url": "fixture://all-source/xueqiu/hot/post/001",
+      "confidence": 0.45,
+      "copy_text": "A fixture Xueqiu hot discussion focuses on disagreement quality instead of price action.",
+      "detail_fetch_status": "fixture_detail_not_attempted",
+      "early_heat_score": 0.5885,
+      "engagement_snapshot": {
+        "metrics": {
+          "comment_count": 0,
+          "like_count": 0,
+          "share_count": 0
+        },
+        "metrics_are_fixture": true,
+        "observed_at": "2026-06-15T03:00:00Z",
+        "status": "dry_run_fixture_metrics_not_ground_truth"
+      },
+      "eval_status": "eval_joined_5_windows",
+      "evidence_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[1]",
+      "full_text_status": "summary_or_list_excerpt_only",
+      "hotness_score": 0.6185,
+      "hotness_series": [
+        0.1979,
+        0.3093,
+        0.4206,
+        0.5195,
+        0.6185
+      ],
+      "id": "manual_smoke_002_sha256:all-s",
+      "image_quality_status": "no_image",
+      "image_refs": [],
+      "image_status": "no_image",
+      "image_structured_errors": [],
+      "item_version": "radar.timeline.item.v1",
+      "lasting_score": 0.5639,
+      "manual_smoke": true,
+      "non_investment_advice": true,
+      "object_type": "RadarTimelineItem",
+      "outcome_status": "outcome_collected_24h",
+      "prediction_scores": {
+        "15m": 0.5442,
+        "1h": 0.6328,
+        "24h": 0.5639,
+        "3h": 0.6325,
+        "6h": 0.6045
+      },
+      "prediction_status": "manual_smoke_model_inference_not_ground_truth",
+      "published_at": "2026-06-15T02:40:00Z",
+      "quality_reasons": [],
+      "quality_status": "candidate",
+      "radar_score": 0.522,
+      "revisit_status": "outcome_collected_24h",
+      "revisit_task_refs": [
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_hot_001_15m",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_hot_001_1h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_hot_001_3h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_hot_001_6h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_hot_001_24h"
+      ],
+      "scoring_structured_error": null,
+      "source": "xueqiu_hot",
+      "source_label": "\u96ea\u7403\u70ed\u95e8",
+      "source_material_role": "original_source_candidate",
+      "source_quality_risk_flags": [],
+      "source_quality_status": "source_row_observed",
+      "source_url": "fixture://all-source/xueqiu/hot/post/001",
+      "spread_score": 0.6185,
+      "structured_error": null,
+      "timeline_status": "manual_smoke_observed",
+      "topic_or_hook": "discussion_quality_signal",
+      "uncertainty": 0.55,
+      "visual_evidence_score": 0.18
+    },
+    {
+      "article_detail_url": null,
+      "asset_refs": [],
+      "author": "fixture_reddit_author",
+      "canonical_url": "fixture://all-source/reddit/r/wallstreetbets/comments/001",
+      "confidence": 0.45,
+      "copy_text": "A fixture Reddit post has rapid comment velocity but is flagged as community-slang heavy.",
+      "detail_fetch_status": null,
+      "early_heat_score": 0.5699,
+      "engagement_snapshot": {
+        "metrics": {
+          "comment_count": 0,
+          "score": 0,
+          "upvote_ratio": 0
+        },
+        "metrics_are_fixture": true,
+        "observed_at": "2026-06-15T03:00:00Z",
+        "status": "dry_run_fixture_metrics_not_ground_truth"
+      },
+      "eval_status": "eval_joined_5_windows",
+      "evidence_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[4]",
+      "full_text_status": null,
+      "hotness_score": 0.5999,
+      "hotness_series": [
+        0.192,
+        0.2999,
+        0.4079,
+        0.5039,
+        0.5999
+      ],
+      "id": "manual_smoke_005_sha256:all-s",
+      "image_quality_status": "no_image",
+      "image_refs": [],
+      "image_status": "no_image",
+      "image_structured_errors": [],
+      "item_version": "radar.timeline.item.v1",
+      "lasting_score": 0.5475,
+      "manual_smoke": true,
+      "non_investment_advice": true,
+      "object_type": "RadarTimelineItem",
+      "outcome_status": "outcome_collected_24h",
+      "prediction_scores": {
+        "15m": 0.527,
+        "1h": 0.6128,
+        "24h": 0.5475,
+        "3h": 0.6133,
+        "6h": 0.5865
+      },
+      "prediction_status": "manual_smoke_model_inference_not_ground_truth",
+      "published_at": "2026-06-15T02:25:00Z",
+      "quality_reasons": [],
+      "quality_status": "candidate",
+      "radar_score": 0.5075,
+      "revisit_status": "outcome_collected_24h",
+      "revisit_task_refs": [
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_reddit_wallstreetbets_001_15m",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_reddit_wallstreetbets_001_1h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_reddit_wallstreetbets_001_3h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_reddit_wallstreetbets_001_6h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_reddit_wallstreetbets_001_24h"
+      ],
+      "scoring_structured_error": null,
+      "source": "reddit",
+      "source_label": "Reddit source pool",
+      "source_material_role": "original_source_candidate",
+      "source_quality_risk_flags": [],
+      "source_quality_status": "source_row_observed",
+      "source_url": "fixture://all-source/reddit/r/wallstreetbets/comments/001",
+      "spread_score": 0.5999,
+      "structured_error": null,
+      "timeline_status": "manual_smoke_observed",
+      "topic_or_hook": "comment_velocity_meme_risk",
+      "uncertainty": 0.55,
+      "visual_evidence_score": 0.18
+    },
+    {
+      "article_detail_url": null,
+      "asset_refs": [],
+      "author": "fixture_xueqiu_daren_author",
+      "canonical_url": "fixture://all-source/xueqiu/daren/post/001",
+      "confidence": 0.45,
+      "copy_text": "A fixture expert post turns a complex topic into a checklist readers can debate.",
+      "detail_fetch_status": "fixture_detail_not_attempted",
+      "early_heat_score": 0.5513,
+      "engagement_snapshot": {
+        "metrics": {
+          "comment_count": 0,
+          "like_count": 0,
+          "share_count": 0
+        },
+        "metrics_are_fixture": true,
+        "observed_at": "2026-06-15T03:00:00Z",
+        "status": "dry_run_fixture_metrics_not_ground_truth"
+      },
+      "eval_status": "eval_joined_5_windows",
+      "evidence_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[2]",
+      "full_text_status": "summary_or_list_excerpt_only",
+      "hotness_score": 0.5813,
+      "hotness_series": [
+        0.186,
+        0.2907,
+        0.3953,
+        0.4883,
+        0.5813
+      ],
+      "id": "manual_smoke_003_sha256:all-s",
+      "image_quality_status": "no_image",
+      "image_refs": [],
+      "image_status": "no_image",
+      "image_structured_errors": [],
+      "item_version": "radar.timeline.item.v1",
+      "lasting_score": 0.5311,
+      "manual_smoke": true,
+      "non_investment_advice": true,
+      "object_type": "RadarTimelineItem",
+      "outcome_status": "outcome_collected_24h",
+      "prediction_scores": {
+        "15m": 0.5098,
+        "1h": 0.5928,
+        "24h": 0.5311,
+        "3h": 0.5941,
+        "6h": 0.5685
+      },
+      "prediction_status": "manual_smoke_model_inference_not_ground_truth",
+      "published_at": "2026-06-15T02:35:00Z",
+      "quality_reasons": [],
+      "quality_status": "candidate",
+      "radar_score": 0.493,
+      "revisit_status": "outcome_collected_24h",
+      "revisit_task_refs": [
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_daren_001_15m",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_daren_001_1h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_daren_001_3h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_daren_001_6h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_daren_001_24h"
+      ],
+      "scoring_structured_error": null,
+      "source": "xueqiu_daren",
+      "source_label": "\u96ea\u7403\u8fbe\u4eba",
+      "source_material_role": "original_source_candidate",
+      "source_quality_risk_flags": [],
+      "source_quality_status": "source_row_observed",
+      "source_url": "fixture://all-source/xueqiu/daren/post/001",
+      "spread_score": 0.5813,
+      "structured_error": null,
+      "timeline_status": "manual_smoke_observed",
+      "topic_or_hook": "expert_checklist_angle",
+      "uncertainty": 0.55,
+      "visual_evidence_score": 0.18
+    },
+    {
+      "article_detail_url": null,
+      "asset_refs": [],
+      "author": "fixture_xueqiu_dispute_author",
+      "canonical_url": "fixture://all-source/xueqiu/dispute/post/001",
+      "confidence": 0.45,
+      "copy_text": "A fixture dispute thread shows sharply different narratives, with moderation risk kept explicit.",
+      "detail_fetch_status": "fixture_detail_not_attempted",
+      "early_heat_score": 0.5141,
+      "engagement_snapshot": {
+        "metrics": {
+          "comment_count": 0,
+          "like_count": 0,
+          "share_count": 0
+        },
+        "metrics_are_fixture": true,
+        "observed_at": "2026-06-15T03:00:00Z",
+        "status": "dry_run_fixture_metrics_not_ground_truth"
+      },
+      "eval_status": "eval_joined_5_windows",
+      "evidence_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[3]",
+      "full_text_status": "summary_or_list_excerpt_only",
+      "hotness_score": 0.5441,
+      "hotness_series": [
+        0.1741,
+        0.2721,
+        0.37,
+        0.457,
+        0.5441
+      ],
+      "id": "manual_smoke_004_sha256:all-s",
+      "image_quality_status": "no_image",
+      "image_refs": [],
+      "image_status": "no_image",
+      "image_structured_errors": [],
+      "item_version": "radar.timeline.item.v1",
+      "lasting_score": 0.4983,
+      "manual_smoke": true,
+      "non_investment_advice": true,
+      "object_type": "RadarTimelineItem",
+      "outcome_status": "outcome_collected_24h",
+      "prediction_scores": {
+        "15m": 0.4754,
+        "1h": 0.5528,
+        "24h": 0.4983,
+        "3h": 0.5557,
+        "6h": 0.5325
+      },
+      "prediction_status": "manual_smoke_model_inference_not_ground_truth",
+      "published_at": "2026-06-15T02:30:00Z",
+      "quality_reasons": [],
+      "quality_status": "candidate",
+      "radar_score": 0.464,
+      "revisit_status": "outcome_collected_24h",
+      "revisit_task_refs": [
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_dispute_001_15m",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_dispute_001_1h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_dispute_001_3h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_dispute_001_6h",
+        "artifacts/manual_smoke/latest/revisit_schedule.json#tasks/revisit_scored_all_source_xueqiu_dispute_001_24h"
+      ],
+      "scoring_structured_error": null,
+      "source": "xueqiu_dispute",
+      "source_label": "\u96ea\u7403\u4e89\u8bae\u8ba8\u8bba",
+      "source_material_role": "original_source_candidate",
+      "source_quality_risk_flags": [],
+      "source_quality_status": "source_row_observed",
+      "source_url": "fixture://all-source/xueqiu/dispute/post/001",
+      "spread_score": 0.5441,
+      "structured_error": null,
+      "timeline_status": "manual_smoke_observed",
+      "topic_or_hook": "controversy_without_ground_truth",
+      "uncertainty": 0.55,
+      "visual_evidence_score": 0.18
+    }
+  ],
+  "manual_smoke": {
+    "agent_reach_ref": null,
+    "backend": "fixture",
+    "connector_health": {},
+    "direct_cli_ref": null,
+    "enabled": true,
+    "eval": {
+      "eval_ref": "artifacts/manual_smoke/latest/eval.json",
+      "joined_count": 25,
+      "ndcg_at_5": 0.0,
+      "precision_at_5": 0.0,
+      "promotion_status": "shadow_only",
+      "row_count": 25
+    },
+    "fixture_items_hidden_from_product_feed": 6,
+    "image_asset_ref": "artifacts/manual_smoke/latest/image_assets.json",
+    "image_assets": {
+      "blocked_count": 0,
+      "downloaded_count": 0,
+      "failed_count": 0,
+      "record_count": 1,
+      "reference_only_count": 0
+    },
+    "production_connector_ready": false,
+    "revisit": {
+      "outcome_count": 25,
+      "outcome_ref": "artifacts/manual_smoke/latest/outcome.json",
+      "pending_count": 0,
+      "schedule_ref": "artifacts/manual_smoke/latest/revisit_schedule.json",
+      "task_count": 25,
+      "windows": [
+        "15m",
+        "1h",
+        "3h",
+        "6h",
+        "24h"
+      ]
+    },
+    "scoring": {
+      "fallback_used": "fixture_scoring",
+      "model_id": "deepseek-chat-fixture",
+      "model_provider": "deepseek",
+      "provider_called": false,
+      "scored_candidate_count": 5,
+      "structured_error_count": 0
+    },
+    "scoring_ref": "artifacts/manual_smoke/latest/deepseek_scoring.json",
+    "source_run_ref": "artifacts/manual_smoke/latest/source_run.json",
+    "source_statuses": [
+      {
+        "backend": "fixture",
+        "batch_limit": 1,
+        "duration_seconds": 0,
+        "item_count": 1,
+        "rate_limit": {
+          "backoff_seconds": 0,
+          "retry_after": null
+        },
+        "redaction_status": "passed",
+        "refresh_interval_seconds": 1800,
+        "requested_item_count": 1,
+        "source": "x_list",
+        "status": "ok",
+        "structured_errors": []
+      },
+      {
+        "backend": "fixture",
+        "batch_limit": 1,
+        "duration_seconds": 0,
+        "item_count": 1,
+        "rate_limit": {
+          "backoff_seconds": 0,
+          "retry_after": null
+        },
+        "redaction_status": "passed",
+        "refresh_interval_seconds": 1800,
+        "requested_item_count": 1,
+        "source": "xueqiu_hot",
+        "status": "ok",
+        "structured_errors": []
+      },
+      {
+        "backend": "fixture",
+        "batch_limit": 1,
+        "duration_seconds": 0,
+        "item_count": 1,
+        "rate_limit": {
+          "backoff_seconds": 0,
+          "retry_after": null
+        },
+        "redaction_status": "passed",
+        "refresh_interval_seconds": 1800,
+        "requested_item_count": 1,
+        "source": "xueqiu_daren",
+        "status": "ok",
+        "structured_errors": []
+      },
+      {
+        "backend": "fixture",
+        "batch_limit": 1,
+        "duration_seconds": 0,
+        "item_count": 1,
+        "rate_limit": {
+          "backoff_seconds": 0,
+          "retry_after": null
+        },
+        "redaction_status": "passed",
+        "refresh_interval_seconds": 1800,
+        "requested_item_count": 1,
+        "source": "xueqiu_dispute",
+        "status": "ok",
+        "structured_errors": []
+      },
+      {
+        "backend": "fixture",
+        "batch_limit": 1,
+        "duration_seconds": 0,
+        "item_count": 1,
+        "rate_limit": {
+          "backoff_seconds": 0,
+          "retry_after": null
+        },
+        "redaction_status": "passed",
+        "refresh_interval_seconds": 1800,
+        "requested_item_count": 1,
+        "source": "reddit",
+        "status": "ok",
+        "structured_errors": []
+      }
+    ],
+    "structured_errors": []
+  },
+  "no_real_source_access": false,
+  "object_type": "RadarTimelineFeed",
+  "rolling_runtime": {
+    "active_item_count": 5,
+    "duplicate_update_count": 1,
+    "expired_items_excluded": true,
+    "expired_store_item_count": 1,
+    "exported_from_store_ref": "fixtures/timeline_store.json",
+    "retention_window_hours": 120,
+    "revisit_schedule_ref": "fixtures/revisit_schedule.json",
+    "revisit_task_count": 14,
+    "runtime_stage": "fixture_only_rolling_feed",
+    "shadow_source_ref": "fixtures/sample_shadow_source_fetch_result.json",
+    "source_refresh_intervals": {
+      "reddit": 3600,
+      "x_list": 3600,
+      "xueqiu_daren": 1800,
+      "xueqiu_dispute": 1800,
+      "xueqiu_hot": 1800
+    },
+    "source_schedule_ref": "fixtures/rolling_source_schedule.json",
+    "store_item_count": 7
+  },
+  "sorting_policy": {
+    "default_sort": "hotness",
+    "hotness_series_units": "relative_fixture_score_0_to_1",
+    "outcome_ground_truth": "not_ground_truth_fixture_only",
+    "sort_by": [
+      "hotness_score_desc",
+      "published_at_desc"
+    ],
+    "supported_sorts": [
+      "hotness",
+      "published_at"
+    ]
+  },
+  "source_refs": [
+    "fixtures/sample_evidence.json",
+    "fixtures/sample_candidate.json",
+    "fixtures/sample_structure.json",
+    "fixtures/sample_prediction.json",
+    "fixtures/sample_outcome.json",
+    "fixtures/sample_shadow_source_fetch_result.json",
+    "fixtures/sample_x_list_secret_ref_dry_run.json",
+    "fixtures/sample_all_source_runner_dry_run.json",
+    "fixtures/sample_deepseek_scoring_fixture.json",
+    "fixtures/rolling_source_schedule.json",
+    "fixtures/timeline_store.json",
+    "fixtures/revisit_schedule.json",
+    "artifacts/manual_smoke/latest/source_run.json",
+    "artifacts/manual_smoke/latest/deepseek_scoring.json",
+    "artifacts/manual_smoke/latest/image_assets.json",
+    "artifacts/manual_smoke/latest/revisit_schedule.json",
+    "artifacts/manual_smoke/latest/outcome.json"
+  ],
+  "view_config": {
+    "default_recent_hours": 120,
+    "default_sort": "hotness",
+    "supported_recent_hours": [
+      12,
+      24,
+      48,
+      72,
+      120
+    ],
+    "supported_sorts": [
+      {
+        "direction": "desc",
+        "field": "hotness_score",
+        "id": "hotness"
+      },
+      {
+        "direction": "desc",
+        "field": "published_at",
+        "id": "published_at"
+      }
+    ]
+  }
+}

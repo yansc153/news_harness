@@ -1,0 +1,31 @@
+{
+  "object_type": "ReplayManifest",
+  "replay_manifest_id": "replay_manifest_fixture_001",
+  "run_id": "run_fixture_replay_seed",
+  "evidence_snapshot_refs": [
+    "fixtures/sample_evidence.json"
+  ],
+  "config_hash": "sha256:fixture-config-001",
+  "strategy_version": "strategy.fixture.v1",
+  "harness_version": "harness.fixture.v1",
+  "prompt_hash": "sha256:fixture-prompt-001",
+  "context_hash": "sha256:fixture-context-001",
+  "tool_output_hashes": {
+    "fixture.fetch_candidates.v1": "sha256:fixture-tool-output-001"
+  },
+  "model_provider": "fixture_rules",
+  "model_id": "deterministic_fixture_scorer",
+  "model_config": {
+    "temperature": 0,
+    "uses_external_model": false
+  },
+  "temperature": 0,
+  "seed_if_available": "fixture-seed-001",
+  "schema_versions": {
+    "fixture_schema": "news_harness_mvp_schema.v1",
+    "event_schema": "event_schema.v1",
+    "prediction_schema": "prediction_record.v1"
+  },
+  "replay_mode": "deterministic_fixture",
+  "created_at": "2026-06-14T00:15:00Z"
+}

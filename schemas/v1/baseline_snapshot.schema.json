@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BaselineSnapshot",
+  "description": "Versioned, immutable snapshot of platform/window engagement quantiles. Must pass validation before being used in any OutcomeEvaluation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "object_type", "baseline_version", "created_at", "input_refs",
+    "metric_map_version", "threshold_version", "platform_windows",
+    "validation", "content_hash"
+  ],
+  "properties": {
+    "object_type": { "type": "string", "const": "BaselineSnapshot" },
+    "baseline_version": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "input_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "metric_map_version": { "type": "string", "minLength": 1 },
+    "threshold_version": { "type": "string", "minLength": 1 },
+    "platform_windows": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sample_count", "p50_delta", "p75_delta", "p90_delta", "missing_metric_rate"],
+        "properties": {
+          "sample_count": { "type": "integer", "minimum": 0 },
+          "p50_delta": { "type": "number" },
+          "p75_delta": { "type": "number" },
+          "p90_delta": { "type": "number" },
+          "missing_metric_rate": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "checks"],
+      "properties": {
+        "status": { "type": "string", "enum": ["ok", "invalid"] },
+        "checks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      }
+    },
+    "content_hash": { "type": "string", "minLength": 1 }
+  }
+}

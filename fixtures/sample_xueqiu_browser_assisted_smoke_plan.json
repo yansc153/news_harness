@@ -1,0 +1,46 @@
+{
+  "object_type": "AuthGatedSourceSmokePlan",
+  "plan_version": "xueqiu_browser_assisted_smoke.fixture.v1",
+  "smoke_plan_id": "xueqiu_browser_assisted_smoke_plan_001",
+  "source": "xueqiu",
+  "source_url": "https://xueqiu.com/hot",
+  "fixture_only": true,
+  "no_real_source_access": true,
+  "vps_runner_plan_ref": "fixtures/sample_vps_source_runner_plan.json",
+  "runner_mode": "vps_browser_assisted_plan",
+  "browser_requirement": {
+    "required": true,
+    "headless": true
+  },
+  "auth_boundary": {
+    "auth_requirement": "required",
+    "secret_ref": "secret_ref:xueqiu-cookie"
+  },
+  "smoke_execution": {
+    "executed": false,
+    "status": "planned_not_executed"
+  },
+  "readiness": {
+    "fixture_ready": true,
+    "production_connector_ready": false
+  },
+  "read_only_boundary": {
+    "approved": false,
+    "allowed_actions": [
+      "read"
+    ],
+    "forbidden_actions": [
+      "login",
+      "post",
+      "comment"
+    ]
+  },
+  "rate_limit_policy": {
+    "backoff_policy": "exponential_with_jitter",
+    "refresh_interval_seconds": 900
+  },
+  "artifact_policy": {
+    "preserve_original_image_refs": true,
+    "raw_session_material_allowed": false
+  }
+}

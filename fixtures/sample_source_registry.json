@@ -1,0 +1,136 @@
+{
+  "object_type": "SourceRegistrySet",
+  "source_registry_set_id": "source_registry_fixture_set_001",
+  "registry_version": "source_registry.fixture.v1",
+  "created_at": "2026-06-14T00:00:00Z",
+  "scope": "fixture_only_not_real_source_reach",
+  "entries": [
+    {
+      "source_registry_id": "registry_fixture_source_v1",
+      "source_entrance_id": "src_fixture_market_001",
+      "source": "fixture_source",
+      "entrance_type": "rss_or_list_fixture",
+      "registry_status": "fixture_allowed",
+      "connector_status": "fixture_connector_ready",
+      "supported_entrance_types": [
+        "rss_or_list_fixture"
+      ],
+      "connector_ids": [
+        "fixture.fetch_candidates.v1",
+        "agent_reach.wrapper.mock_fixture_source.v1"
+      ],
+      "auth_requirement": "not_required",
+      "auth_status": "not_required",
+      "legal_tos_status": "approved_fixture_only",
+      "rate_limit_status": "fixture_no_network",
+      "image_reference_policy": "reference_only_no_download_no_cache",
+      "evidence_policy": "raw_evidence_refs_required",
+      "agent_reach_role": "not_required",
+      "real_source_reach_proven": false,
+      "notes": "Allowed only inside fixture replay; not a real production source."
+    },
+    {
+      "source_registry_id": "registry_xueqiu_planned_v1",
+      "source_entrance_id": "src_xueqiu_planned_001",
+      "source": "xueqiu",
+      "entrance_type": "xueqiu_hot_board",
+      "registry_status": "planned",
+      "connector_status": "planned",
+      "supported_entrance_types": [],
+      "connector_ids": [],
+      "auth_requirement": "required",
+      "auth_status": "not_configured",
+      "legal_tos_status": "unreviewed",
+      "rate_limit_status": "unverified",
+      "image_reference_policy": "unverified",
+      "evidence_policy": "unverified",
+      "agent_reach_role": "unknown",
+      "real_source_reach_proven": false,
+      "notes": "Planned source must not enter production eligibility."
+    },
+    {
+      "source_registry_id": "registry_eastmoney_unsupported_v1",
+      "source_entrance_id": "src_eastmoney_unsupported_001",
+      "source": "eastmoney_guba",
+      "entrance_type": "guba_board",
+      "registry_status": "unsupported",
+      "connector_status": "connector_unsupported",
+      "supported_entrance_types": [],
+      "connector_ids": [],
+      "auth_requirement": "unknown",
+      "auth_status": "unknown",
+      "legal_tos_status": "unreviewed",
+      "rate_limit_status": "unverified",
+      "image_reference_policy": "unverified",
+      "evidence_policy": "unverified",
+      "agent_reach_role": "unknown",
+      "real_source_reach_proven": false,
+      "notes": "Requires a custom connector before any candidate discovery."
+    },
+    {
+      "source_registry_id": "registry_reddit_auth_required_v1",
+      "source_entrance_id": "src_reddit_auth_required_001",
+      "source": "reddit",
+      "entrance_type": "subreddit",
+      "registry_status": "auth_required",
+      "connector_status": "auth_boundary_missing",
+      "supported_entrance_types": [
+        "subreddit"
+      ],
+      "connector_ids": [
+        "planned.reddit.reader.v0"
+      ],
+      "auth_requirement": "required",
+      "auth_status": "missing",
+      "legal_tos_status": "unreviewed",
+      "rate_limit_status": "unverified",
+      "image_reference_policy": "unverified",
+      "evidence_policy": "unverified",
+      "agent_reach_role": "unknown",
+      "real_source_reach_proven": false,
+      "notes": "Auth-required source cannot be ready without auth boundary review."
+    },
+    {
+      "source_registry_id": "registry_shadow_rss_v1",
+      "source_entrance_id": "src_shadow_rss_001",
+      "source": "shadow_rss_fixture",
+      "entrance_type": "rss_or_list_fixture",
+      "registry_status": "shadow_only",
+      "connector_status": "shadow_only",
+      "supported_entrance_types": [
+        "rss_or_list_fixture"
+      ],
+      "connector_ids": [
+        "shadow.fixture.reader.v1"
+      ],
+      "auth_requirement": "not_required",
+      "auth_status": "not_required_fixture",
+      "legal_tos_status": "approved_fixture_only",
+      "rate_limit_status": "fixture_no_network",
+      "image_reference_policy": "reference_only_no_download_no_cache",
+      "evidence_policy": "shadow_diagnostic_only",
+      "agent_reach_role": "not_required",
+      "real_source_reach_proven": false,
+      "notes": "Shadow-only source can be observed but cannot feed production candidate discovery."
+    },
+    {
+      "source_registry_id": "registry_x_risk_blocked_v1",
+      "source_entrance_id": "src_x_risk_blocked_001",
+      "source": "x",
+      "entrance_type": "x_list",
+      "registry_status": "risk_blocked",
+      "connector_status": "risk_unapproved",
+      "supported_entrance_types": [],
+      "connector_ids": [],
+      "auth_requirement": "required",
+      "auth_status": "not_configured",
+      "legal_tos_status": "risk_unapproved",
+      "rate_limit_status": "unverified",
+      "image_reference_policy": "unreviewed",
+      "evidence_policy": "unverified",
+      "agent_reach_role": "unknown",
+      "real_source_reach_proven": false,
+      "notes": "Risk-blocked source cannot be rescued by score."
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "object_type": "AllSourceRunnerConfig",
+  "config_version": "all_source_runner.fixture.v1",
+  "runtime_mode": "fixture",
+  "dry_run_default": true,
+  "fixture_only": true,
+  "no_real_source_access": true,
+  "network_fetch_allowed": false,
+  "browser_automation_allowed": false,
+  "real_scheduler_allowed": false,
+  "output_fixture_ref": "fixtures/sample_all_source_runner_dry_run.json",
+  "source_observation_schema_version": "source_observation.fixture.v1",
+  "batch_policy": {
+    "batch_processing_required": true,
+    "per_item_full_serial_pipeline_allowed": false,
+    "max_items_per_source_per_run": 10,
+    "continue_on_source_error": true
+  },
+  "sources": [
+    {
+      "source": "x_list",
+      "source_label": "X list",
+      "source_entry_url": "https://x.com/i/lists/2056032482127175889?s=20",
+      "refresh_interval_seconds": 3600,
+      "batch_limit": 10,
+      "two_level_crawl": true,
+      "secret_ref": "secret_ref:x_list_reader_cookie_v1",
+      "session_ref": "session_ref:x_list_small_account_v1",
+      "cookie_file_env_var_name": "NEWS_HARNESS_X_COOKIE_FILE"
+    },
+    {
+      "source": "xueqiu_hot",
+      "source_label": "雪球热门",
+      "source_entry_url": "https://xueqiu.com/",
+      "refresh_interval_seconds": 1800,
+      "batch_limit": 10,
+      "secret_ref": "secret_ref:xueqiu_reader_cookie_v1",
+      "session_ref": "session_ref:xueqiu_small_account_v1",
+      "two_level_crawl": true,
+      "js_render_required": true
+    },
+    {
+      "source": "xueqiu_daren",
+      "source_label": "雪球达人",
+      "source_entry_url": "https://xueqiu.com/",
+      "refresh_interval_seconds": 1800,
+      "batch_limit": 10,
+      "secret_ref": "secret_ref:xueqiu_reader_cookie_v1",
+      "session_ref": "session_ref:xueqiu_small_account_v1",
+      "two_level_crawl": true,
+      "js_render_required": true
+    },
+    {
+      "source": "xueqiu_dispute",
+      "source_label": "雪球争议讨论",
+      "source_entry_url": "https://xueqiu.com/",
+      "refresh_interval_seconds": 1800,
+      "batch_limit": 10,
+      "secret_ref": "secret_ref:xueqiu_reader_cookie_v1",
+      "session_ref": "session_ref:xueqiu_small_account_v1",
+      "two_level_crawl": true,
+      "js_render_required": true
+    },
+    {
+      "source": "reddit",
+      "source_label": "Reddit source pool",
+      "source_entry_url": "https://www.reddit.com/",
+      "refresh_interval_seconds": 3600,
+      "batch_limit": 10,
+      "max_items_per_subreddit_per_run": 10,
+      "secret_ref": "secret_ref:reddit_readonly_session_v1",
+      "two_level_crawl": true,
+      "subreddit_tiers": {
+        "tier1_high_signal": {
+          "subreddits": [
+            "wallstreetbets",
+            "stocks",
+            "investing",
+            "StockMarket"
+          ],
+          "refresh_interval_seconds": 1800,
+          "max_items_per_subreddit_per_run": 15
+        },
+        "tier2_medium": {
+          "subreddits": [
+            "options",
+            "Daytrading",
+            "trading",
+            "algotrading",
+            "Stock_Picks"
+          ],
+          "refresh_interval_seconds": 3600,
+          "max_items_per_subreddit_per_run": 10
+        },
+        "tier3_low_frequency": {
+          "subreddits": [
+            "pennystocks",
+            "ValueInvesting",
+            "SecurityAnalysis",
+            "dividends",
+            "finance",
+            "personalfinance",
+            "Bogleheads",
+            "dividendinvesting",
+            "SPACs",
+            "Shortsqueeze",
+            "RobinHood"
+          ],
+          "refresh_interval_seconds": 7200,
+          "max_items_per_subreddit_per_run": 5
+        }
+      },
+      "subreddits": [
+        "wallstreetbets",
+        "stocks",
+        "investing",
+        "StockMarket",
+        "options",
+        "Daytrading",
+        "pennystocks",
+        "ValueInvesting",
+        "SecurityAnalysis",
+        "algotrading",
+        "trading",
+        "Stock_Picks",
+        "dividends",
+        "finance",
+        "personalfinance",
+        "Bogleheads",
+        "dividendinvesting",
+        "SPACs",
+        "Shortsqueeze",
+        "RobinHood"
+      ]
+    }
+  ],
+  "forbidden_actions": [
+    "login",
+    "network_fetch",
+    "open_chrome",
+    "post",
+    "like",
+    "repost",
+    "follow",
+    "comment",
+    "dm",
+    "download_image",
+    "cache_image",
+    "bypass_challenge"
+  ]
+}

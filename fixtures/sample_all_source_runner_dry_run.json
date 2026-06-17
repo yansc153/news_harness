@@ -1,0 +1,263 @@
+{
+  "object_type": "AllSourceRunnerDryRun",
+  "runner_run_id": "all_source_runner_dry_run_fixture_001",
+  "runner_version": "all_source_runner.fixture.v1",
+  "source_observation_schema_version": "source_observation.fixture.v1",
+  "created_at": "2026-06-15T03:00:00Z",
+  "fixture_only": true,
+  "no_real_source_access": true,
+  "real_source_smoke_executed": false,
+  "production_connector_ready": false,
+  "config_refs": {
+    "all_source_runner_config_ref": "configs/all_source_runner.example.json",
+    "source_runner_runtime_config_ref": "configs/source_runner_runtime.example.json",
+    "rolling_source_schedule_ref": "fixtures/rolling_source_schedule.json"
+  },
+  "secret_boundary": {
+    "secret_refs_only": true,
+    "session_refs_only": true,
+    "raw_cookie_detected": false,
+    "raw_token_detected": false,
+    "raw_api_key_detected": false,
+    "repo_write_contains_raw_auth": false
+  },
+  "batch_policy": {
+    "batch_processing_required": true,
+    "per_item_full_serial_pipeline_allowed": false,
+    "continue_on_source_error": true,
+    "max_items_per_source_per_run": 10,
+    "reddit_max_items_per_subreddit_per_run": 10
+  },
+  "source_statuses": [
+    {
+      "source": "x_list",
+      "fetch_status": "dry_run_fixture_success",
+      "observed_item_count": 1,
+      "structured_error": null
+    },
+    {
+      "source": "xueqiu_hot",
+      "fetch_status": "dry_run_fixture_success",
+      "observed_item_count": 1,
+      "structured_error": null
+    },
+    {
+      "source": "xueqiu_daren",
+      "fetch_status": "dry_run_fixture_success",
+      "observed_item_count": 1,
+      "structured_error": null
+    },
+    {
+      "source": "xueqiu_dispute",
+      "fetch_status": "dry_run_fixture_success",
+      "observed_item_count": 1,
+      "structured_error": null
+    },
+    {
+      "source": "reddit",
+      "fetch_status": "dry_run_fixture_success",
+      "observed_item_count": 1,
+      "structured_error": null
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "source_observation_x_list_001",
+      "source": "x_list",
+      "source_label": "X list",
+      "source_channel": "list_2056032482127175889",
+      "source_entry_url": "https://x.com/i/lists/2056032482127175889?s=20",
+      "source_url": "fixture://all-source/x/list/2056032482127175889/post/001",
+      "canonical_url": "fixture://all-source/x/list/2056032482127175889/post/001",
+      "author": "fixture_x_list_author",
+      "published_at": "2026-06-15T02:45:00Z",
+      "fetched_at": "2026-06-15T03:00:00Z",
+      "copy_text": "A fixture X list post frames operator trust around replayable evidence and rollback paths.",
+      "topic_or_hook": "operator_trust_replay",
+      "image_refs": [],
+      "image_status": "no_image",
+      "engagement_snapshot": {
+        "status": "dry_run_fixture_metrics_not_ground_truth",
+        "metrics_are_fixture": true,
+        "observed_at": "2026-06-15T03:00:00Z",
+        "metrics": {
+          "like_count": 0,
+          "reply_count": 0,
+          "repost_count": 0
+        }
+      },
+      "content_hash": "sha256:all-source-x-list-001",
+      "connector_identity": {
+        "connector_id": "fixture.x_list.runner.v1",
+        "tool_id": "news_harness.run_sources.fixture",
+        "tool_version": "all_source_runner.fixture.v1"
+      },
+      "fetch_status": "dry_run_fixture_success",
+      "structured_error": null,
+      "evidence_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[0]"
+    },
+    {
+      "observation_id": "source_observation_xueqiu_hot_001",
+      "source": "xueqiu_hot",
+      "source_label": "雪球热门",
+      "source_channel": "xueqiu_hot",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_url": "fixture://all-source/xueqiu/hot/post/001",
+      "canonical_url": "fixture://all-source/xueqiu/hot/post/001",
+      "author": "fixture_xueqiu_hot_author",
+      "published_at": "2026-06-15T02:40:00Z",
+      "fetched_at": "2026-06-15T03:00:00Z",
+      "copy_text": "A fixture Xueqiu hot discussion focuses on disagreement quality instead of price action.",
+      "topic_or_hook": "discussion_quality_signal",
+      "image_refs": [],
+      "image_status": "no_image",
+      "engagement_snapshot": {
+        "status": "dry_run_fixture_metrics_not_ground_truth",
+        "metrics_are_fixture": true,
+        "observed_at": "2026-06-15T03:00:00Z",
+        "metrics": {
+          "comment_count": 0,
+          "like_count": 0,
+          "share_count": 0
+        }
+      },
+      "content_hash": "sha256:all-source-xueqiu-hot-001",
+      "connector_identity": {
+        "connector_id": "fixture.xueqiu_hot.runner.v1",
+        "tool_id": "news_harness.run_sources.fixture",
+        "tool_version": "all_source_runner.fixture.v1"
+      },
+      "fetch_status": "dry_run_fixture_success",
+      "structured_error": null,
+      "evidence_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[1]"
+    },
+    {
+      "observation_id": "source_observation_xueqiu_daren_001",
+      "source": "xueqiu_daren",
+      "source_label": "雪球达人",
+      "source_channel": "xueqiu_daren",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_url": "fixture://all-source/xueqiu/daren/post/001",
+      "canonical_url": "fixture://all-source/xueqiu/daren/post/001",
+      "author": "fixture_xueqiu_daren_author",
+      "published_at": "2026-06-15T02:35:00Z",
+      "fetched_at": "2026-06-15T03:00:00Z",
+      "copy_text": "A fixture expert post turns a complex topic into a checklist readers can debate.",
+      "topic_or_hook": "expert_checklist_angle",
+      "image_refs": [],
+      "image_status": "no_image",
+      "engagement_snapshot": {
+        "status": "dry_run_fixture_metrics_not_ground_truth",
+        "metrics_are_fixture": true,
+        "observed_at": "2026-06-15T03:00:00Z",
+        "metrics": {
+          "comment_count": 0,
+          "like_count": 0,
+          "share_count": 0
+        }
+      },
+      "content_hash": "sha256:all-source-xueqiu-daren-001",
+      "connector_identity": {
+        "connector_id": "fixture.xueqiu_daren.runner.v1",
+        "tool_id": "news_harness.run_sources.fixture",
+        "tool_version": "all_source_runner.fixture.v1"
+      },
+      "fetch_status": "dry_run_fixture_success",
+      "structured_error": null,
+      "evidence_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[2]"
+    },
+    {
+      "observation_id": "source_observation_xueqiu_dispute_001",
+      "source": "xueqiu_dispute",
+      "source_label": "雪球争议讨论",
+      "source_channel": "xueqiu_dispute",
+      "source_entry_url": "https://xueqiu.com/",
+      "source_url": "fixture://all-source/xueqiu/dispute/post/001",
+      "canonical_url": "fixture://all-source/xueqiu/dispute/post/001",
+      "author": "fixture_xueqiu_dispute_author",
+      "published_at": "2026-06-15T02:30:00Z",
+      "fetched_at": "2026-06-15T03:00:00Z",
+      "copy_text": "A fixture dispute thread shows sharply different narratives, with moderation risk kept explicit.",
+      "topic_or_hook": "controversy_without_ground_truth",
+      "image_refs": [],
+      "image_status": "no_image",
+      "engagement_snapshot": {
+        "status": "dry_run_fixture_metrics_not_ground_truth",
+        "metrics_are_fixture": true,
+        "observed_at": "2026-06-15T03:00:00Z",
+        "metrics": {
+          "comment_count": 0,
+          "like_count": 0,
+          "share_count": 0
+        }
+      },
+      "content_hash": "sha256:all-source-xueqiu-dispute-001",
+      "connector_identity": {
+        "connector_id": "fixture.xueqiu_dispute.runner.v1",
+        "tool_id": "news_harness.run_sources.fixture",
+        "tool_version": "all_source_runner.fixture.v1"
+      },
+      "fetch_status": "dry_run_fixture_success",
+      "structured_error": null,
+      "evidence_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[3]"
+    },
+    {
+      "observation_id": "source_observation_reddit_wallstreetbets_001",
+      "source": "reddit",
+      "source_label": "Reddit source pool",
+      "source_channel": "r/wallstreetbets",
+      "source_entry_url": "https://www.reddit.com/r/wallstreetbets/",
+      "source_url": "fixture://all-source/reddit/r/wallstreetbets/comments/001",
+      "canonical_url": "fixture://all-source/reddit/r/wallstreetbets/comments/001",
+      "author": "fixture_reddit_author",
+      "published_at": "2026-06-15T02:25:00Z",
+      "fetched_at": "2026-06-15T03:00:00Z",
+      "copy_text": "A fixture Reddit post has rapid comment velocity but is flagged as community-slang heavy.",
+      "topic_or_hook": "comment_velocity_meme_risk",
+      "image_refs": [],
+      "image_status": "no_image",
+      "engagement_snapshot": {
+        "status": "dry_run_fixture_metrics_not_ground_truth",
+        "metrics_are_fixture": true,
+        "observed_at": "2026-06-15T03:00:00Z",
+        "metrics": {
+          "comment_count": 0,
+          "score": 0,
+          "upvote_ratio": 0
+        }
+      },
+      "content_hash": "sha256:all-source-reddit-wsb-001",
+      "connector_identity": {
+        "connector_id": "fixture.reddit.runner.v1",
+        "tool_id": "news_harness.run_sources.fixture",
+        "tool_version": "all_source_runner.fixture.v1"
+      },
+      "fetch_status": "dry_run_fixture_success",
+      "structured_error": null,
+      "evidence_ref": "fixtures/sample_all_source_runner_dry_run.json#observations[4]"
+    }
+  ],
+  "structured_errors": [
+    {
+      "source": "x_list",
+      "code": "auth_required",
+      "stage": "real_smoke_blocked",
+      "message": "Real X access is blocked in fixture mode; only secret_ref placeholders are accepted.",
+      "retryable": false,
+      "blocks_other_sources": false
+    },
+    {
+      "source": "deepseek",
+      "code": "auth_required",
+      "stage": "llm_real_call_blocked",
+      "message": "DeepSeek key is not read in fixture mode; fixture scoring is used.",
+      "retryable": false,
+      "blocks_other_sources": false
+    }
+  ],
+  "downstream_refs": {
+    "deepseek_scoring_ref": "fixtures/sample_deepseek_scoring_fixture.json",
+    "timeline_store_ref": "fixtures/timeline_store.json",
+    "revisit_schedule_ref": "fixtures/revisit_schedule.json"
+  }
+}

@@ -1,0 +1,32 @@
+# News Harness V1 — Caddy reverse proxy
+# Deploy to /etc/caddy/Caddyfile on VPS
+#
+# Replace YOUR_DOMAIN with the actual domain before deploying.
+
+YOUR_DOMAIN {
+    # Static files served directly by Caddy (fast, no Python overhead)
+    handle_path /web/* {
+        root * /opt/news_harness
+        file_server
+    }
+
+    # API proxied to Python
+    handle /api/* {
+        reverse_proxy 127.0.0.1:8765
+    }
+
+    # Root redirects to dashboard
+    redir / /web/radar-timeline/
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy same-origin
+        Cache-Control "public, max-age=60"
+    }
+
+    # Logs
+    log {
+        output file /var/log/caddy/news-harness.log
+    }
+}

@@ -1,0 +1,18 @@
+[Unit]
+Description=News Harness rolling source -> score -> timeline cycle
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/news_harness
+EnvironmentFile=/run/news-harness/news_harness.env
+ExecStart=/usr/bin/python3 -m news_harness run-cycle --source-config configs/all_source_runner.example.json --score-config configs/deepseek_provider.example.json --fixtures fixtures --out web/radar-timeline/timeline_feed.json --mode manual-smoke --backend direct-cli
+User=news-harness
+Group=news-harness
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/news_harness/artifacts /opt/news_harness/web/radar-timeline /run/news-harness
+
