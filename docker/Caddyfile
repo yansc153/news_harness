@@ -1,0 +1,26 @@
+# News Harness V1 — Docker Caddyfile
+# Replace :80 with your domain for automatic HTTPS:
+#   YOUR_DOMAIN {
+#       ...
+#   }
+
+:80 {
+    # Static files served directly by Caddy
+    handle_path /web/* {
+        root * /srv
+        file_server
+    }
+
+    # API proxied to Python app
+    handle /api/* {
+        reverse_proxy app:8765
+    }
+
+    # Root redirects to dashboard
+    redir / /web/radar-timeline/
+
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy same-origin
+    }
+}

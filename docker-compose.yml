@@ -1,0 +1,48 @@
+# News Harness V1 — Docker Compose
+#
+# Secrets: place files in ./docker/secrets/ before starting:
+#   ./docker/secrets/deepseek-api-key
+#   ./docker/secrets/x-list-reader-cookie
+#   ./docker/secrets/reddit-reader-cookie
+#
+# Start:  docker compose up -d
+# Stop:   docker compose down
+
+services:
+  app:
+    build: .
+    container_name: news-harness
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    volumes:
+      # Secrets (read-only)
+      - ./docker/secrets:/run/news-harness/secrets:ro
+      - ./docker/news_harness.env:/run/news-harness/news_harness.env:ro
+      # Persistent artifacts
+      - ./docker/artifacts:/app/artifacts
+      - ./docker/feed:/app/web/radar-timeline
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/api/health')"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  caddy:
+    image: caddy:alpine
+    container_name: news-harness-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web:/srv/web:ro
+      - caddy_data:/data
+    depends_on:
+      - app
+
+volumes:
+  caddy_data:
