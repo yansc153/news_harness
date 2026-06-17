@@ -429,6 +429,10 @@ a {
   color: var(--accent);
 }
 
+.feed-pill.blocked {
+  color: var(--warn);
+}
+
 .controls {
   display: grid;
   grid-template-columns: repeat(4, minmax(82px, auto));

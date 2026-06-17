@@ -460,9 +460,10 @@ function renderStats(feed, items, loadedFrom) {
   const evaluated = items.filter((item) => evalLabel(item).includes("已")).length;
   const avgScore = items.length ? items.reduce((total, item) => total + score(item), 0) / items.length : 0;
   const isFixture = isDemoFeed(feed, loadedFrom);
+  const isBlocked = feed.status === "blocked" || loadedFrom === "no live feed";
   const feedStatus = document.getElementById("feedStatus");
-  feedStatus.textContent = isFixture ? "演示数据" : "已连接";
-  feedStatus.className = `feed-pill ${isFixture ? "fixture" : "live"}`;
+  feedStatus.textContent = isFixture ? "演示数据" : isBlocked ? "等待真实数据" : "已连接";
+  feedStatus.className = `feed-pill ${isFixture ? "fixture" : isBlocked ? "blocked" : "live"}`;
 
   const avgSeries = aggregateSeries(items);
   const stages = [
