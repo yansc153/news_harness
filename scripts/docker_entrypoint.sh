@@ -16,19 +16,22 @@ fi
 mkdir -p /app/artifacts/manual_smoke/latest
 mkdir -p /app/web/radar-timeline
 
+CYCLE_MODE="${NEWS_HARNESS_CYCLE_MODE:-dry-run}"
+CYCLE_BACKEND="${NEWS_HARNESS_CYCLE_BACKEND:-builtin}"
+
 # Run cycle once immediately, then every 30 minutes in background
 (
     echo "  cycle runner: waiting 10s for site server to start..."
     sleep 10
     while true; do
-        echo "  [cycle] $(date -Iseconds) starting..."
+        echo "  [cycle] $(date -Iseconds) starting mode=$CYCLE_MODE backend=$CYCLE_BACKEND..."
         python3 -m news_harness run-cycle \
             --source-config configs/all_source_runner.json \
             --score-config configs/deepseek_provider.json \
             --fixtures fixtures \
             --out web/radar-timeline/timeline_feed.json \
-            --mode manual-smoke \
-            --backend direct-cli \
+            --mode "$CYCLE_MODE" \
+            --backend "$CYCLE_BACKEND" \
             2>&1 || echo "  [cycle] exited with code $?"
         echo "  [cycle] $(date -Iseconds) done. sleeping 30m..."
         sleep 1800
