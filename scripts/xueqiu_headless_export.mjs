@@ -70,10 +70,17 @@ function looksBlocked(text) {
   return /login|请登录|登录后|下载app 关于雪球/i.test(lowered) && lowered.length < 800;
 }
 
+function looksTruncated(text) {
+  const cleaned = cleanText(text);
+  if (!cleaned) return true;
+  return /(\.{3,}|…|展开全文|阅读全文|查看全文)\s*$/.test(cleaned);
+}
+
 function hasConfirmedDetailText(detailText, listText) {
   const detail = cleanText(detailText);
   const list = cleanText(listText);
   if (!detail || looksBlocked(detail)) return false;
+  if (looksTruncated(detail)) return false;
   if (detail.length >= list.length + 20) return true;
   if (detail.length >= 120 && !/[.。…]\s*展开/.test(detail.slice(-80))) return true;
   return detail.length >= 60 && list.length < 80;
@@ -298,7 +305,7 @@ try {
   const rejected = [];
   for (const row of rows.slice(0, Math.min(rows.length, limit * 3))) {
     const detail = await detailRow(context, row);
-    if (detail.full_text_observed) {
+    if (detail.full_text_observed && !looksTruncated(detail.text)) {
       detailed.push(detail);
     } else {
       rejected.push(detail);

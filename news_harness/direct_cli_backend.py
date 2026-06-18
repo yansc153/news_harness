@@ -1133,8 +1133,12 @@ def _quoted_original_row(row: dict[str, Any]) -> dict[str, Any] | None:
 def _xueqiu_source_quality(row: dict[str, Any], text: str) -> dict[str, Any]:
     detail_status = str(row.get("detail_fetch_status") or "").strip()
     detail_confirmed = row.get("full_text_observed") is True and detail_status in {"full_text_observed", "api_full_text_observed"}
-    if detail_confirmed and not _looks_like_auth_or_challenge_text(text):
+    text_truncated = _looks_like_truncated_xueqiu_text(text)
+    if detail_confirmed and not _looks_like_auth_or_challenge_text(text) and not text_truncated:
         full_text_status = "full_text_observed"
+    elif text_truncated:
+        detail_status = detail_status or "detail_text_incomplete"
+        full_text_status = "detail_attempt_incomplete"
     elif detail_status:
         full_text_status = "detail_attempt_incomplete"
     else:
@@ -1442,6 +1446,13 @@ def _looks_like_auth_or_challenge_text(text: str) -> bool:
             "下载app 关于雪球",
         )
     )
+
+
+def _looks_like_truncated_xueqiu_text(text: str) -> bool:
+    normalized = re.sub(r"\s+", " ", str(text or "")).strip()
+    if not normalized:
+        return True
+    return bool(re.search(r"(\.{3,}|…|展开全文|阅读全文|查看全文)\s*$", normalized))
 
 
 def _x_list_id(url: str) -> str:
