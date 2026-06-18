@@ -189,6 +189,8 @@ function clamp01(value) {
 function score(item) {
   const raw = Number(item.radar_score ?? item.hotness_score ?? 0);
   if (!Number.isFinite(raw)) return 0;
+  // ponytail: legacy feeds briefly wrote 3300 for 33; keep display sane without a migration.
+  if (raw > 100) return Math.round(Math.min(100, raw / 100));
   return Math.round(raw > 1 ? raw : raw * 100);
 }
 

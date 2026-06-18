@@ -62,6 +62,23 @@ class TimelineMergeTests(unittest.TestCase):
 
         self.assertEqual(["high", "mid"], [item["id"] for item in merged])
 
+    def test_manual_timeline_merge_drops_challenge_pages(self) -> None:
+        merged = merge_manual_timeline_items(
+            current_items=[],
+            prior_items=[
+                {
+                    "id": "blocked",
+                    "copy_text": "Access Verification please slide to complete the verification process TraceID: abc",
+                    "published_at": "2026-06-18T02:00:00Z",
+                    "hotness_score": 99,
+                },
+                {"id": "real", "copy_text": "actual source text", "published_at": "2026-06-18T01:00:00Z", "hotness_score": 1},
+            ],
+            max_items=10,
+        )
+
+        self.assertEqual(["real"], [item["id"] for item in merged])
+
 
 if __name__ == "__main__":
     unittest.main()

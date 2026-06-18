@@ -66,7 +66,7 @@ function stripHtml(text) {
 
 function looksBlocked(text) {
   const lowered = cleanText(text).toLowerCase();
-  if (/captcha|challenge|risk|waf|verify|验证码|访问受限|访问验证|安全验证|滑动验证|请按住滑块/i.test(lowered)) return true;
+  if (/access verification|slide to complete|slide to verify|traceid|captcha|challenge|risk|waf|verify|验证码|访问受限|访问验证|安全验证|滑动验证|请按住滑块/i.test(lowered)) return true;
   return /login|请登录|登录后|下载app 关于雪球/i.test(lowered) && lowered.length < 800;
 }
 

@@ -2075,7 +2075,7 @@ def _manual_deepseek_model_id(config: dict[str, Any]) -> str:
 
 def _looks_like_challenge(body: str) -> bool:
     lowered = body.lower()
-    return any(marker in lowered for marker in ("captcha", "login", "challenge", "risk", "verify you are human", "请登录", "验证码"))
+    return any(marker in lowered for marker in ("captcha", "login", "challenge", "risk", "access verification", "slide to complete", "slide to verify", "traceid", "verify you are human", "请登录", "验证码"))
 
 
 def _html_title(body: str) -> str | None:

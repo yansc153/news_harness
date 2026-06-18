@@ -57,6 +57,11 @@ def _timeline_sort_key(item: dict[str, Any]) -> tuple[float, str]:
     return hotness, published_at if isinstance(published_at, str) else ""
 
 
+def _blocked_timeline_text(item: dict[str, Any]) -> bool:
+    text = str(item.get("copy_text") or item.get("topic_or_hook") or "").lower()
+    return any(marker in text for marker in ("access verification", "slide to complete", "slide to verify", "traceid"))
+
+
 def _load_timeline_feed_items(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
@@ -80,7 +85,7 @@ def merge_manual_timeline_items(
 
     merged: dict[str, dict[str, Any]] = {}
     for item in [*prior_items, *current_items]:
-        if isinstance(item, dict):
+        if isinstance(item, dict) and not _blocked_timeline_text(item):
             merged[_timeline_item_key(item)] = item
     sorted_items = sorted(merged.values(), key=_timeline_sort_key, reverse=True)
     limit = max_items if max_items is not None else _manual_timeline_max_items()
