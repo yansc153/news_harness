@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -21,10 +22,69 @@ SHADOW_SOURCE_FIXTURE = "sample_shadow_source_fetch_result.json"
 ROLLING_SOURCE_SCHEDULE_FIXTURE = "rolling_source_schedule.json"
 TIMELINE_STORE_FIXTURE = "timeline_store.json"
 REVISIT_SCHEDULE_FIXTURE = "revisit_schedule.json"
+DEFAULT_MANUAL_TIMELINE_MAX_ITEMS = 1000
 
 
 def _write_json(path: Path, data: Any) -> None:
     write_json_artifact(path, data)
+
+
+def _manual_timeline_max_items() -> int:
+    value = os.environ.get("NEWS_HARNESS_TIMELINE_MAX_ITEMS")
+    if not value:
+        return DEFAULT_MANUAL_TIMELINE_MAX_ITEMS
+    try:
+        parsed = int(value)
+    except ValueError:
+        return DEFAULT_MANUAL_TIMELINE_MAX_ITEMS
+    return max(1, parsed)
+
+
+def _timeline_item_key(item: dict[str, Any]) -> str:
+    for field in ("source_url", "canonical_url", "article_detail_url", "evidence_ref", "id"):
+        value = item.get(field)
+        if isinstance(value, str) and value.strip():
+            return f"{field}:{value.strip()}"
+    return f"id:{item.get('id', '')}"
+
+
+def _timeline_sort_key(item: dict[str, Any]) -> tuple[float, str]:
+    try:
+        hotness = float(item.get("hotness_score", 0) or 0)
+    except (TypeError, ValueError):
+        hotness = 0.0
+    published_at = item.get("published_at")
+    return hotness, published_at if isinstance(published_at, str) else ""
+
+
+def _load_timeline_feed_items(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            feed = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return []
+    if not isinstance(feed, dict) or not isinstance(feed.get("items"), list):
+        return []
+    return [item for item in feed["items"] if isinstance(item, dict)]
+
+
+def merge_manual_timeline_items(
+    current_items: list[dict[str, Any]],
+    prior_items: list[dict[str, Any]],
+    *,
+    max_items: int | None = None,
+) -> list[dict[str, Any]]:
+    """Merge the latest cycle into the rolling live feed, replacing duplicates."""
+
+    merged: dict[str, dict[str, Any]] = {}
+    for item in [*prior_items, *current_items]:
+        if isinstance(item, dict):
+            merged[_timeline_item_key(item)] = item
+    sorted_items = sorted(merged.values(), key=_timeline_sort_key, reverse=True)
+    limit = max_items if max_items is not None else _manual_timeline_max_items()
+    return sorted_items[: max(1, limit)]
 
 
 def _base_fixture_item(fixtures: dict[str, Any]) -> dict[str, Any]:
@@ -269,14 +329,24 @@ def generate_timeline_feed(fixtures_dir: Path, out_path: Path, schema_path: Path
         )
         fixture_item_count = len(feed["items"])
         if manual_items:
-            feed["items"] = sorted(manual_items, key=lambda item: (item["hotness_score"], item["published_at"]), reverse=True)
+            prior_items = [
+                *_load_timeline_feed_items(TIMELINE_FEED_ARTIFACT),
+                *_load_timeline_feed_items(out_path),
+            ]
+            feed["items"] = merge_manual_timeline_items(manual_items, prior_items)
             feed["manual_smoke"]["fixture_items_hidden_from_product_feed"] = fixture_item_count
-            write_manual_timeline_store(manual_items, manual_metadata)
+            feed["manual_smoke"]["current_cycle_item_count"] = len(manual_items)
+            feed["manual_smoke"]["retained_prior_item_count"] = max(0, len(feed["items"]) - len(manual_items))
+            feed["manual_smoke"]["timeline_max_items"] = _manual_timeline_max_items()
+            write_manual_timeline_store(feed["items"], feed["manual_smoke"])
         else:
             feed["items"] = []
             feed["manual_smoke"]["fixture_items_hidden_from_product_feed"] = fixture_item_count
         feed["rolling_runtime"]["runtime_stage"] = "manual_smoke_live_feed"
         feed["rolling_runtime"]["active_item_count"] = len(feed["items"])
+        feed["rolling_runtime"]["current_cycle_item_count"] = len(manual_items)
+        feed["rolling_runtime"]["store_item_count"] = len(feed["items"])
+        feed["rolling_runtime"]["max_store_item_count"] = _manual_timeline_max_items()
         _write_json(TIMELINE_FEED_ARTIFACT, feed)
     _write_json(out_path, feed)
     return {
