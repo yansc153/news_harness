@@ -28,11 +28,28 @@ services:
       - NEWS_HARNESS_REDDIT_COOKIE_FILE=/run/news-harness/secrets/reddit-reader-cookie
       - DEEPSEEK_API_KEY_FILE=/run/news-harness/secrets/deepseek-api-key
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1/api/health')"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/api/health')"]
       interval: 60s
       timeout: 10s
       retries: 3
       start_period: 10m
 
+  caddy:
+    build:
+      context: https://github.com/yansc153/news_harness.git
+      dockerfile: docker/Dockerfile.caddy
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - news_harness_caddy_data:/data
+      - news_harness_caddy_config:/config
+    environment:
+      - NEWS_HARNESS_DOMAIN=newshardness.hellopepper.work
+      - NEWS_HARNESS_UPSTREAM=127.0.0.1:8765
+    depends_on:
+      - app
+
 volumes:
   news_harness_artifacts:
+  news_harness_caddy_data:
+  news_harness_caddy_config:
