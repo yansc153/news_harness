@@ -1,0 +1,13 @@
+{
+  "object_type": "SourceRunnerRuntimeConfig",
+  "config_version": "source_runner_runtime.fixture.v1",
+  "fixture_only": true,
+  "no_real_source_access": true,
+  "network_fetch_allowed": false,
+  "no_real_scheduler": true,
+  "refresh_interval_seconds": 1800,
+  "failure_budget": {
+    "max_consecutive_failures": 3,
+    "cooldown_seconds": 3600
+  }
+}

@@ -98,10 +98,17 @@ def run_healthcheck(
     provider_status = deepseek.get("provider_status", {}) if isinstance(deepseek, dict) else {}
     scored_candidates = deepseek.get("scored_candidates", []) if isinstance(deepseek, dict) else []
     fixture_backed = isinstance(deepseek, dict) and deepseek.get("fixture_only") is True
+    deepseek_errors = deepseek.get("structured_errors", []) if isinstance(deepseek, dict) and isinstance(deepseek.get("structured_errors"), list) else []
     deepseek_ok = (
-        isinstance(provider_status, dict)
-        and (provider_status.get("provider_called") is True or fixture_backed)
-        and isinstance(scored_candidates, list)
+        fixture_backed
+        or (
+            isinstance(provider_status, dict)
+            and provider_status.get("provider_called") is True
+            and not deepseek_errors
+            and not provider_status.get("fallback_used")
+        )
+    ) and (
+        isinstance(scored_candidates, list)
         and len(scored_candidates) > 0
     )
     checks.append(
@@ -110,7 +117,7 @@ def run_healthcheck(
             deepseek_ok,
             f"provider_called={provider_status.get('provider_called') if isinstance(provider_status, dict) else None}; fixture_backed={fixture_backed}; "
             f"fallback={provider_status.get('fallback_used') if isinstance(provider_status, dict) else None}; "
-            f"scored={len(scored_candidates) if isinstance(scored_candidates, list) else 0}",
+            f"structured_errors={len(deepseek_errors)}; scored={len(scored_candidates) if isinstance(scored_candidates, list) else 0}",
         )
     )
     visual_items = [
@@ -122,7 +129,7 @@ def run_healthcheck(
     checks.append(_check("visual_evidence_present", bool(visual_items), f"visual evidence items={len(visual_items)}"))
     requires_revisit = isinstance(deepseek, dict) and "prediction_contract" in deepseek
     revisit_ref = feed.get("manual_smoke", {}).get("revisit", {}).get("schedule_ref") if isinstance(feed, dict) else None
-    revisit = _load_json(ROOT / revisit_ref) if isinstance(revisit_ref, str) else revisit_direct
+    revisit = revisit_direct if revisit_direct is not None else (_load_json(ROOT / revisit_ref) if isinstance(revisit_ref, str) else None)
     task_count = len(revisit.get("tasks", [])) if isinstance(revisit, dict) and isinstance(revisit.get("tasks"), list) else 0
     checks.append(_check("revisit_registered", (not requires_revisit) or task_count > 0, f"revisit tasks={task_count}; required={requires_revisit}"))
     due_task_ids = _due_task_ids(revisit)

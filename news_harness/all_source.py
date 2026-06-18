@@ -150,12 +150,29 @@ def run_cycle(
     errors: list[dict[str, Any]] = []
 
     if source_result.get("status") == "ok":
+        if selected_mode == "manual-smoke" and not source_result.get("observation_count"):
+            errors.append({"phase": "sources", "status": "failed", "code": "no_manual_source_observations"})
+        failed_sources = [
+            source
+            for source, status in (source_result.get("source_statuses") or {}).items()
+            if status != "ok"
+        ]
+        if selected_mode == "manual-smoke" and failed_sources:
+            errors.append({"phase": "sources", "status": "failed", "code": "source_failed", "sources": failed_sources})
+
+    can_score = source_result.get("status") == "ok" and (
+        selected_mode != "manual-smoke" or bool(source_result.get("observation_count"))
+    )
+    if can_score:
         score_result = score(score_config, dry_run=dry_run, mode=selected_mode)
     else:
-        errors.append({"phase": "sources", "status": source_result.get("status"), "code": source_result.get("error_code")})
+        if not errors:
+            errors.append({"phase": "sources", "status": source_result.get("status"), "code": source_result.get("error_code")})
 
     if score_result is not None and score_result.get("status") != "ok":
         errors.append({"phase": "score", "status": score_result.get("status"), "code": score_result.get("error_code")})
+    if selected_mode == "manual-smoke" and score_result is not None and score_result.get("structured_error_count"):
+        errors.append({"phase": "score", "status": "failed", "code": "deepseek_structured_errors", "count": score_result.get("structured_error_count")})
 
     closed_loop_result: dict[str, Any] | None = None
     if score_result is not None and score_result.get("status") == "ok":

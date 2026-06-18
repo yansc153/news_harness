@@ -20,7 +20,7 @@ A healthy VPS candidate has:
 
 ```bash
 python3 -m news_harness run-cycle \
-  --source-config configs/all_source_runner.example.json \
+  --source-config configs/all_source_runner.json \
   --score-config configs/deepseek_provider.example.json \
   --fixtures fixtures \
   --out web/radar-timeline/timeline_feed.json \
@@ -107,7 +107,8 @@ Tools exposed:
 - `get_health`
 
 MCP is read-only. It must not crawl sources, call DeepSeek, mutate artifacts,
-or promote scoring rules. See `docs/MCP_CONNECTOR.md`.
+or promote scoring rules. The website's `MCP 通道` section mirrors the command
+and client config for operators. See `docs/MCP_CONNECTOR.md`.
 
 ## If `feed_fresh` Fails
 
@@ -236,10 +237,16 @@ Use repo-external files only. Do not store secret values in this repo.
 - `NEWS_HARNESS_MANUAL_SMOKE_ACK=I_UNDERSTAND_THIS_IS_READ_ONLY_MANUAL_SMOKE`
 - `NEWS_HARNESS_REAL_SOURCE_SMOKE=1`
 - `NEWS_HARNESS_DEEPSEEK_SMOKE=1`
-- optional `NEWS_HARNESS_REDDIT_COOKIE_FILE`
-- optional `NEWS_HARNESS_XUEQIU_HEADLESS=1`
-- optional `NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE`
-- optional `NEWS_HARNESS_XUEQIU_EXPORT_DIR`
+- `NEWS_HARNESS_X_HEADLESS=1`
+- `NEWS_HARNESS_REDDIT_COOKIE_FILE`
+- `NEWS_HARNESS_XUEQIU_HEADLESS=1`
+- `NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE`
+- `NEWS_HARNESS_XUEQIU_EXPORT_DIR`
+
+Use `configs/all_source_runner.json` for the production-shaped three-source
+candidate: X list, Reddit, Xueqiu `热门`, and Xueqiu `达人`. Do not describe it
+as production ready until a real run and healthcheck verify all four required
+source IDs.
 
 ## Promotion Rule
 

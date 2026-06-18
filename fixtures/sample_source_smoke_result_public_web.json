@@ -1,0 +1,47 @@
+{
+  "object_type": "SourceSmokeResult",
+  "result_id": "source_smoke_result_public_web_fixture_001",
+  "smoke_matrix_id": "source_smoke_matrix_fixture_001",
+  "smoke_decision_id": "smoke_decision_public_web_001",
+  "source": "public_web",
+  "source_entrance_id": "src_public_web_candidate_001",
+  "source_type": "public_web_page",
+  "source_url": "fixture://future-smoke/public-web/page",
+  "smoke_allowed": false,
+  "diagnostic_success": true,
+  "source_reach_success": false,
+  "fixture_only": true,
+  "not_real_source_reach": true,
+  "connector_identity": {
+    "connector_id": "planned.public_web.reader.v0",
+    "connector_version": "source_smoke.fixture.v1",
+    "connector_run_ref": null,
+    "source_registry_ref": null,
+    "readiness_decision_ref": null
+  },
+  "auth_status": {
+    "auth_requirement": "not_required",
+    "auth_state": "not_required",
+    "auth_boundary_review": "blocked_missing_readiness",
+    "session_state_ref": null,
+    "secret_ref": null
+  },
+  "rate_limit_status": {
+    "policy": "unreviewed",
+    "state": "blocked_missing_readiness",
+    "remaining": "unknown",
+    "observed_at": "2026-06-14T00:00:00Z"
+  },
+  "structured_error": {
+    "code": "source_registry_missing",
+    "message": "Public web smoke is blocked until source registry and connector readiness are recorded."
+  },
+  "real_engagement": {
+    "status": "unavailable",
+    "metrics": {}
+  },
+  "evidence_policy": {
+    "source_url_required": true,
+    "raw_evidence_ref_required_for_real_smoke": true
+  }
+}

@@ -50,14 +50,9 @@ ELIGIBLE_IMAGE_ROLES = {"original_content_image", "article_card_image"}
 INELIGIBLE_IMAGE_ROLES = {"avatar", "sidebar", "comment_image", "recommendation", "emoji", "unknown_non_content_image"}
 
 REQUIRED_MANUAL_ENV = {
-    "DEEPSEEK_API_KEY_FILE": None,
-    "NEWS_HARNESS_X_COOKIE_FILE": None,
     "NEWS_HARNESS_MANUAL_SMOKE_ACK": None,
     "NEWS_HARNESS_REAL_SOURCE_SMOKE": "1",
     "NEWS_HARNESS_DEEPSEEK_SMOKE": "1",
-}
-OPTIONAL_MANUAL_SECRET_FILES = {
-    "NEWS_HARNESS_REDDIT_COOKIE_FILE": "reddit_cookie",
 }
 MANUAL_ENV_FILE = Path("/tmp/news-harness-secrets/news_harness.env")
 MAX_IMAGE_BYTES = 2_000_000
@@ -82,7 +77,6 @@ def run_manual_sources(config_path: Path) -> dict[str, Any]:
         _write_manual_json(SOURCE_RUN_ARTIFACT, artifact)
         return _source_summary(artifact)
 
-    x_cookie = _read_secret_file(os.environ["NEWS_HARNESS_X_COOKIE_FILE"], "x_cookie")
     reddit_cookie = _read_optional_secret_file("NEWS_HARNESS_REDDIT_COOKIE_FILE", "reddit_cookie")
     source_results: list[dict[str, Any]] = []
     observations: list[dict[str, Any]] = []
@@ -98,6 +92,11 @@ def run_manual_sources(config_path: Path) -> dict[str, Any]:
                 else:
                     source_observations, errors = _fetch_reddit(source_config, reddit_cookie.get("value"))
             elif source == "x_list":
+                x_cookie_file = os.environ.get("NEWS_HARNESS_X_COOKIE_FILE")
+                x_cookie = _read_secret_file(x_cookie_file, "x_cookie") if x_cookie_file else {
+                    "status": "blocked",
+                    "structured_error": _structured_error("secret_env_missing", "NEWS_HARNESS_X_COOKIE_FILE is not set"),
+                }
                 if x_cookie["status"] != "ok":
                     source_observations, errors = [], [x_cookie["structured_error"]]
                 else:
@@ -156,9 +155,14 @@ def score_manual_deepseek(config_path: Path) -> dict[str, Any]:
     elif not observations:
         structured_errors.append(_structured_error("no_manual_source_observations", "run manual-smoke sources before scoring"))
     else:
-        key_read = _read_secret_file(os.environ["DEEPSEEK_API_KEY_FILE"], "deepseek_api_key")
+        key_file = os.environ.get("DEEPSEEK_API_KEY_FILE")
+        key_read = _read_secret_file(key_file, "deepseek_api_key") if key_file else {
+            "status": "blocked",
+            "structured_error": _structured_error("secret_env_missing", "DEEPSEEK_API_KEY_FILE is not set"),
+        }
         if key_read["status"] != "ok":
             structured_errors.append(key_read["structured_error"])
+            candidates = _fallback_scored_candidates(observations, key_read["structured_error"])
         else:
             try:
                 provider_called = True
@@ -187,6 +191,7 @@ def score_manual_deepseek(config_path: Path) -> dict[str, Any]:
             "provider_ref": "secret_ref:deepseek_api_key_v1",
             "network_calls_allowed": True,
             "timeout_seconds": 20,
+            "max_tokens": 3000,
             "max_candidates": 5,
         },
         "provider_status": {
@@ -531,6 +536,9 @@ def load_manual_timeline_items() -> tuple[list[dict[str, Any]], dict[str, Any]]:
         visual = _timeline_visual_summary(observation, assets)
         hotness = _manual_hotness_score(observation, score, quality, visual)
         prediction_scores = score.get("scores", {}) if isinstance(score.get("scores"), dict) else {}
+        image_refs = observation.get("image_refs", [])
+        image_refs = image_refs if isinstance(image_refs, list) else []
+        first_image = _manual_first_image_ref(image_refs)
         items.append(
             {
                 "object_type": "RadarTimelineItem",
@@ -538,9 +546,13 @@ def load_manual_timeline_items() -> tuple[list[dict[str, Any]], dict[str, Any]]:
                 "id": f"manual_smoke_{index + 1:03d}_{observation.get('content_hash', '')[:12]}",
                 "source": observation.get("source"),
                 "source_label": observation.get("source_label"),
+                "source_group": _manual_source_group(observation.get("source"), observation.get("source_label")),
                 "source_url": observation.get("source_url"),
                 "canonical_url": observation.get("canonical_url"),
                 "author": observation.get("author"),
+                "display_name": observation.get("display_name"),
+                "handle": observation.get("handle"),
+                "avatar_url": observation.get("avatar_url"),
                 "published_at": observation.get("published_at") or observation.get("fetched_at"),
                 "copy_text": observation.get("copy_text", ""),
                 "topic_or_hook": score.get("topic_or_hook") or observation.get("topic_or_hook"),
@@ -551,10 +563,12 @@ def load_manual_timeline_items() -> tuple[list[dict[str, Any]], dict[str, Any]]:
                 "full_text_status": observation.get("full_text_status"),
                 "detail_fetch_status": observation.get("detail_fetch_status"),
                 "article_detail_url": observation.get("article_detail_url"),
-                "image_refs": observation.get("image_refs", []),
+                "image_refs": image_refs,
+                "original_image_ref": _manual_image_url(first_image, "original_image_ref"),
+                "thumbnail_ref": _manual_image_url(first_image, "thumbnail_ref"),
                 "asset_refs": downloaded_assets,
                 "image_structured_errors": image_errors,
-                "image_status": "available" if observation.get("image_refs") else "no_image",
+                "image_status": "available" if image_refs else "no_image",
                 "image_quality_status": visual["image_quality_status"],
                 "visual_evidence_score": visual["visual_evidence_score"],
                 "hotness_score": hotness,
@@ -602,6 +616,35 @@ def load_manual_timeline_items() -> tuple[list[dict[str, Any]], dict[str, Any]]:
         "backend": source_run.get("backend", "builtin"),
     }
     return items, metadata
+
+
+def _manual_source_group(source: Any, source_label: Any) -> str:
+    key = f"{source or ''} {source_label or ''}".lower()
+    if "reddit" in key or "r/" in key:
+        return "reddit"
+    if "xueqiu" in key or "雪球" in key:
+        return "xueqiu"
+    if "x_list" in key or "twitter" in key or "推特" in key or "x list" in key:
+        return "x"
+    return "other"
+
+
+def _manual_first_image_ref(image_refs: list[Any]) -> dict[str, Any]:
+    for ref in image_refs:
+        if isinstance(ref, dict) and _manual_image_url(ref, "original_image_ref"):
+            return ref
+    for ref in image_refs:
+        if isinstance(ref, dict):
+            return ref
+    return {}
+
+
+def _manual_image_url(image_ref: dict[str, Any], preferred_key: str) -> str:
+    for key in (preferred_key, "original_image_ref", "thumbnail_ref", "url", "image_url", "media_url", "media_url_https"):
+        value = str(image_ref.get(key) or "")
+        if value.startswith(("http://", "https://")):
+            return value
+    return ""
 
 
 def _manual_scoring_summary(scoring: dict[str, Any]) -> dict[str, Any]:
@@ -1110,7 +1153,7 @@ def _call_deepseek(config: dict[str, Any], observations: list[dict[str, Any]], a
     payload = {
         "model": _manual_deepseek_model_id(config),
         "temperature": 0,
-        "max_tokens": 1200,
+        "max_tokens": 3000,
         "response_format": {"type": "json_object"},
         "messages": [
             {
@@ -1287,7 +1330,7 @@ def _reddit_observation(data: dict[str, Any], subreddit: str) -> dict[str, Any]:
         canonical_url=permalink,
         author=str(data.get("author") or "unknown"),
         published_at=_utc_from_epoch(data.get("created_utc")),
-        copy_text=(str(data.get("title") or "") + "\n" + str(data.get("selftext") or "")).strip()[:2000],
+        copy_text=(str(data.get("title") or "") + "\n" + str(data.get("selftext") or "")).strip(),
         image_refs=image_refs,
         engagement=engagement,
         topic_or_hook=str(data.get("link_flair_text") or "reddit hot post"),
@@ -1367,10 +1410,11 @@ def run_revisit(
         outcome = {
             "object_type": "OutcomeRecord",
             "outcome_id": f"outcome_{task.get('task_id')}",
+            "task_id": task.get("task_id"),
             "candidate_id": task.get("candidate_id"),
             "source_evidence_ref": ref or "",
             "window": task.get("window", "4h"),
-            "window_role": task.get("window_role", "primary_outcome"),
+            "window_role": task.get("window_role") or task.get("role", "primary_outcome"),
             "scheduled_for": task.get("due_at", ""),
             "collected_at": _utc_now(),
             "observation_status": "observed" if current else "missed",
@@ -1777,14 +1821,6 @@ def _check_manual_env() -> dict[str, Any]:
         if not value:
             missing.append(key)
         elif expected is not None and value != expected:
-            invalid.append(key)
-    for key in ("DEEPSEEK_API_KEY_FILE", "NEWS_HARNESS_X_COOKIE_FILE"):
-        value = os.environ.get(key)
-        if value and not _is_repo_external_file(Path(value)):
-            invalid.append(key)
-    for key in OPTIONAL_MANUAL_SECRET_FILES:
-        value = os.environ.get(key)
-        if value and not _is_repo_external_file(Path(value)):
             invalid.append(key)
     if missing or invalid:
         return {

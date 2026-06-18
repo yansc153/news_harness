@@ -137,6 +137,9 @@ def main(argv: list[str] | None = None) -> int:
     health_parser.add_argument("--artifact-dir", type=Path, default=None, help="Artifact directory for --auto mode")
     health_parser.add_argument("--source-run", type=Path, default=health_module.DEFAULT_SOURCE_RUN, help="Manual source run artifact")
     health_parser.add_argument("--deepseek", type=Path, default=health_module.DEFAULT_DEEPSEEK, help="DeepSeek scoring artifact")
+    health_parser.add_argument("--revisit", type=Path, default=health_module.DEFAULT_REVISIT, help="Revisit schedule artifact")
+    health_parser.add_argument("--outcome", type=Path, default=health_module.DEFAULT_OUTCOME, help="Outcome artifact")
+    health_parser.add_argument("--eval", type=Path, default=health_module.DEFAULT_EVAL, help="Eval artifact")
     health_parser.add_argument("--max-age-minutes", type=int, default=90, help="Maximum feed age")
     health_parser.add_argument("--require-source", action="append", default=None, help="Source that must have feed items and ok source status")
 
@@ -222,6 +225,9 @@ def main(argv: list[str] | None = None) -> int:
             argv.extend(["--artifact-dir", str(args.artifact_dir)])
         argv.extend(["--source-run", str(args.source_run)])
         argv.extend(["--deepseek", str(args.deepseek)])
+        argv.extend(["--revisit", str(args.revisit)])
+        argv.extend(["--outcome", str(args.outcome)])
+        argv.extend(["--eval", str(args.eval)])
         argv.extend(["--max-age-minutes", str(args.max_age_minutes)])
         for source in args.require_source or []:
             argv.extend(["--require-source", source])

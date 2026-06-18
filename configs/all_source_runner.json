@@ -6,7 +6,7 @@
   "fixture_only": false,
   "no_real_source_access": false,
   "network_fetch_allowed": true,
-  "browser_automation_allowed": false,
+  "browser_automation_allowed": true,
   "real_scheduler_allowed": true,
   "source_observation_schema_version": "source_observation.v1",
   "batch_policy": {
@@ -25,6 +25,61 @@
       "two_level_crawl": false,
       "secret_ref": "secret_ref:x_list_reader_cookie_v1",
       "cookie_file_env_var_name": "NEWS_HARNESS_X_COOKIE_FILE"
+    },
+    {
+      "source": "reddit",
+      "source_label": "Reddit source pool",
+      "source_entry_url": "https://www.reddit.com/",
+      "refresh_interval_seconds": 3600,
+      "batch_limit": 10,
+      "max_items_per_subreddit_per_run": 10,
+      "secret_ref": "secret_ref:reddit_readonly_session_v1",
+      "cookie_file_env_var_name": "NEWS_HARNESS_REDDIT_COOKIE_FILE",
+      "two_level_crawl": true,
+      "subreddits": [
+        "wallstreetbets",
+        "stocks",
+        "investing",
+        "StockMarket",
+        "options",
+        "Daytrading",
+        "pennystocks",
+        "ValueInvesting",
+        "SecurityAnalysis",
+        "algotrading",
+        "trading",
+        "Stock_Picks",
+        "dividends",
+        "finance",
+        "personalfinance",
+        "Bogleheads",
+        "dividendinvesting",
+        "SPACs",
+        "Shortsqueeze",
+        "RobinHood"
+      ]
+    },
+    {
+      "source": "xueqiu_hot",
+      "source_label": "雪球热门",
+      "source_entry_url": "https://xueqiu.com/",
+      "refresh_interval_seconds": 1800,
+      "batch_limit": 10,
+      "secret_ref": "secret_ref:xueqiu_reader_cookie_v1",
+      "session_ref": "session_ref:xueqiu_small_account_v1",
+      "two_level_crawl": true,
+      "js_render_required": true
+    },
+    {
+      "source": "xueqiu_daren",
+      "source_label": "雪球达人",
+      "source_entry_url": "https://xueqiu.com/",
+      "refresh_interval_seconds": 1800,
+      "batch_limit": 10,
+      "secret_ref": "secret_ref:xueqiu_reader_cookie_v1",
+      "session_ref": "session_ref:xueqiu_small_account_v1",
+      "two_level_crawl": true,
+      "js_render_required": true
     }
   ],
   "forbidden_actions": [

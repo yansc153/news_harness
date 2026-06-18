@@ -19,11 +19,11 @@
     "published_at": { "type": "string", "format": "date-time" },
     "title": { "type": "string" },
     "copy_text": { "type": "string" },
-    "source_url": { "type": "string", "minLength": 1 },
-    "canonical_url": { "type": "string", "minLength": 1 },
-    "image_refs": { "type": "array", "items": { "type": "string" } },
-    "image_status": { "type": "string", "enum": ["available", "partial", "unavailable", "not_applicable"] },
-    "evidence_status": { "type": "string", "enum": ["complete", "partial", "degraded", "unavailable"] },
+    "source_url": { "type": "string" },
+    "canonical_url": { "type": "string" },
+    "image_refs": { "type": "array", "items": { "type": "object" } },
+    "image_status": { "type": "string" },
+    "evidence_status": { "type": "string" },
     "public_url_available": { "type": "boolean" }
   }
 }

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>牛子强 · news hardness</title>
-    <link rel="stylesheet" href="./styles.css?v=20260617-real2" />
+    <link rel="stylesheet" href="./styles.css?v=20260618-mcp1" />
   </head>
   <body>
     <main class="factory-page">
@@ -17,6 +17,7 @@
           <a href="#quickStats">总览</a>
           <a href="#timeline">队列</a>
           <a href="#telemetryPanels">指标</a>
+          <a href="#mcpChannel">MCP</a>
         </nav>
         <div class="site-actions">
           <a class="site-button light" href="#timeline">看队列</a>
@@ -43,10 +44,6 @@
                 <img src="./assets/source-logos/xueqiu.svg" alt="" />
                 <b>雪球</b>
               </span>
-              <span class="source-logo eastmoney-logo" aria-label="东方财富">
-                <img src="./assets/source-logos/eastmoney.svg" alt="" />
-                <b>东方财富</b>
-              </span>
               <span class="source-logo reddit-logo" aria-label="Reddit">
                 <img src="./assets/source-logos/reddit.svg" alt="" />
                 <b>Reddit</b>
@@ -63,6 +60,7 @@
               <nav class="rail-nav">
                 <a class="rail-item active" href="./index.html">原文雷达</a>
                 <a class="rail-item" href="#timeline">可能爆的</a>
+                <a class="rail-item" href="#mcpChannel">MCP 通道</a>
               </nav>
             </aside>
 
@@ -104,23 +102,25 @@
                 <span>绿色表示已经看过结果，橙色表示还在观察。你只看结论，不用读系统黑话。</span>
               </section>
 
-              <section class="signal-board" id="quickStats" aria-label="今日概览"></section>
+              <section class="source-tabs" id="sourceTabs" aria-label="来源分类"></section>
               <section class="language-tabs" id="languageRadar" aria-label="语言筛选"></section>
-              <section class="chart-grid" id="telemetryPanels" aria-label="运行指标"></section>
               <section class="timeline" id="timeline" aria-label="原文队列"></section>
+              <section class="mcp-channel" id="mcpChannel" aria-label="MCP 通道"></section>
+              <section class="signal-board" id="quickStats" aria-label="今日概览"></section>
+              <section class="chart-grid" id="telemetryPanels" aria-label="运行指标"></section>
             </div>
           </div>
         </section>
       </section>
     </main>
 
-    <dialog class="item-dialog" id="itemDialog">
+    <dialog class="item-dialog" id="itemDialog" role="dialog" aria-modal="true" aria-label="原文线索详情">
       <div class="dialog-panel">
         <button class="dialog-close" id="dialogClose" type="button">关闭</button>
         <div id="dialogBody"></div>
       </div>
     </dialog>
 
-    <script src="./app.js?v=20260617-real2"></script>
+    <script src="./app.js?v=20260618-mcp1"></script>
   </body>
 </html>

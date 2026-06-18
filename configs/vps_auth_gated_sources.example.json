@@ -1,0 +1,39 @@
+{
+  "object_type": "VpsAuthGatedSourceConfig",
+  "config_version": "vps_auth_gated_sources.fixture.v1",
+  "fixture_only": true,
+  "no_real_source_access": true,
+  "no_real_scheduler": true,
+  "runner_defaults": {
+    "permission_mode": "read_only",
+    "forbidden_actions": [
+      "post",
+      "like",
+      "repost",
+      "follow",
+      "comment",
+      "dm",
+      "download_image",
+      "cache_image",
+      "bypass_challenge"
+    ]
+  },
+  "secret_reference_policy": {
+    "secret_file_path_ref": "secret_ref:vps/news-harness/secrets-dir",
+    "session_state_file_path_ref": "session_ref:vps/news-harness/session-state-dir"
+  },
+  "sources": [
+    {
+      "source": "x",
+      "source_url": "https://x.com/i/lists/2056032482127175889?s=20",
+      "production_connector_ready": false,
+      "session_state_approval_status": "pending_review"
+    },
+    {
+      "source": "xueqiu",
+      "source_url": "https://xueqiu.com/",
+      "browser_assisted_required": true,
+      "production_connector_ready": false
+    }
+  ]
+}

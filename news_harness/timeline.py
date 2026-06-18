@@ -246,6 +246,7 @@ def generate_timeline_feed(fixtures_dir: Path, out_path: Path, schema_path: Path
     feed = build_timeline_feed(fixtures)
     manual_items, manual_metadata = load_manual_timeline_items()
     if manual_items or manual_metadata:
+        feed["feed_id"] = "radar_timeline_manual_smoke_latest"
         feed["fixture_only"] = False
         feed["no_real_source_access"] = False
         feed["generated_at"] = _utc_now()
@@ -266,11 +267,15 @@ def generate_timeline_feed(fixtures_dir: Path, out_path: Path, schema_path: Path
             ]
             if ref
         )
+        fixture_item_count = len(feed["items"])
         if manual_items:
-            fixture_item_count = len(feed["items"])
             feed["items"] = sorted(manual_items, key=lambda item: (item["hotness_score"], item["published_at"]), reverse=True)
             feed["manual_smoke"]["fixture_items_hidden_from_product_feed"] = fixture_item_count
             write_manual_timeline_store(manual_items, manual_metadata)
+        else:
+            feed["items"] = []
+            feed["manual_smoke"]["fixture_items_hidden_from_product_feed"] = fixture_item_count
+        feed["rolling_runtime"]["runtime_stage"] = "manual_smoke_live_feed"
         feed["rolling_runtime"]["active_item_count"] = len(feed["items"])
         _write_json(TIMELINE_FEED_ARTIFACT, feed)
     _write_json(out_path, feed)

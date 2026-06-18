@@ -3,26 +3,39 @@
   "plan_version": "xueqiu_browser_assisted_smoke.fixture.v1",
   "smoke_plan_id": "xueqiu_browser_assisted_smoke_plan_001",
   "source": "xueqiu",
-  "source_url": "https://xueqiu.com/hot",
+  "source_url": "https://xueqiu.com/",
   "fixture_only": true,
   "no_real_source_access": true,
   "vps_runner_plan_ref": "fixtures/sample_vps_source_runner_plan.json",
   "runner_mode": "vps_browser_assisted_plan",
-  "browser_requirement": {
-    "required": true,
-    "headless": true
+  "browser_assisted_boundary": {
+    "browser_assisted_required": true,
+    "cannot_override_readiness": true,
+    "browser_automation_allowed_in_fixture": false
   },
-  "auth_boundary": {
-    "auth_requirement": "required",
-    "secret_ref": "secret_ref:xueqiu-cookie"
+  "session_boundary": {
+    "auth_requirement": "session_optional_unverified",
+    "secret_ref": null,
+    "session_state_ref": null,
+    "session_state_approval_status": "not_configured"
   },
   "smoke_execution": {
     "executed": false,
+    "network_access": false,
+    "scheduler_started": false,
     "status": "planned_not_executed"
   },
   "readiness": {
     "fixture_ready": true,
-    "production_connector_ready": false
+    "production_connector_ready": false,
+    "vps_runner_plan_ready": false,
+    "blocked_reason": [
+      "browser_assisted_required",
+      "session_optional_unverified",
+      "legal_access_unapproved",
+      "rate_limit_unverified",
+      "connector_not_ready"
+    ]
   },
   "read_only_boundary": {
     "approved": false,

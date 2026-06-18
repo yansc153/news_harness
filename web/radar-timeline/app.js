@@ -38,6 +38,7 @@ const state = {
   loadedFrom: "embedded fixture",
   recentHours: 120,
   sortMode: "hotness",
+  sourceGroup: "all",
   sourceFilter: "all",
   languageFilter: "all",
   renderedItems: [],
@@ -67,6 +68,20 @@ function assetUrl(assetRef) {
 function publicUrl(value) {
   const url = String(value || "");
   return url.startsWith("http://") || url.startsWith("https://") ? url : "";
+}
+
+function imageUrlFromRef(ref) {
+  if (!ref || typeof ref !== "object") return "";
+  return publicUrl(
+    ref.original_image_ref ||
+      ref.thumbnail_ref ||
+      ref.original_url ||
+      ref.image_url ||
+      ref.url ||
+      ref.thumbnail_url ||
+      ref.media_url ||
+      ref.media_url_https
+  );
 }
 
 function isDemoFeed(feed, loadedFrom) {
@@ -107,12 +122,38 @@ function previewCopy(text, limit = 220) {
   return `${cleaned.slice(0, limit).trim()}...`;
 }
 
+function firstContentLine(text) {
+  return String(text || "")
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .find(Boolean) || "";
+}
+
 function readableTitle(item) {
-  const copy = previewCopy(item.copy_text, 96);
-  const hook = String(item.topic_or_hook || "").trim();
+  if (isXItem(item)) return socialDisplayName(item) || "X 原文";
+  const hook = String(item.topic_or_hook || item.title || "").trim();
   const hookLooksInternal = !hook || hook.includes("_") || /^[a-z0-9 -]{4,48}$/i.test(hook);
+  if (!hookLooksInternal) return hook;
+  const firstLine = firstContentLine(item.copy_text);
+  if (firstLine && firstLine.length <= 180) return firstLine;
+  const copy = previewCopy(item.copy_text, 96);
   if (copy) return copy.replace(/[。.!?？].*$/, (match) => (match.length <= 2 ? match : match.slice(0, 1)));
-  return hookLooksInternal ? "原文线索" : hook;
+  return "原文线索";
+}
+
+function displayCopy(item, title = readableTitle(item)) {
+  const original = String(item.copy_text || "").trim();
+  if (!original || isXItem(item)) return original;
+  const lines = original.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+  let text = lines.length > 1 && lines[1].startsWith(lines[0]) ? lines.slice(1).join("\n") : original;
+  for (const prefix of [title, firstContentLine(original)]) {
+    const cleanPrefix = String(prefix || "").trim();
+    if (!cleanPrefix) continue;
+    for (let index = 0; index < 2 && text.startsWith(cleanPrefix); index += 1) {
+      text = text.slice(cleanPrefix.length).replace(/^[\s:：|｜,，。.!?？-]+/, "").trim();
+    }
+  }
+  return text || original;
 }
 
 async function loadFeed() {
@@ -271,12 +312,12 @@ function bestAsset(item) {
 
 function firstOriginalImageRef(item) {
   const refs = Array.isArray(item.image_refs) ? item.image_refs : [];
-  return refs.find((ref) => ref && (ref.original_url || ref.image_url || ref.url || ref.thumbnail_url)) || refs[0] || null;
+  return refs.find((ref) => imageUrlFromRef(ref)) || refs[0] || null;
 }
 
 function imageLabel(item) {
   if (bestAsset(item)) return "有图";
-  if (item.image_status === "available") return "保留原图";
+  if (imageUrlFromRef(firstOriginalImageRef(item))) return "有图";
   if (item.image_status === "image_unavailable") return "图片不可用";
   if (item.image_status === "auth_gated") return "需登录";
   return "无图";
@@ -295,9 +336,16 @@ function imagePreview(item) {
     `;
   }
   const ref = firstOriginalImageRef(item);
-  if (item.image_status === "available" && ref) return `<div class="image-preview ref-only"><span>保留原图链接</span></div>`;
-  if (item.image_status === "image_unavailable") return `<div class="image-preview unavailable"><span>图片不可用</span></div>`;
-  return `<div class="image-preview empty"><span>无图片</span></div>`;
+  const url = imageUrlFromRef(ref);
+  if (item.image_status === "available" && url) {
+    return `
+      <figure class="image-preview has-image external-image">
+        <img src="${escapeHtml(url)}" alt="${escapeHtml(item.topic_or_hook || item.copy_text || "原文图片")}" loading="lazy" referrerpolicy="no-referrer" />
+        <figcaption>原图</figcaption>
+      </figure>
+    `;
+  }
+  return "";
 }
 
 function outcomeLabel(item) {
@@ -318,7 +366,9 @@ function sourceQualityLabel(item) {
   const value = item.source_quality_status || item.source_material_role || item.quality_status;
   const map = {
     source_row_observed: "原文已观察",
+    full_text_observed: "全文已抓取",
     original_source_candidate: "原文线索",
+    original_post: "原帖",
     quoted_original_traced: "已追到引用原文",
     summary_or_list_excerpt_only: "仅摘要",
     candidate: "线索",
@@ -369,6 +419,25 @@ function sourceKey(item) {
   return item.source_label || item.source || "unknown";
 }
 
+function sourceGroupKey(item) {
+  const key = String(item.source || item.source_label || "").toLowerCase();
+  if (key.includes("reddit") || key.startsWith("r/")) return "reddit";
+  if (key.includes("xueqiu") || key.includes("雪球")) return "xueqiu";
+  if (key === "x_list" || key.includes("twitter") || key.includes("推特") || key.includes("x list")) return "x";
+  return "other";
+}
+
+function sourceGroupLabel(group) {
+  const map = {
+    all: "全部",
+    x: "X",
+    reddit: "Reddit",
+    xueqiu: "雪球",
+    other: "其他",
+  };
+  return map[group] || group;
+}
+
 function sourceDisplayName(value) {
   const key = String(value || "").trim();
   const map = {
@@ -376,6 +445,45 @@ function sourceDisplayName(value) {
     fixture_source: "牛子强示例",
   };
   return map[key] || key || "来源";
+}
+
+function isXItem(item) {
+  return sourceGroupKey(item) === "x";
+}
+
+function socialDisplayName(item) {
+  return String(item.display_name || item.author_name || item.author || "").replace(/^@/, "").trim();
+}
+
+function socialHandle(item) {
+  const handle = String(item.handle || item.author || "").replace(/^@/, "").trim();
+  return handle ? `@${handle}` : "";
+}
+
+function socialMeta(item) {
+  return [socialHandle(item), formatTime(item.published_at)].filter(Boolean).join(" · ");
+}
+
+function socialAvatar(item) {
+  const url = publicUrl(item.avatar_url || item.author_avatar_url || item.profile_image_url);
+  const name = socialDisplayName(item) || "X";
+  const initial = Array.from(name)[0] || "X";
+  if (url) {
+    return `<img class="social-avatar" src="${escapeHtml(url)}" alt="${escapeHtml(name)}" loading="lazy" referrerpolicy="no-referrer" />`;
+  }
+  return `<span class="social-avatar placeholder" aria-hidden="true">${escapeHtml(initial)}</span>`;
+}
+
+function socialAuthorBlock(item) {
+  return `
+    <div class="social-author">
+      ${socialAvatar(item)}
+      <div class="social-author-text">
+        <strong>${escapeHtml(socialDisplayName(item) || sourceDisplayName(item.source_label || item.source))}</strong>
+        <span>${escapeHtml(socialMeta(item))}</span>
+      </div>
+    </div>
+  `;
 }
 
 function readableFlag(value) {
@@ -386,6 +494,8 @@ function readableFlag(value) {
     image_unavailable: "图片不可用",
     auth_gated: "需登录",
     summary_or_list_excerpt_only: "仅摘要",
+    full_text_observed: "全文已抓取",
+    x_full_text_not_confirmed: "X 全文待确认",
     fixture_scoring: "示例打分",
     shadow_fixture_outcome_not_ground_truth: "示例结果",
     revisit_pending_fixture_not_ground_truth: "等结果",
@@ -439,7 +549,8 @@ function syncControls(feed) {
     .map((value) => `<option value="${escapeHtml(value)}"${value === state.sortMode ? " selected" : ""}>${optionLabel(value, "sort")}</option>`)
     .join("");
 
-  const sourceOptions = ["all", ...Array.from(new Set((feed.items || []).map(sourceKey))).sort()];
+  const sourceCandidates = (feed.items || []).filter((item) => state.sourceGroup === "all" || sourceGroupKey(item) === state.sourceGroup);
+  const sourceOptions = ["all", ...Array.from(new Set(sourceCandidates.map(sourceKey))).sort()];
   if (!sourceOptions.includes(state.sourceFilter)) state.sourceFilter = "all";
   document.getElementById("sourceFilter").innerHTML = sourceOptions
     .map((value) => `<option value="${escapeHtml(value)}"${value === state.sourceFilter ? " selected" : ""}>${value === "all" ? "全部来源" : escapeHtml(sourceDisplayName(value))}</option>`)
@@ -448,14 +559,15 @@ function syncControls(feed) {
 
 function visibleItems(feed) {
   const recentItems = filterRecent(feed.items || [], feed.generated_at, state.recentHours);
-  const sourceItems = recentItems.filter((item) => state.sourceFilter === "all" || sourceKey(item) === state.sourceFilter);
+  const groupItems = recentItems.filter((item) => state.sourceGroup === "all" || sourceGroupKey(item) === state.sourceGroup);
+  const sourceItems = groupItems.filter((item) => state.sourceFilter === "all" || sourceKey(item) === state.sourceFilter);
   const languageItems = sourceItems.filter((item) => state.languageFilter === "all" || detectLanguage(item.copy_text) === state.languageFilter);
   return sortItems(languageItems, state.sortMode);
 }
 
 function renderStats(feed, items, loadedFrom) {
   const sourceCount = new Set(items.map((item) => item.source_label || item.source)).size;
-  const imageCount = items.filter((item) => bestAsset(item) || item.image_status === "available").length;
+  const imageCount = items.filter((item) => bestAsset(item) || imageUrlFromRef(firstOriginalImageRef(item))).length;
   const revisited = items.filter((item) => outcomeLabel(item).includes("已")).length;
   const evaluated = items.filter((item) => evalLabel(item).includes("已")).length;
   const avgScore = items.length ? items.reduce((total, item) => total + score(item), 0) / items.length : 0;
@@ -607,10 +719,93 @@ function renderLanguageRadar(itemsBeforeLanguage) {
     .join("");
 }
 
+function mcpClientConfig() {
+  return JSON.stringify({
+    mcpServers: {
+      "news-harness": {
+        command: "python3",
+        args: [
+          "-m",
+          "news_harness",
+          "mcp",
+          "--feed",
+          "/opt/news_harness/web/radar-timeline/timeline_feed.json",
+          "--artifact-dir",
+          "/opt/news_harness/artifacts/manual_smoke/latest",
+        ],
+      },
+    },
+  }, null, 2);
+}
+
+function renderMcpChannel(feed, items, loadedFrom) {
+  const status = isDemoFeed(feed, loadedFrom) ? "演示数据" : "只读在线";
+  const totalItems = Array.isArray(feed.items) ? feed.items.length : items.length;
+  const command = [
+    "python3 -m news_harness mcp \\",
+    "  --feed /opt/news_harness/web/radar-timeline/timeline_feed.json \\",
+    "  --artifact-dir /opt/news_harness/artifacts/manual_smoke/latest",
+  ].join("\n");
+  const tools = ["get_latest_feed", "list_radar_items", "get_radar_item", "get_image_refs", "get_health"];
+  const fields = ["copy_text", "source_url", "canonical_url", "image_refs", "image_status", "published_at"];
+  document.getElementById("mcpChannel").innerHTML = `
+    <div class="mcp-copy">
+      <span>MCP 通道</span>
+      <h2>给下游 Agent 读取原文和图片证据</h2>
+      <p>MCP 只读，不抓源站，不调用 DeepSeek，不输出分数、复盘标签或学习规则。下游只拿素材证据，判断逻辑留在本项目内。</p>
+      <div class="mcp-status">
+        <b>${escapeHtml(status)}</b>
+        <span>${compactCount(totalItems)} 条 MCP 可读素材</span>
+        <span>更新 ${escapeHtml(formatTime(feed.generated_at))}</span>
+      </div>
+    </div>
+    <div class="mcp-grid">
+      <section>
+        <h3>启动命令</h3>
+        <pre><code>${escapeHtml(command)}</code></pre>
+      </section>
+      <section>
+        <h3>客户端配置</h3>
+        <pre><code>${escapeHtml(mcpClientConfig())}</code></pre>
+      </section>
+      <section>
+        <h3>工具</h3>
+        <ul>${tools.map((tool) => `<li>${escapeHtml(tool)}</li>`).join("")}</ul>
+      </section>
+      <section>
+        <h3>允许字段</h3>
+        <ul>${fields.map((field) => `<li>${escapeHtml(field)}</li>`).join("")}</ul>
+        <a class="mcp-doc-link" href="../../docs/MCP_CONNECTOR.md">查看 MCP 接入文档</a>
+      </section>
+    </div>
+  `;
+}
+
+function renderSourceTabs(recentItems) {
+  const orderedGroups = ["all", "x", "reddit", "xueqiu"];
+  const extraGroups = Array.from(new Set(recentItems.map(sourceGroupKey))).filter((group) => !orderedGroups.includes(group));
+  const groups = [...orderedGroups, ...extraGroups];
+  const counts = Object.fromEntries(groups.map((group) => [group, group === "all" ? recentItems.length : 0]));
+  for (const item of recentItems) {
+    const group = sourceGroupKey(item);
+    counts[group] = (counts[group] || 0) + 1;
+  }
+  if (!groups.includes(state.sourceGroup)) state.sourceGroup = "all";
+  document.getElementById("sourceTabs").innerHTML = groups
+    .map((group) => `
+      <button class="source-tab ${state.sourceGroup === group ? "active" : ""}" type="button" data-source-group="${escapeHtml(group)}">
+        <span>${escapeHtml(sourceGroupLabel(group))}</span>
+        <strong>${compactCount(counts[group] || 0)}</strong>
+      </button>
+    `)
+    .join("");
+}
+
 function itemChips(item) {
+  const imageChip = imageLabel(item);
   const chips = [
     { text: sourceQualityLabel(item), tone: "soft" },
-    { text: imageLabel(item), tone: item.image_status === "available" || bestAsset(item) ? "good" : "soft" },
+    { text: imageChip, tone: imageChip === "有图" ? "good" : "soft" },
     { text: outcomeLabel(item), tone: outcomeLabel(item).includes("已") ? "good" : "soft" },
     { text: evalLabel(item), tone: evalLabel(item).includes("已") ? "good" : "soft" },
   ];
@@ -623,30 +818,40 @@ function itemChips(item) {
 function render(feed, loadedFrom) {
   syncControls(feed);
   const recentItems = filterRecent(feed.items || [], feed.generated_at, state.recentHours);
-  const sourceItems = recentItems.filter((item) => state.sourceFilter === "all" || sourceKey(item) === state.sourceFilter);
+  renderSourceTabs(recentItems);
+  const groupItems = recentItems.filter((item) => state.sourceGroup === "all" || sourceGroupKey(item) === state.sourceGroup);
+  const sourceItems = groupItems.filter((item) => state.sourceFilter === "all" || sourceKey(item) === state.sourceFilter);
   renderLanguageRadar(sourceItems);
 
   const items = visibleItems(feed);
   state.renderedItems = items;
   renderStats(feed, items, loadedFrom);
   renderTelemetryPanels(items);
+  renderMcpChannel(feed, items, loadedFrom);
 
   document.getElementById("timeline").innerHTML = items
     .map((item, index) => {
       const title = readableTitle(item);
       const chips = itemChips(item);
       const tone = index % 2 ? "orange" : "green";
+      const preview = imagePreview(item);
+      const social = isXItem(item);
       return `
-        <article class="timeline-card" data-testid="radar-card">
-          ${imagePreview(item)}
+        <article class="timeline-card ${preview ? "has-media" : "no-media"} ${social ? "social-post" : ""}" data-testid="radar-card">
+          ${preview}
           <div class="card-body">
             <div class="card-meta">
               <span>${String(index + 1).padStart(2, "0")}</span>
               <span>${escapeHtml(sourceDisplayName(item.source_label || item.source))}</span>
               <span>${escapeHtml(formatTime(item.published_at))}</span>
             </div>
-            <h2>${escapeHtml(title)}</h2>
-            <p>${escapeHtml(previewCopy(item.copy_text))}</p>
+            ${social ? `
+              ${socialAuthorBlock(item)}
+              <p class="social-copy">${escapeHtml(previewCopy(item.copy_text, 340))}</p>
+            ` : `
+              <h2>${escapeHtml(title)}</h2>
+              <p>${escapeHtml(previewCopy(displayCopy(item, title)))}</p>
+            `}
             <div class="chip-row">
               ${chips.map((chip) => `<span class="chip ${escapeHtml(chip.tone)}">${escapeHtml(chip.text)}</span>`).join("")}
             </div>
@@ -670,17 +875,21 @@ function render(feed, loadedFrom) {
 function renderDialog(item) {
   const asset = bestAsset(item);
   const originalImageRef = firstOriginalImageRef(item);
+  const preview = imagePreview(item);
+  const title = readableTitle(item);
+  const copy = displayCopy(item, title);
   const metrics = item.engagement_snapshot?.metrics || {};
   const predictionScores = item.prediction_scores || {};
+  const social = isXItem(item);
   const sourceRows = [
     ["来源", sourceDisplayName(item.source_label || item.source)],
-    ["作者", item.author || ""],
+    ["作者", social ? `${socialDisplayName(item)} ${socialHandle(item)}`.trim() : item.author || ""],
     ["发布时间", formatTime(item.published_at)],
     ["原文链接", publicUrl(item.source_url || item.canonical_url)],
   ].filter(([, value]) => String(value || "").trim());
   const imageRows = [
     ["图片状态", imageLabel(item)],
-    ["原图链接", originalImageRef?.original_url || originalImageRef?.image_url || originalImageRef?.url || ""],
+    ["原图链接", imageUrlFromRef(originalImageRef)],
     ["出现位置", originalImageRef?.context_position || originalImageRef?.context || ""],
     ["尺寸", asset?.dimensions?.width && asset?.dimensions?.height ? `${asset.dimensions.width}x${asset.dimensions.height}` : ""],
   ].filter(([, value]) => String(value || "").trim());
@@ -703,14 +912,22 @@ function renderDialog(item) {
 
   document.getElementById("dialogBody").innerHTML = `
     <article class="detail-view">
-      <header class="detail-header">
-        <span>${escapeHtml(sourceDisplayName(item.source_label || item.source))}</span>
-        <h2>${escapeHtml(readableTitle(item))}</h2>
-        <p>${escapeHtml(item.copy_text || "")}</p>
-      </header>
+      ${social ? `
+        <header class="detail-header social-detail">
+          <span>${escapeHtml(sourceDisplayName(item.source_label || item.source))}</span>
+          ${socialAuthorBlock(item)}
+          <p class="social-copy">${escapeHtml(item.copy_text || "")}</p>
+        </header>
+      ` : `
+        <header class="detail-header">
+          <span>${escapeHtml(sourceDisplayName(item.source_label || item.source))}</span>
+          <h2>${escapeHtml(title)}</h2>
+          <p>${escapeHtml(copy)}</p>
+        </header>
+      `}
       <section class="detail-grid">
         <div>
-          ${imagePreview(item)}
+          ${preview}
           ${publicUrl(item.source_url) ? `<a class="source-link" href="${escapeHtml(publicUrl(item.source_url))}" target="_blank" rel="noreferrer">打开原文</a>` : ""}
           <section class="reader-section">
             <h3>这条为什么值得看</h3>
@@ -782,7 +999,8 @@ function renderDialog(item) {
       </section>
     </article>
   `;
-  document.getElementById("itemDialog").showModal();
+  const dialog = document.getElementById("itemDialog");
+  if (!dialog.open) dialog.showModal();
 }
 
 function detailHash(item) {
@@ -799,8 +1017,7 @@ function openHashItem() {
   const itemId = itemIdFromHash();
   if (!itemId) return;
   const item = (state.feed.items || []).find((candidate) => String(candidate.id || "") === itemId);
-  const dialog = document.getElementById("itemDialog");
-  if (item && !dialog.open) {
+  if (item) {
     state.restoringHash = true;
     renderDialog(item);
     state.restoringHash = false;
@@ -845,6 +1062,14 @@ document.getElementById("languageRadar").addEventListener("click", (event) => {
   if (!button) return;
   state.languageFilter = button.dataset.language || "all";
   document.getElementById("languageFilter").value = state.languageFilter;
+  render(state.feed, state.loadedFrom);
+});
+
+document.getElementById("sourceTabs").addEventListener("click", (event) => {
+  const button = event.target.closest(".source-tab");
+  if (!button) return;
+  state.sourceGroup = button.dataset.sourceGroup || "all";
+  state.sourceFilter = "all";
   render(state.feed, state.loadedFrom);
 });
 

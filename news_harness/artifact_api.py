@@ -104,16 +104,31 @@ def project_item_web(item: dict[str, Any], *, include_private_refs: bool = False
         "id": item.get("id"),
         "source": item.get("source"),
         "source_label": item.get("source_label") or item.get("source"),
+        "source_group": item.get("source_group") or "",
         "author": item.get("author"),
+        "display_name": item.get("display_name") or "",
+        "handle": item.get("handle") or "",
+        "avatar_url": public_url(item.get("avatar_url")),
         "published_at": item.get("published_at"),
         "title": item.get("topic_or_hook") or "",
+        "topic_or_hook": item.get("topic_or_hook") or "",
         "copy_text": item.get("copy_text") or "",
         "source_url": source_url,
+        "original_image_ref": public_url(item.get("original_image_ref")),
+        "thumbnail_ref": public_url(item.get("thumbnail_ref")),
         "image_status": item.get("image_status") or item.get("image_quality_status") or "unknown",
         "image_refs": _image_refs(item),
+        "engagement_snapshot": item.get("engagement_snapshot") or {},
+        "source_material_role": item.get("source_material_role") or "",
+        "source_quality_status": item.get("source_quality_status") or "",
+        "source_quality_risk_flags": item.get("source_quality_risk_flags") or [],
+        "full_text_status": item.get("full_text_status") or "",
+        "detail_fetch_status": item.get("detail_fetch_status") or "",
+        "article_detail_url": public_url(item.get("article_detail_url")),
         "radar_score": _score(item),
         "hotness_score": item.get("hotness_score"),
         "hotness_series": item.get("hotness_series") or [],
+        "prediction_scores": item.get("prediction_scores") or {},
         "revisit_status": item.get("revisit_status") or item.get("outcome_status") or "pending",
         "eval_status": item.get("eval_status") or "pending",
         "non_investment_advice": item.get("non_investment_advice") is True,
@@ -132,15 +147,19 @@ def project_item_mcp(item: dict[str, Any]) -> dict[str, Any]:
     """Return the MCP export read model — evidence/read fields only, no scores/status/refs."""
     source_url = public_url(item.get("source_url") or item.get("canonical_url"))
     return {
+        "object_type": "McpExportItem",
         "id": item.get("id"),
         "source": item.get("source"),
         "source_label": item.get("source_label") or item.get("source"),
+        "source_group": item.get("source_group") or "",
         "author": item.get("author"),
         "published_at": item.get("published_at"),
         "title": item.get("topic_or_hook") or "",
         "copy_text": item.get("copy_text") or "",
         "source_url": source_url,
         "canonical_url": item.get("canonical_url") or "",
+        "original_image_ref": public_url(item.get("original_image_ref")),
+        "thumbnail_ref": public_url(item.get("thumbnail_ref")),
         "image_refs": _image_refs(item),
         "image_status": item.get("image_status") or item.get("image_quality_status") or "unknown",
         "evidence_status": item.get("evidence_status") or "",
@@ -210,13 +229,21 @@ def artifact_health(feed_path: Path = DEFAULT_FEED, artifact_dir: Path = DEFAULT
         "timeline_feed": feed_path,
     }
     missing = [name for name, path in artifacts.items() if not path.exists()]
+    source_run = load_json(artifacts["source_run"]) if artifacts["source_run"].exists() else {}
+    failed_sources = [
+        status.get("source")
+        for status in source_run.get("sources", [])
+        if isinstance(status, dict) and status.get("status") != "ok"
+    ] if isinstance(source_run, dict) else []
+    feed_status = "demo" if is_demo_feed(feed, str(feed_path)) else "live"
     return {
         "object_type": "NewsHarnessWebsiteHealth",
-        "status": "ok" if not missing else "degraded",
-        "feed_status": "demo" if is_demo_feed(feed, str(feed_path)) else "live",
+        "status": "ok" if not missing and feed_status == "live" and not failed_sources else "degraded",
+        "feed_status": feed_status,
         "feed_path": str(feed_path),
         "generated_at": feed.get("generated_at"),
         "item_count": len(feed.get("items", [])),
         "missing_artifacts": missing,
+        "failed_sources": failed_sources,
         "artifacts": {name: str(path) for name, path in artifacts.items()},
     }

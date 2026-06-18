@@ -13,9 +13,13 @@ import json
 import os
 import re
 import shutil
+import socket
 import subprocess
 import time
+import http.client
+import urllib.error
 import urllib.parse
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
@@ -47,10 +51,14 @@ from .paths import write_json_artifact
 
 DIRECT_CLI_DIR = ROOT / "artifacts" / "direct_cli" / "latest"
 DIRECT_CLI_PROCESSING_ARTIFACT = DIRECT_CLI_DIR / "processing.json"
-DIRECT_CLI_INSTALL_TIMEOUT_SECONDS = 180
 DIRECT_CLI_READ_TIMEOUT_SECONDS = 60
+REDDIT_JSON_TIMEOUT_SECONDS = 12
+REDDIT_SUBREDDIT_WORKERS = 1
+REDDIT_DETAIL_WORKERS = 2
+REDDIT_HEADLESS_TIMEOUT_SECONDS = 150
 OPENCLI_READ_TIMEOUT_SECONDS = 45
-XUEQIU_HEADLESS_TIMEOUT_SECONDS = 75
+X_LIST_HEADLESS_TIMEOUT_SECONDS = 120
+XUEQIU_HEADLESS_TIMEOUT_SECONDS = 180
 
 
 def run_direct_cli_sources(config_path: Path) -> dict[str, Any]:
@@ -116,7 +124,7 @@ def run_direct_cli_sources(config_path: Path) -> dict[str, Any]:
                 "item_count": len(source_observations),
                 "requested_item_count": _requested_item_count(source_config),
                 "refresh_interval_seconds": source_config.get("refresh_interval_seconds"),
-                "batch_limit": source_config.get("max_items_per_subreddit_per_run") if source == "reddit" else source_config.get("batch_limit"),
+                "batch_limit": _reddit_per_subreddit_limit(source_config) if source == "reddit" else source_config.get("batch_limit"),
                 "structured_errors": errors,
                 "duration_seconds": round(time.monotonic() - source_started, 3),
                 "rate_limit": {"backoff_seconds": 0, "retry_after": None},
@@ -177,8 +185,15 @@ def run_direct_cli_sources(config_path: Path) -> dict[str, Any]:
 def _fetch_x_list_with_twitter_cli(source_config: dict[str, Any], availability: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     command = availability.get("twitter", {}).get("command")
     if not command:
-        return [], [_structured_error("direct_cli_unavailable", "twitter-cli is unavailable")]
-    cookie = _read_secret_file(os.environ["NEWS_HARNESS_X_COOKIE_FILE"], "x_cookie")
+        observations, errors = _fetch_x_list_from_headless(source_config)
+        if observations:
+            return observations, errors
+        return [], [{**_structured_error("direct_cli_unavailable", "twitter-cli is unavailable and headless X list export produced no rows"), "headless_status": errors}]
+    cookie_file = os.environ.get("NEWS_HARNESS_X_COOKIE_FILE")
+    cookie = _read_secret_file(cookie_file, "x_cookie") if cookie_file else {
+        "status": "blocked",
+        "structured_error": _structured_error("secret_env_missing", "NEWS_HARNESS_X_COOKIE_FILE is not set"),
+    }
     if cookie["status"] != "ok":
         return [], [cookie["structured_error"]]
     tokens = _extract_x_cookie_tokens(str(cookie["value"]))
@@ -195,7 +210,7 @@ def _fetch_x_list_with_twitter_cli(source_config: dict[str, Any], availability: 
         timeout=DIRECT_CLI_READ_TIMEOUT_SECONDS,
         env=env,
     )
-    return _observations_from_cli_result(
+    observations, errors = _observations_from_cli_result(
         result,
         source_config,
         source="x_list",
@@ -204,18 +219,135 @@ def _fetch_x_list_with_twitter_cli(source_config: dict[str, Any], availability: 
         tool_id="twitter-cli",
         connector_prefix="direct_cli",
     )
+    if observations:
+        return observations, errors
+    headless_observations, headless_errors = _fetch_x_list_from_headless(source_config)
+    if headless_observations:
+        return headless_observations, headless_errors
+    return observations, [*errors, *headless_errors]
+
+
+def _fetch_x_list_from_headless(source_config: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    if os.environ.get("NEWS_HARNESS_X_HEADLESS") != "1":
+        return [], [_structured_error("x_headless_disabled", "NEWS_HARNESS_X_HEADLESS is not enabled")]
+    cookie_file = os.environ.get("NEWS_HARNESS_X_COOKIE_FILE")
+    cookie = _read_secret_file(cookie_file, "x_cookie") if cookie_file else {
+        "status": "blocked",
+        "structured_error": _structured_error("secret_env_missing", "NEWS_HARNESS_X_COOKIE_FILE is not set"),
+    }
+    if cookie["status"] != "ok":
+        return [], [cookie["structured_error"]]
+    node = _find_command("node")
+    if not node:
+        return [], [_structured_error("node_unavailable", "Node.js is required for X list headless export")]
+    script = ROOT / "scripts" / "x_list_headless_export.mjs"
+    if not script.exists():
+        return [], [_structured_error("x_headless_script_missing", "scripts/x_list_headless_export.mjs is missing")]
+    export_dir = Path(os.environ.get("NEWS_HARNESS_X_EXPORT_DIR", "/tmp/news-harness-secrets")).expanduser().resolve()
+    try:
+        export_dir.relative_to(ROOT.resolve())
+        return [], [_structured_error("x_headless_export_dir_in_repo", "X headless export directory must live outside the repo")]
+    except ValueError:
+        pass
+    export_path = export_dir / "x_list_headless_export.json"
+    result = _run_command(
+        [
+            node,
+            str(script),
+            "--url",
+            str(source_config.get("source_entry_url") or X_LIST_URL),
+            "--limit",
+            str(int(source_config.get("batch_limit", 10))),
+            "--cookie-file",
+            str(cookie_file),
+            "--out",
+            str(export_path),
+        ],
+        timeout=X_LIST_HEADLESS_TIMEOUT_SECONDS,
+        env={"OUTPUT": "json"},
+    )
+    if result["status"] != "ok":
+        parsed = _parse_json_payload(result.get("stdout", ""))
+        if isinstance(parsed, dict) and parsed.get("code"):
+            return [], [_structured_error(_normalize_error_code(str(parsed.get("code"))), str(parsed.get("message") or parsed.get("code")))]
+        return [], [_structured_error(_direct_cli_error_code(result), _command_failure_message(result))]
+    return _fetch_x_list_from_export_file(source_config, export_path)
+
+
+def _fetch_x_list_from_export_file(source_config: dict[str, Any], export_path: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    try:
+        export = json.loads(export_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return [], [_structured_error("x_headless_export_unreadable", str(exc))]
+    if find_raw_secret_material(export):
+        return [], [_structured_error("x_headless_export_secret_leak", "X headless export contains raw secret-like material")]
+    rows = export.get("sources", {}).get("x_list") if isinstance(export, dict) else None
+    if not isinstance(rows, list) or not rows:
+        return [], [_structured_error("x_headless_export_no_rows", "X headless export has no rows")]
+    observations = []
+    limit = int(source_config.get("batch_limit") or 10)
+    default_url = str(source_config.get("source_entry_url") or X_LIST_URL)
+    label = str(source_config.get("source_label") or "X list")
+    for row in rows[:limit]:
+        if not isinstance(row, dict):
+            continue
+        if row.get("is_quote") is True or row.get("is_repost") is True:
+            continue
+        text = _strip_x_quote_text(_row_copy_text(row))
+        if not text or _looks_like_auth_or_challenge_text(text):
+            continue
+        url = _row_url(row, default_url, "x_list")
+        observation = _observation(
+            source="x_list",
+            source_label=label,
+            source_url=url,
+            canonical_url=url,
+            author=_row_author(row, "x_list", label),
+            published_at=_row_published_at(row),
+            copy_text=text,
+            image_refs=_image_refs_from_row(row, url),
+            engagement=_engagement_from_row(row),
+            topic_or_hook=str(row.get("title") or row.get("topic") or label)[:300],
+            structured_error=None,
+        )
+        for key in ("display_name", "handle", "avatar_url"):
+            value = row.get(key)
+            if isinstance(value, str) and value.strip():
+                observation[key] = value.strip()
+        observation["connector_identity"] = {
+            "connector_id": "direct_cli.x_list.headless_manual_smoke.v1",
+            "tool_id": "playwright-core-x-list",
+            "tool_version": str(export.get("export_schema_version") or "x_list_headless_dom.v1"),
+        }
+        full_text_status = "full_text_observed" if row.get("full_text_observed") is True else "summary_or_list_excerpt_only"
+        detail_fetch_status = str(row.get("detail_fetch_status") or "detail_not_confirmed")
+        observation["fetch_status"] = "headless_dom_manual_smoke_success"
+        observation["source_material_role"] = "original_post"
+        observation["source_quality_status"] = full_text_status
+        observation["full_text_status"] = full_text_status
+        observation["detail_fetch_status"] = detail_fetch_status
+        observation["article_detail_url"] = url
+        observation["source_quality_risk_flags"] = [] if full_text_status == "full_text_observed" else ["x_full_text_not_confirmed"]
+        observation["evidence_ref"] = f"artifacts/manual_smoke/latest/source_run.json#observations/{observation['observation_id']}"
+        observations.append(observation)
+    if not observations:
+        return [], [_structured_error("x_headless_export_parse_failed", "X headless rows had no readable post text")]
+    return observations, []
 
 
 def _fetch_reddit_with_rdt_cli(source_config: dict[str, Any], availability: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    reddit_cookie = _read_optional_secret_file("NEWS_HARNESS_REDDIT_COOKIE_FILE", "reddit_cookie")
+    if reddit_cookie["status"] == "ok":
+        return _fetch_reddit_with_cookie_json(source_config, str(reddit_cookie["value"]))
+    if reddit_cookie["status"] == "blocked":
+        return [], [reddit_cookie["structured_error"]]
+
     command = availability.get("rdt", {}).get("command")
     if not command:
         return [], [_structured_error("direct_cli_unavailable", "rdt-cli is unavailable")]
-    reddit_cookie = _read_optional_secret_file("NEWS_HARNESS_REDDIT_COOKIE_FILE", "reddit_cookie")
     observations: list[dict[str, Any]] = []
     errors: list[dict[str, Any]] = []
-    if reddit_cookie["status"] == "ok":
-        errors.append(_structured_error("reddit_cookie_file_not_consumed_by_rdt_cli", "rdt-cli uses browser/saved cookies; repo-external cookie file was not copied into CLI config"))
-    per_subreddit = int(source_config.get("max_items_per_subreddit_per_run", 10))
+    per_subreddit = _reddit_per_subreddit_limit(source_config)
     subreddits = [str(subreddit) for subreddit in source_config.get("subreddits", [])]
 
     def fetch_subreddit(subreddit_name: str) -> tuple[str, list[dict[str, Any]], list[dict[str, Any]]]:
@@ -248,6 +380,289 @@ def _fetch_reddit_with_rdt_cli(source_config: dict[str, Any], availability: dict
     return observations, errors
 
 
+def _fetch_reddit_with_cookie_json(source_config: dict[str, Any], cookie: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    per_subreddit = _reddit_per_subreddit_limit(source_config)
+    target_count = max(1, min(10, int(source_config.get("batch_limit") or per_subreddit)))
+    cookie = " ".join(part.strip() for part in str(cookie).splitlines() if part.strip())
+    headers = {
+        "User-Agent": "news-harness-direct-cli/0.1 read-only",
+        "Accept": "application/json,text/plain,*/*",
+        "Cookie": cookie,
+    }
+    subreddits = [str(item) for item in source_config.get("subreddits", [])]
+
+    def fetch_subreddit(subreddit: str, max_rows: int | None = None) -> tuple[str, list[dict[str, Any]], list[dict[str, Any]]]:
+        observations: list[dict[str, Any]] = []
+        errors: list[dict[str, Any]] = []
+        row_limit = max(1, min(per_subreddit, int(max_rows or per_subreddit)))
+        list_url = f"https://www.reddit.com/r/{urllib.parse.quote(subreddit)}/hot.json?limit={row_limit}&raw_json=1"
+        response, error = _reddit_http_json(list_url, headers)
+        if error:
+            return subreddit, [], [{**error, "source": "reddit", "subreddit": subreddit}]
+        children = response.get("data", {}).get("children", []) if isinstance(response, dict) else []
+        if not isinstance(children, list):
+            return subreddit, [], [{**_structured_error("parse_failed", "Reddit list JSON did not contain data.children"), "source": "reddit", "subreddit": subreddit}]
+
+        rows = [_unwrap_row(child) for child in children[:row_limit] if isinstance(child, dict)]
+
+        def fetch_detail(index: int, data: dict[str, Any]) -> tuple[int, dict[str, Any] | None, dict[str, Any] | None]:
+            data = _unwrap_row(data)
+            if not data:
+                return index, None, None
+            detail_data, detail_error = _reddit_detail_data(data, headers)
+            if detail_data:
+                data = {**data, **detail_data}
+            elif detail_error:
+                return index, None, {**detail_error, "source": "reddit", "subreddit": subreddit, "source_url": _reddit_permalink(data)}
+            return index, _reddit_json_observation(data, subreddit), None
+
+        indexed_observations: list[tuple[int, dict[str, Any]]] = []
+        with ThreadPoolExecutor(max_workers=min(REDDIT_DETAIL_WORKERS, len(rows) or 1)) as executor:
+            futures = [executor.submit(fetch_detail, index, row) for index, row in enumerate(rows)]
+            for future in as_completed(futures):
+                index, observation, detail_error = future.result()
+                if observation:
+                    indexed_observations.append((index, observation))
+                elif detail_error:
+                    errors.append(detail_error)
+        observations.extend(observation for _, observation in sorted(indexed_observations, key=lambda item: item[0]))
+        return subreddit, observations, errors
+
+    observations: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+    if REDDIT_SUBREDDIT_WORKERS <= 1:
+        consecutive_rate_limits = 0
+        for subreddit in subreddits:
+            remaining = target_count - len(observations)
+            if remaining <= 0:
+                break
+            _, subreddit_observations, subreddit_errors = fetch_subreddit(subreddit, remaining)
+            observations.extend(subreddit_observations[:remaining])
+            errors.extend(subreddit_errors)
+            if subreddit_observations:
+                consecutive_rate_limits = 0
+                if len(observations) >= target_count:
+                    break
+                continue
+            if any(error.get("code") == "http_429" for error in subreddit_errors):
+                consecutive_rate_limits += 1
+                if consecutive_rate_limits >= 3:
+                    errors.append(
+                        {
+                            **_structured_error(
+                                "reddit_rate_limit_short_circuit",
+                                "Reddit returned repeated 429 responses; stopped remaining subreddit reads for this cycle",
+                            ),
+                            "source": "reddit",
+                        }
+                    )
+                    break
+            else:
+                consecutive_rate_limits = 0
+        if not observations and errors:
+            headless_observations, headless_errors = _fetch_reddit_from_headless(source_config)
+            if headless_observations:
+                return headless_observations, []
+            return observations, [*errors, *headless_errors]
+        return observations, errors
+
+    with ThreadPoolExecutor(max_workers=min(REDDIT_SUBREDDIT_WORKERS, len(subreddits) or 1)) as executor:
+        futures = [executor.submit(fetch_subreddit, subreddit) for subreddit in subreddits]
+        results = [future.result() for future in as_completed(futures)]
+    for subreddit, subreddit_observations, subreddit_errors in sorted(results, key=lambda item: subreddits.index(item[0])):
+        observations.extend(subreddit_observations)
+        errors.extend(subreddit_errors)
+    return observations, errors
+
+
+def _fetch_reddit_from_headless(source_config: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    cookie_file = os.environ.get("NEWS_HARNESS_REDDIT_COOKIE_FILE")
+    cookie = _read_secret_file(cookie_file, "reddit_cookie") if cookie_file else {
+        "status": "blocked",
+        "structured_error": _structured_error("secret_env_missing", "NEWS_HARNESS_REDDIT_COOKIE_FILE is not set"),
+    }
+    if cookie["status"] != "ok":
+        return [], [cookie["structured_error"]]
+    node = _find_command("node")
+    if not node:
+        return [], [_structured_error("node_unavailable", "Node.js is required for Reddit headless export")]
+    script = ROOT / "scripts" / "reddit_headless_export.mjs"
+    if not script.exists():
+        return [], [_structured_error("reddit_headless_script_missing", "scripts/reddit_headless_export.mjs is missing")]
+    export_dir = Path(os.environ.get("NEWS_HARNESS_REDDIT_EXPORT_DIR", "/tmp/news-harness-runtime")).expanduser().resolve()
+    try:
+        export_dir.relative_to(ROOT.resolve())
+        return [], [_structured_error("reddit_headless_export_dir_in_repo", "Reddit headless export directory must live outside the repo")]
+    except ValueError:
+        pass
+    export_path = export_dir / "reddit_headless_export.json"
+    subreddits = ",".join(str(item) for item in source_config.get("subreddits", []))
+    result = _run_command(
+        [
+            node,
+            str(script),
+            "--subreddits",
+            subreddits,
+            "--limit",
+            str(int(source_config.get("batch_limit", 10))),
+            "--per-subreddit",
+            str(_reddit_per_subreddit_limit(source_config)),
+            "--cookie-file",
+            str(cookie_file),
+            "--out",
+            str(export_path),
+        ],
+        timeout=REDDIT_HEADLESS_TIMEOUT_SECONDS,
+        env={"OUTPUT": "json"},
+    )
+    if result["status"] != "ok":
+        parsed = _parse_json_payload(result.get("stdout", ""))
+        if isinstance(parsed, dict) and parsed.get("code"):
+            return [], [_structured_error(_normalize_error_code(str(parsed.get("code"))), str(parsed.get("message") or parsed.get("code")))]
+        return [], [_structured_error(_direct_cli_error_code(result), _command_failure_message(result))]
+    return _fetch_reddit_from_headless_export_file(source_config, export_path)
+
+
+def _fetch_reddit_from_headless_export_file(source_config: dict[str, Any], export_path: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    try:
+        export = json.loads(export_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return [], [_structured_error("reddit_headless_export_unreadable", str(exc))]
+    if find_raw_secret_material(export):
+        return [], [_structured_error("reddit_headless_export_secret_leak", "Reddit headless export contains raw secret-like material")]
+    rows = export.get("sources", {}).get("reddit") if isinstance(export, dict) else None
+    if not isinstance(rows, list) or not rows:
+        return [], [_structured_error("reddit_headless_export_no_rows", "Reddit headless export has no rows")]
+    observations = []
+    limit = int(source_config.get("batch_limit") or 10)
+    for row in rows[:limit]:
+        if not isinstance(row, dict):
+            continue
+        text = str(row.get("text") or row.get("body") or row.get("title") or "").strip()
+        if not text or _looks_like_auth_or_challenge_text(text):
+            continue
+        subreddit = str(row.get("subreddit") or "reddit")
+        url = _row_url(row, f"https://www.reddit.com/r/{urllib.parse.quote(subreddit)}/hot/", "reddit")
+        observation = _observation(
+            source="reddit",
+            source_label=f"r/{subreddit}",
+            source_url=url,
+            canonical_url=url,
+            author=_row_author(row, "reddit", f"r/{subreddit}"),
+            published_at=_row_published_at(row),
+            copy_text=text,
+            image_refs=_image_refs_from_row(row, url),
+            engagement=_engagement_from_row(row),
+            topic_or_hook=str(row.get("title") or "reddit hot post")[:300],
+            structured_error=None,
+        )
+        observation["connector_identity"] = {
+            "connector_id": "direct_cli.reddit.headless_manual_smoke.v1",
+            "tool_id": "playwright-core-reddit-browser",
+            "tool_version": str(export.get("export_schema_version") or "reddit_headless_dom.v1"),
+        }
+        observation["fetch_status"] = "headless_dom_manual_smoke_success"
+        observation["source_material_role"] = "original_post"
+        observation["source_quality_status"] = "full_text_observed"
+        observation["full_text_status"] = "full_text_observed"
+        observation["detail_fetch_status"] = str(row.get("detail_fetch_status") or "full_text_observed")
+        observation["source_quality_risk_flags"] = []
+        observation["evidence_ref"] = f"artifacts/manual_smoke/latest/source_run.json#observations/{observation['observation_id']}"
+        observations.append(observation)
+    if not observations:
+        return [], [_structured_error("reddit_headless_export_parse_failed", "Reddit headless rows had no readable post text")]
+    return observations, []
+
+
+def _reddit_detail_data(data: dict[str, Any], headers: dict[str, str]) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    permalink = str(data.get("permalink") or "")
+    if not permalink:
+        return None, _structured_error("parse_failed", "Reddit list row did not contain permalink")
+    detail_url = f"{_reddit_permalink(data).rstrip('/')}.json?raw_json=1"
+    response, error = _reddit_http_json(detail_url, headers)
+    if error:
+        return None, error
+    if isinstance(response, list):
+        for listing in response:
+            children = listing.get("data", {}).get("children", []) if isinstance(listing, dict) else []
+            if not isinstance(children, list):
+                continue
+            for child in children:
+                row = _unwrap_row(child) if isinstance(child, dict) else {}
+                if row.get("selftext") or row.get("title") or row.get("body"):
+                    return row, None
+    rows = _extract_rows(response)
+    for row in rows:
+        if row.get("selftext") or row.get("title") or row.get("body"):
+            return row, None
+    return None, _structured_error("parse_failed", "Reddit detail JSON did not contain readable post text")
+
+
+def _reddit_http_json(url: str, headers: dict[str, str]) -> tuple[Any, dict[str, Any] | None]:
+    request = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(request, timeout=REDDIT_JSON_TIMEOUT_SECONDS) as response:
+            body = response.read().decode("utf-8", errors="replace")
+            status = int(response.status)
+    except ValueError:
+        return {}, _structured_error("invalid_cookie_header", "Reddit cookie contains invalid HTTP header characters")
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        code = "auth_or_challenge_required" if exc.code in {401, 403} or _looks_like_auth_or_challenge_text(body) else f"http_{exc.code}"
+        return {}, _structured_error(code, "Reddit returned HTTP error", http_status=int(exc.code))
+    except (urllib.error.URLError, TimeoutError, socket.timeout, http.client.IncompleteRead) as exc:
+        code = "network_timeout" if "timed out" in str(exc).lower() else "network_failure"
+        return {}, _structured_error(code, str(exc))
+    if status in {401, 403} or _looks_like_auth_or_challenge_text(body):
+        return {}, _structured_error("auth_or_challenge_required", "Reddit returned auth/challenge content", http_status=status)
+    try:
+        parsed = json.loads(body)
+    except json.JSONDecodeError as exc:
+        return {}, _structured_error("parse_failed", str(exc), http_status=status)
+    return parsed, None
+
+
+def _reddit_json_observation(data: dict[str, Any], subreddit: str) -> dict[str, Any] | None:
+    text = _row_copy_text(data)
+    if not text or _looks_like_auth_or_challenge_text(text):
+        return None
+    url = _reddit_permalink(data)
+    observation = _observation(
+        source="reddit",
+        source_label=f"r/{subreddit}",
+        source_url=url,
+        canonical_url=url,
+        author=_row_author(data, "reddit", f"r/{subreddit}"),
+        published_at=_row_published_at(data),
+        copy_text=text,
+        image_refs=_image_refs_from_row(data, url),
+        engagement=_engagement_from_row(data),
+        topic_or_hook=str(data.get("link_flair_text") or data.get("title") or "reddit hot post")[:300],
+        structured_error=None,
+    )
+    observation["connector_identity"] = {
+        "connector_id": "direct_cli.reddit.manual_smoke.v1",
+        "tool_id": "reddit-json",
+        "tool_version": "stdlib",
+    }
+    observation["fetch_status"] = "direct_cli_manual_smoke_success"
+    observation["source_material_role"] = "original_source_candidate"
+    observation["source_quality_status"] = "full_text_observed"
+    observation["full_text_status"] = "full_text_observed"
+    observation["detail_fetch_status"] = "reddit_detail_json_observed"
+    observation["source_quality_risk_flags"] = []
+    return observation
+
+
+def _reddit_permalink(data: dict[str, Any]) -> str:
+    value = str(data.get("permalink") or data.get("url") or "")
+    if value.startswith("/"):
+        return "https://www.reddit.com" + value
+    if value.startswith("http"):
+        return value
+    return "https://www.reddit.com/"
+
+
 def _fetch_xueqiu_with_opencli(source_config: dict[str, Any], availability: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Read Xueqiu through OpenCLI when its browser bridge is available.
 
@@ -259,14 +674,22 @@ def _fetch_xueqiu_with_opencli(source_config: dict[str, Any], availability: dict
     command = availability.get("opencli", {}).get("command")
     source = str(source_config.get("source", "xueqiu"))
     if not command:
+        headless_observations, headless_errors = _fetch_xueqiu_from_headless(source_config)
+        if headless_observations:
+            return headless_observations, headless_errors
+        chrome_observations, chrome_errors = _fetch_xueqiu_from_chrome_export(source_config)
+        if chrome_observations:
+            return chrome_observations, chrome_errors
         fallback_observations, fallback_errors = _fetch_xueqiu(source_config)
         return fallback_observations, [
             {
                 **_structured_error(
                     "opencli_unavailable",
-                    "opencli is unavailable; builtin Xueqiu parser fell back to homepage reach only",
+                    "opencli is unavailable; headless/export/builtin Xueqiu fallbacks did not produce rows",
                 ),
                 "source": source,
+                "headless_status": headless_errors,
+                "chrome_export_status": chrome_errors,
                 "fallback_errors": fallback_errors,
             }
         ]
@@ -354,10 +777,13 @@ def _fetch_xueqiu_from_chrome_export_file(source_config: dict[str, Any], export_
     limit = int(source_config.get("batch_limit", 10))
     default_url = str(source_config.get("source_entry_url") or "https://xueqiu.com/")
     label = str(source_config.get("source_label") or human_xueqiu_label(source))
+    auth_or_challenge_required = False
     for row in rows[:limit]:
         if not isinstance(row, dict):
             continue
         text = _row_copy_text(row)
+        if source == "x_list":
+            text = _strip_x_quote_text(text)
         if not text or _looks_like_auth_or_challenge_text(text):
             continue
         observation_url = _row_url(row, default_url, source)
@@ -368,7 +794,7 @@ def _fetch_xueqiu_from_chrome_export_file(source_config: dict[str, Any], export_
             canonical_url=observation_url,
             author=_row_author(row, source, label),
             published_at=_row_published_at(row),
-            copy_text=text[:2000],
+            copy_text=text,
             image_refs=_image_refs_from_row(row, observation_url),
             engagement=_engagement_from_row(row),
             topic_or_hook=str(row.get("title") or row.get("topic") or label)[:300],
@@ -380,11 +806,17 @@ def _fetch_xueqiu_from_chrome_export_file(source_config: dict[str, Any], export_
             "tool_version": str(export.get("export_schema_version") or "xueqiu_chrome_dom.v1") if isinstance(export, dict) else "xueqiu_chrome_dom.v1",
         }
         observation.update(_xueqiu_source_quality(row, text))
+        if observation.get("detail_fetch_status") == "auth_or_challenge_required":
+            auth_or_challenge_required = True
+        if observation.get("full_text_status") != "full_text_observed":
+            continue
         observation["fetch_status"] = f"{export_kind}_dom_manual_smoke_success"
         observation["evidence_ref"] = f"artifacts/manual_smoke/latest/source_run.json#observations/{observation['observation_id']}"
         observations.append(observation)
     if not observations:
-        return [], [_structured_error(f"xueqiu_{export_kind}_export_parse_failed", f"Xueqiu DOM export rows for {source} had no readable post text")]
+        if auth_or_challenge_required:
+            return [], [_structured_error(f"xueqiu_{export_kind}_auth_or_challenge_required", f"Xueqiu DOM export for {source} hit auth/challenge before second-level full text")]
+        return [], [_structured_error(f"xueqiu_{export_kind}_detail_required", f"Xueqiu DOM export rows for {source} did not confirm second-level full text")]
     return observations, []
 
 
@@ -451,26 +883,21 @@ def human_xueqiu_label(source: str) -> str:
 
 
 def _ensure_direct_cli_available() -> dict[str, Any]:
-    install_results = []
     twitter = _find_command("twitter")
     rdt = _find_command("rdt")
     opencli = _find_command("opencli")
-    if not twitter or not rdt:
-        install_result = _run_command(
-            [os.sys.executable, "-m", "pip", "install", "--user", "--index-url", "https://pypi.org/simple", "twitter-cli", "rdt-cli"],
-            timeout=DIRECT_CLI_INSTALL_TIMEOUT_SECONDS,
-        )
-        install_results.append(_redacted_command_result(install_result))
-        twitter = _find_command("twitter")
-        rdt = _find_command("rdt")
     opencli_probe = _probe_opencli(opencli) if opencli else {"status": "failed", "command": None, "browser_bridge": {"status": "failed", "code": "opencli_unavailable"}}
+    fallback_enabled = any(
+        os.environ.get(name) == "1"
+        for name in ("NEWS_HARNESS_X_HEADLESS", "NEWS_HARNESS_XUEQIU_HEADLESS")
+    ) or bool(os.environ.get("NEWS_HARNESS_REDDIT_COOKIE_FILE"))
     availability = {
-        "status": "ok" if twitter and rdt else "failed",
+        "status": "ok" if twitter or rdt or fallback_enabled else "failed",
         "twitter": _probe_cli(twitter, "twitter") if twitter else {"status": "failed", "command": None},
         "rdt": _probe_cli(rdt, "rdt") if rdt else {"status": "failed", "command": None},
         "opencli": opencli_probe,
-        "install_attempted": bool(install_results),
-        "install_results": install_results,
+        "install_attempted": False,
+        "install_results": [],
         "production_connector_ready": False,
     }
     return availability
@@ -479,10 +906,12 @@ def _ensure_direct_cli_available() -> dict[str, Any]:
 def _requested_item_count(source_config: dict[str, Any]) -> int:
     source = str(source_config.get("source", "unknown"))
     if source == "reddit":
-        per_subreddit = int(source_config.get("max_items_per_subreddit_per_run") or source_config.get("batch_limit") or 10)
-        subreddits = source_config.get("subreddits", [])
-        return per_subreddit * len(subreddits) if isinstance(subreddits, list) else per_subreddit
+        return int(source_config.get("batch_limit") or _reddit_per_subreddit_limit(source_config))
     return int(source_config.get("batch_limit") or 10)
+
+
+def _reddit_per_subreddit_limit(source_config: dict[str, Any]) -> int:
+    return min(10, int(source_config.get("max_items_per_subreddit_per_run") or source_config.get("batch_limit") or 10))
 
 
 def _probe_opencli(command: str) -> dict[str, Any]:
@@ -603,27 +1032,18 @@ def _observations_from_cli_result(
         }
         if source == "x_list":
             quote = _x_quote_context(row, default_url)
-            if quote["status"] == "quote_repost_original_unresolved":
+            if quote["status"] != "not_quote_repost":
                 row_errors.append(
                     {
                         **_structured_error(
-                            "x_quote_repost_original_unresolved",
-                            "X list row is a quote repost wrapper, but the quoted original post was not available in CLI output",
+                            "x_quote_repost_skipped",
+                            "X list row is a quote/repost wrapper and is intentionally skipped",
                         ),
                         "source": source,
                         "wrapper_url": _row_url(row, default_url, source),
                     }
                 )
                 continue
-            if quote["status"] == "quoted_original_traced":
-                row = quote["quoted_row"]
-                source_quality = {
-                    "source_material_role": "original_from_quote_repost",
-                    "source_quality_status": "quoted_original_traced",
-                    "source_quality_risk_flags": ["quote_repost_wrapper_rewritten_to_original"],
-                    "quote_wrapper_url": quote.get("wrapper_url"),
-                    "quoted_original_url": quote.get("quoted_original_url"),
-                }
         text = _row_copy_text(row)
         if not text or _looks_like_auth_or_challenge_text(text):
             continue
@@ -635,7 +1055,7 @@ def _observations_from_cli_result(
             canonical_url=observation_url,
             author=_row_author(row, source, label),
             published_at=_row_published_at(row),
-            copy_text=text[:2000],
+            copy_text=text,
             image_refs=_image_refs_from_row(row, observation_url),
             engagement=_engagement_from_row(row),
             topic_or_hook=str(row.get("title") or row.get("topic") or label)[:300],
@@ -649,6 +1069,18 @@ def _observations_from_cli_result(
         observation.update(source_quality)
         if source.startswith("xueqiu_"):
             observation.update(_xueqiu_source_quality(row, text))
+            if observation.get("full_text_status") != "full_text_observed":
+                row_errors.append(
+                    {
+                        **_structured_error(
+                            "xueqiu_detail_required",
+                            "Xueqiu row did not confirm second-level full text",
+                        ),
+                        "source": source,
+                        "source_url": observation_url,
+                    }
+                )
+                continue
         observation["fetch_status"] = "direct_cli_manual_smoke_success"
         observation["evidence_ref"] = f"artifacts/manual_smoke/latest/source_run.json#observations/{observation['observation_id']}"
         observations.append(observation)
@@ -675,6 +1107,10 @@ def _x_quote_context(row: dict[str, Any], default_url: str) -> dict[str, Any]:
     }
 
 
+def _strip_x_quote_text(text: str) -> str:
+    return re.split(r"\s+(?:引用|Quote)\s+", text, maxsplit=1, flags=re.IGNORECASE)[0].strip()
+
+
 def _is_x_quote_repost(row: dict[str, Any]) -> bool:
     if row.get("is_quote_status") is True or row.get("quoted_status_id") or row.get("quoted_tweet_id"):
         return True
@@ -696,11 +1132,11 @@ def _quoted_original_row(row: dict[str, Any]) -> dict[str, Any] | None:
 
 def _xueqiu_source_quality(row: dict[str, Any], text: str) -> dict[str, Any]:
     detail_status = str(row.get("detail_fetch_status") or "").strip()
-    if detail_status:
-        full_text_status = "full_text_observed" if detail_status in {"full_text_observed", "api_full_text_observed"} else "detail_attempt_incomplete"
-    elif row.get("full_text_observed") is True or len(text) >= 600:
-        detail_status = "full_text_observed"
+    detail_confirmed = row.get("full_text_observed") is True and detail_status in {"full_text_observed", "api_full_text_observed"}
+    if detail_confirmed and not _looks_like_auth_or_challenge_text(text):
         full_text_status = "full_text_observed"
+    elif detail_status:
+        full_text_status = "detail_attempt_incomplete"
     else:
         detail_status = "detail_click_required_not_attempted"
         full_text_status = "summary_or_list_excerpt_only"
@@ -906,6 +1342,12 @@ def _image_refs_from_row(row: dict[str, Any], page_url: str) -> list[dict[str, A
             value = article.get(key)
             if isinstance(value, str):
                 candidates.append(("card_image", value, article.get("width"), article.get("height")))
+    preview = row.get("preview")
+    preview_images = preview.get("images", []) if isinstance(preview, dict) else []
+    for image in preview_images if isinstance(preview_images, list) else []:
+        source = image.get("source") if isinstance(image, dict) else None
+        if isinstance(source, dict) and isinstance(source.get("url"), str):
+            candidates.append(("preview_image", source["url"], source.get("width"), source.get("height")))
     for key in ("media", "photos", "images", "media_urls", "gallery_urls"):
         value = row.get(key)
         if isinstance(value, list):
@@ -922,7 +1364,7 @@ def _image_refs_from_row(row: dict[str, Any], page_url: str) -> list[dict[str, A
     for source_field, url, width, height in candidates:
         if not url.startswith(("http://", "https://")) or url in seen:
             continue
-        if not re.search(r"\.(jpg|jpeg|png|webp|gif)(\?|$)", url, re.IGNORECASE):
+        if not re.search(r"\.(jpg|jpeg|png|webp|gif)(\?|$)|[?&]format=(jpg|jpeg|png|webp|gif)\b", url, re.IGNORECASE):
             continue
         seen.add(url)
         record = _image_ref_record(
@@ -972,7 +1414,30 @@ def _command_failure_message(result: dict[str, Any]) -> str:
 
 def _looks_like_auth_or_challenge_text(text: str) -> bool:
     lowered = text.lower()
-    return any(marker in lowered for marker in ("captcha", "login required", "please log in", "challenge", "verify you are human", "请登录", "验证码", "no twitter cookies found", "session expired"))
+    return any(
+        marker in lowered
+        for marker in (
+            "captcha",
+            "login required",
+            "please log in",
+            "challenge",
+            "verify you are human",
+            "no twitter cookies found",
+            "session expired",
+            "aliyun_waf",
+            "访问受限",
+            "访问验证",
+            "安全验证",
+            "滑动验证",
+            "请按住滑块",
+            "请登录",
+            "验证码",
+            "验证码登录",
+            "账号密码登录",
+            "二维码登录",
+            "下载app 关于雪球",
+        )
+    )
 
 
 def _x_list_id(url: str) -> str:

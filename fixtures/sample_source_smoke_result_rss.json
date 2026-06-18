@@ -1,0 +1,43 @@
+{
+  "object_type": "SourceSmokeResult",
+  "result_id": "source_smoke_result_rss_fixture_001",
+  "smoke_matrix_id": "source_smoke_matrix_fixture_001",
+  "smoke_decision_id": "smoke_decision_rss_fixture_001",
+  "source": "fixture_source",
+  "source_entrance_id": "src_fixture_market_001",
+  "source_type": "rss",
+  "source_url": "fixture://future-smoke/rss/feed.xml",
+  "smoke_allowed": true,
+  "diagnostic_success": false,
+  "source_reach_success": false,
+  "fixture_only": true,
+  "not_real_source_reach": true,
+  "connector_identity": {
+    "connector_id": "fixture.fetch_candidates.v1",
+    "connector_version": "source_smoke.fixture.v1",
+    "connector_run_ref": "fixtures/sample_connector_result.json",
+    "source_registry_ref": "fixtures/sample_source_registry.json#entries[source_registry_id=registry_fixture_source_v1]",
+    "readiness_decision_ref": "fixtures/sample_connector_readiness_matrix.json#decisions[readiness_decision_id=readiness_fixture_allowed_001]"
+  },
+  "auth_status": {
+    "auth_requirement": "not_required",
+    "auth_state": "not_required",
+    "auth_boundary_review": "passed_fixture",
+    "session_state_ref": null,
+    "secret_ref": null
+  },
+  "rate_limit_status": {
+    "policy": "fixture_no_network",
+    "state": "not_applicable",
+    "remaining": "not_applicable",
+    "observed_at": "2026-06-14T00:00:00Z"
+  },
+  "real_engagement": {
+    "status": "unavailable",
+    "metrics": {}
+  },
+  "evidence_policy": {
+    "source_url_required": true,
+    "raw_evidence_ref_required_for_real_smoke": true
+  }
+}

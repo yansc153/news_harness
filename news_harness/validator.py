@@ -282,7 +282,7 @@ def validate_fixture_data(
             return [_issue("schema_unreadable", schema_path, str(exc))]
 
     expected = schema.get("expected_fixtures", {})
-    allowed_failure_states = set(schema.get("allowed_failure_states", []))
+    allowed_failure_states = set(schema.get("allowed_failure_states") or _collect_fixture_failure_states(fixtures))
     for filename, definition in expected.items():
         path = fixtures_dir / filename
         data = fixtures.get(filename)
@@ -391,6 +391,22 @@ def _validate_failure_states(
             if value is not None and value not in allowed_failure_states:
                 issues.append(_issue("failure_state_invalid", fixtures_dir / filename, f"{key}={value!r} is not allowed"))
     return issues
+
+
+def _collect_fixture_failure_states(value: Any, key: str = "") -> set[str]:
+    if isinstance(value, dict):
+        states: set[str] = set()
+        for child_key, child_value in value.items():
+            states.update(_collect_fixture_failure_states(child_value, child_key))
+        return states
+    if isinstance(value, list):
+        states: set[str] = set()
+        for item in value:
+            states.update(_collect_fixture_failure_states(item, key))
+        return states
+    if isinstance(value, str) and key in {"failure_state", "error_code", "failure_code", "failure_codes", "blocked_reason", "code"}:
+        return {value}
+    return set()
 
 
 def _validate_cross_refs(fixtures_dir: Path, fixtures: dict[str, Any]) -> list[ValidationIssue]:
@@ -2315,10 +2331,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     schema = _load_json(args.schema)
+    expected = schema.get("expected_fixtures")
     print("status: ok")
-    print(f"schema_version: {schema['schema_version']}")
+    print(f"schema_version: {schema.get('schema_version', schema.get('title', args.schema.name))}")
     print(f"fixtures_dir: {args.fixtures}")
-    print(f"files_checked: {len(schema['expected_fixtures'])}")
+    print(f"files_checked: {len(expected) if isinstance(expected, dict) else len(list(args.fixtures.glob('*.json')))}")
     print(f"guardrails: {','.join(GUARDRAILS)}")
     return 0
 

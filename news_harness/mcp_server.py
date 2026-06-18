@@ -149,10 +149,44 @@ class NewsHarnessMcpServer:
         return {"jsonrpc": "2.0", "id": message.get("id"), "error": {"code": code, "message": text}}
 
 
+def _read_stdio_message() -> tuple[str, bool] | None:
+    """Read either MCP Content-Length framing or legacy newline JSON."""
+    first = sys.stdin.buffer.readline()
+    while first in (b"\r\n", b"\n"):
+        first = sys.stdin.buffer.readline()
+    if not first:
+        return None
+    if first.lower().startswith(b"content-length:"):
+        try:
+            length = int(first.split(b":", 1)[1].strip())
+        except (IndexError, ValueError):
+            return "", True
+        while True:
+            header = sys.stdin.buffer.readline()
+            if header in (b"\r\n", b"\n", b""):
+                break
+        return sys.stdin.buffer.read(length).decode("utf-8"), True
+    return first.decode("utf-8").strip(), False
+
+
+def _write_stdio_response(response: JSON, *, framed: bool) -> None:
+    payload = json.dumps(response, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    if framed:
+        sys.stdout.buffer.write(f"Content-Length: {len(payload)}\r\n\r\n".encode("ascii"))
+        sys.stdout.buffer.write(payload)
+        sys.stdout.buffer.flush()
+        return
+    sys.stdout.write(payload.decode("utf-8") + "\n")
+    sys.stdout.flush()
+
+
 def run_stdio(feed_path: Path, artifact_dir: Path) -> None:
     server = NewsHarnessMcpServer(feed_path=feed_path, artifact_dir=artifact_dir)
-    for line in sys.stdin:
-        line = line.strip()
+    while True:
+        incoming = _read_stdio_message()
+        if incoming is None:
+            break
+        line, framed = incoming
         if not line:
             continue
         try:
@@ -162,8 +196,7 @@ def run_stdio(feed_path: Path, artifact_dir: Path) -> None:
         else:
             response = server.handle(message)
         if response is not None:
-            sys.stdout.write(json.dumps(response, ensure_ascii=False, separators=(",", ":")) + "\n")
-            sys.stdout.flush()
+            _write_stdio_response(response, framed=framed)
 
 
 def main(argv: list[str] | None = None) -> int:

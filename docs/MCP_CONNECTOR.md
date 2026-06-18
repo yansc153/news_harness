@@ -51,4 +51,6 @@ python3 -m news_harness mcp \
 ```
 
 Use this connector when another project needs stable access to crawled copy,
-source URLs, radar scores, revisit/eval status, and image evidence refs.
+source URLs, and image evidence refs. Scores, revisit/eval status, rulebook
+internals, secrets, cookies, and session material are intentionally not part of
+the MCP projection.

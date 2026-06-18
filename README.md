@@ -37,7 +37,7 @@ cycle, then checks freshness and required sources.
 
 ```bash
 python3 -m news_harness run-cycle \
-  --source-config configs/all_source_runner.example.json \
+  --source-config configs/all_source_runner.json \
   --score-config configs/deepseek_provider.example.json \
   --fixtures fixtures \
   --out web/radar-timeline/timeline_feed.json \
@@ -140,7 +140,8 @@ The MCP server exposes read-only tools:
 
 This is the stable connector for transferring crawled copy and image evidence
 to another project. It reads the same `timeline_feed.json` and artifact refs as
-the website, so there is no second data source to drift.
+the website, so there is no second data source to drift. The website also
+shows the MCP command and client config under the `MCP 通道` section.
 
 `fixtures/sample_radar_timeline_feed.json` and replay-generated
 `timeline_feed.json` define the first product-facing output surface:
@@ -156,7 +157,7 @@ store items are excluded from exported `timeline_feed.json`.
 Rolling source cadence is fixture-enforced:
 
 - X list: every 1 hour, max 10 items per source run.
-- Xueqiu `热门`, `达人`, and `争议讨论`: every 30 minutes, max 10 items per source run.
+- Xueqiu `热门` and `达人`: every 30 minutes, max 10 items per source run.
 - Reddit: every 1 hour, max 10 items per subreddit run across the configured
   subreddit pool.
 
@@ -187,8 +188,8 @@ truth; 12h/24h revisit remains the outcome path.
 Explicit local manual smoke commands are separate:
 
 ```bash
-python3 -m news_harness run-sources --config configs/all_source_runner.example.json --mode manual-smoke
-python3 -m news_harness run-sources --config configs/all_source_runner.example.json --mode manual-smoke --backend direct-cli
+python3 -m news_harness run-sources --config configs/all_source_runner.json --mode manual-smoke
+python3 -m news_harness run-sources --config configs/all_source_runner.json --mode manual-smoke --backend direct-cli
 python3 -m news_harness score --config configs/deepseek_provider.example.json --mode manual-smoke
 ```
 
@@ -197,7 +198,7 @@ commands by hand:
 
 ```bash
 python3 -m news_harness run-cycle \
-  --source-config configs/all_source_runner.example.json \
+  --source-config configs/all_source_runner.json \
   --score-config configs/deepseek_provider.example.json \
   --fixtures fixtures \
   --out web/radar-timeline/timeline_feed.json \
@@ -249,8 +250,13 @@ browser connector with a repo-external storage-state/session file, strict
 read-only DOM extraction, and structured failure on login challenge, captcha,
 WAF, or parse failure. `scripts/xueqiu_headless_export.mjs` is the first
 headless-ready extraction surface; `run-sources --backend direct-cli` can call it
-when `NEWS_HARNESS_XUEQIU_HEADLESS=1`.
+when `NEWS_HARNESS_XUEQIU_HEADLESS=1`. The Docker runtime also uses
+`NEWS_HARNESS_X_HEADLESS=1` for the X list when `twitter-cli` is unavailable.
 See `docs/direct-cli-real-processing-runbook.md`.
+
+The production source config is `configs/all_source_runner.json`. It targets
+the X list, Reddit's 20-subreddit pool, and Xueqiu `热门` / `达人`; `争议讨论`
+stays out until the connector is fully supported and verified.
 
 `fixtures/sample_shadow_source_fetch_result.json` is the MVP shadow-source
 contract for the future X list / Xueqiu runner. It models one X list item and
