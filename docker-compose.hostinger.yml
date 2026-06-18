@@ -8,14 +8,14 @@ services:
       context: https://github.com/yansc153/news_harness.git
       dockerfile: Dockerfile
     restart: unless-stopped
-    # ponytail: Hostinger drops high external ports here; bind standard HTTP directly.
+    # ponytail: Caddy owns 80/443 for TLS; app stays on localhost port 8765.
     network_mode: host
     volumes:
       - news_harness_artifacts:/app/artifacts
       - /run/news-harness/secrets:/run/news-harness/secrets:ro
     environment:
       - PYTHONUNBUFFERED=1
-      - NEWS_HARNESS_SITE_PORT=80
+      - NEWS_HARNESS_SITE_PORT=8765
       - NEWS_HARNESS_CYCLE_MODE=manual-smoke
       - NEWS_HARNESS_CYCLE_BACKEND=direct-cli
       - NEWS_HARNESS_MANUAL_SMOKE_ACK=1
