@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import hmac
 import json
+import os
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -12,6 +14,8 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 from . import artifact_api
 from .fixtures import ROOT
+
+STATIC_ROOT = ROOT / "web"
 
 
 def json_bytes(payload: Any) -> bytes:
@@ -52,6 +56,8 @@ class NewsHarnessSiteHandler(SimpleHTTPRequestHandler):
     def translate_path(self, path: str) -> str:
         parsed = urlparse(path)
         clean_parts = [part for part in unquote(parsed.path).split("/") if part and part not in {".", ".."}]
+        if clean_parts[:1] == ["web"]:
+            clean_parts = clean_parts[1:]
         candidate = self.server.root_dir.joinpath(*clean_parts) if clean_parts else self.server.root_dir
         try:
             candidate.resolve().relative_to(self.server.root_dir)
@@ -69,6 +75,9 @@ class NewsHarnessSiteHandler(SimpleHTTPRequestHandler):
 
     def _handle_api(self, path: str, query: dict[str, list[str]]) -> None:
         try:
+            if path.startswith("/api/export/v1/"):
+                self._handle_export_api(path, query)
+                return
             if path == "/api/timeline":
                 self._send_json(artifact_api.latest_feed(self.server.feed_path, projection="web"))
                 return
@@ -94,6 +103,37 @@ class NewsHarnessSiteHandler(SimpleHTTPRequestHandler):
         except Exception as exc:  # pragma: no cover - defensive server boundary
             self._send_json({"status": "error", "error": type(exc).__name__, "message": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
 
+    def _authorized_for_export(self) -> bool:
+        token = self.server.export_token
+        if not token:
+            return False
+        header = self.headers.get("Authorization", "")
+        bearer = header.removeprefix("Bearer ").strip() if header.startswith("Bearer ") else ""
+        supplied = bearer or self.headers.get("X-Export-Token", "")
+        return hmac.compare_digest(supplied, token)
+
+    def _handle_export_api(self, path: str, query: dict[str, list[str]]) -> None:
+        if not self.server.export_token:
+            self._send_json({"status": "error", "error": "export_token_not_configured"}, HTTPStatus.SERVICE_UNAVAILABLE)
+            return
+        if not self._authorized_for_export():
+            self._send_json({"status": "error", "error": "unauthorized"}, HTTPStatus.UNAUTHORIZED)
+            return
+        if path == "/api/export/v1/items":
+            limit = int((query.get("limit") or ["50"])[0])
+            source = (query.get("source") or [None])[0]
+            self._send_json(artifact_api.list_items(self.server.feed_path, limit=limit, source=source, projection="mcp"))
+            return
+        if path.startswith("/api/export/v1/items/") and path.endswith("/images"):
+            item_id = unquote(path.removeprefix("/api/export/v1/items/").removesuffix("/images").strip("/"))
+            self._send_json(artifact_api.image_refs(item_id, self.server.feed_path, projection="mcp"))
+            return
+        if path.startswith("/api/export/v1/items/"):
+            item_id = unquote(path.removeprefix("/api/export/v1/items/").strip("/"))
+            self._send_json(artifact_api.get_item(item_id, self.server.feed_path, projection="mcp"))
+            return
+        self._send_json({"status": "error", "error": "not_found", "path": path}, HTTPStatus.NOT_FOUND)
+
 
 class NewsHarnessSiteServer(ThreadingHTTPServer):
     def __init__(self, server_address: tuple[str, int], root_dir: Path, feed_path: Path, artifact_dir: Path):
@@ -101,6 +141,13 @@ class NewsHarnessSiteServer(ThreadingHTTPServer):
         self.root_dir = root_dir.resolve()
         self.feed_path = feed_path.resolve()
         self.artifact_dir = artifact_dir.resolve()
+        token_file = os.environ.get("NEWS_HARNESS_EXPORT_TOKEN_FILE", "")
+        self.export_token = os.environ.get("NEWS_HARNESS_EXPORT_TOKEN", "")
+        if not self.export_token and token_file:
+            try:
+                self.export_token = Path(token_file).read_text(encoding="utf-8").strip()
+            except FileNotFoundError:
+                self.export_token = ""
 
 
 def run_server(host: str, port: int, root_dir: Path, feed_path: Path, artifact_dir: Path) -> None:
@@ -114,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Serve News Harness website and read-only JSON API")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
-    parser.add_argument("--root", type=Path, default=ROOT)
+    parser.add_argument("--root", type=Path, default=STATIC_ROOT)
     parser.add_argument("--feed", type=Path, default=artifact_api.DEFAULT_FEED)
     parser.add_argument("--artifact-dir", type=Path, default=artifact_api.DEFAULT_ARTIFACT_DIR)
     args = parser.parse_args(argv)

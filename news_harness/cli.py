@@ -156,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
     serve_parser = subparsers.add_parser("serve", help="Serve the production website and read-only API")
     serve_parser.add_argument("--host", default="127.0.0.1", help="Bind host")
     serve_parser.add_argument("--port", type=int, default=8765, help="Bind port")
-    serve_parser.add_argument("--root", type=Path, default=site_server_module.ROOT, help="Static root")
+    serve_parser.add_argument("--root", type=Path, default=site_server_module.STATIC_ROOT, help="Static root")
     serve_parser.add_argument("--feed", type=Path, default=site_server_module.artifact_api.DEFAULT_FEED, help="Timeline feed path")
     serve_parser.add_argument("--artifact-dir", type=Path, default=site_server_module.artifact_api.DEFAULT_ARTIFACT_DIR, help="Latest artifact dir")
 

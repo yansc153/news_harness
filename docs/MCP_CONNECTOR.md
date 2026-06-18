@@ -1,7 +1,7 @@
 # News Harness MCP Connector
 
-This repository now includes a read-only MCP stdio server for stable cross-project
-access to radar copy and image evidence.
+This repository includes a read-only MCP stdio server for local trusted
+cross-project access to radar copy and image evidence.
 
 ## Command
 
@@ -13,21 +13,23 @@ python3 -m news_harness mcp \
 
 ## Tools
 
-- `get_latest_feed` returns the current public feed projection.
+- `get_latest_feed` returns the current MCP export projection.
 - `list_radar_items` returns item summaries and supports `limit` and `source`.
 - `get_radar_item` returns one item by `item_id`.
-- `get_image_refs` returns original image references and local asset refs.
-- `get_health` returns artifact chain health.
+- `get_image_refs` returns export-safe image references.
+- `get_health` returns local artifact chain health.
 
 ## Boundaries
 
 - Read-only only.
+- Stdio MCP is local-trusted only; remote clients should use the tokened
+  `/api/export/v1/*` HTTPS surface.
 - No source crawling.
 - No model calls.
 - No promotion.
 - No raw cookies, API keys, or session material.
-- `fixture://` and internal references are preserved as artifact refs but are
-  not exposed as openable public links.
+- Local paths, private refs, and internal artifact refs are not exposed as
+  openable public links.
 
 ## Example Client Config Shape
 

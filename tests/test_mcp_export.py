@@ -27,7 +27,11 @@ class McpExportTests(unittest.TestCase):
                     "copy_text": "full source text",
                     "source_url": "https://example.com/post",
                     "image_status": "available",
-                    "image_refs": [{"original_image_ref": "https://example.com/image.png"}],
+                    "image_refs": [{
+                        "original_image_ref": "https://example.com/image.png",
+                        "page_context_ref": "/tmp/should-not-leak",
+                    }],
+                    "asset_refs": [{"asset_ref": "/tmp/local-image.png"}],
                     "hotness_score": 0.91,
                     "radar_score": 91,
                     "hotness_series": [0.1, 0.9],
@@ -46,6 +50,7 @@ class McpExportTests(unittest.TestCase):
             item = artifact_api.latest_feed(self._feed_path(Path(name)), projection="mcp")["items"][0]
         self.assertEqual(item["object_type"], "McpExportItem")
         self.assertEqual("full source text", item["copy_text"])
+        self.assertEqual([{"original_image_ref": "https://example.com/image.png"}], item["image_refs"])
         self.assertEqual([], artifact_api.validate_mcp_export(item))
         for key in artifact_api.FORBIDDEN_MCP_KEYS:
             self.assertNotIn(key, item)

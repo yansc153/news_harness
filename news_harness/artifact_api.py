@@ -83,6 +83,15 @@ def _image_refs(item: dict[str, Any]) -> list[dict[str, Any]]:
     return refs
 
 
+ALLOWED_MCP_KEYS: set[str] = {
+    "object_type", "id", "source", "published_at", "copy_text", "source_url", "image_refs",
+}
+
+ALLOWED_MCP_IMAGE_REF_KEYS: set[str] = {
+    "url", "original_image_ref", "thumbnail_ref", "alt", "description", "width", "height",
+}
+
+
 FORBIDDEN_MCP_KEYS: set[str] = {
     "radar_score", "hotness_score", "hotness_series", "confidence",
     "rule_ids", "structure_tags", "outcome_labels", "learning_eligibility",
@@ -91,9 +100,43 @@ FORBIDDEN_MCP_KEYS: set[str] = {
 }
 
 
+def _mcp_image_refs(item: dict[str, Any]) -> list[dict[str, Any]]:
+    refs: list[dict[str, Any]] = []
+    for ref in _image_refs(item):
+        clean = {key: value for key, value in ref.items() if key in ALLOWED_MCP_IMAGE_REF_KEYS and value}
+        for key in ("url", "original_image_ref", "thumbnail_ref"):
+            if key in clean:
+                clean[key] = public_url(clean[key])
+        clean = {key: value for key, value in clean.items() if value}
+        if any(key in clean for key in ("url", "original_image_ref", "thumbnail_ref")):
+            refs.append(clean)
+    return refs
+
+
 def validate_mcp_export(item: dict[str, Any]) -> list[str]:
     """Return list of forbidden keys found in an MCP export dict (empty = clean)."""
-    return [k for k in FORBIDDEN_MCP_KEYS if k in item]
+    problems = [f"forbidden:{key}" for key in FORBIDDEN_MCP_KEYS if key in item]
+    problems.extend(f"unexpected:{key}" for key in item if key not in ALLOWED_MCP_KEYS)
+    for index, ref in enumerate(item.get("image_refs") or []):
+        if not isinstance(ref, dict):
+            problems.append(f"image_refs[{index}]:not_object")
+            continue
+        problems.extend(f"image_refs[{index}].unexpected:{key}" for key in ref if key not in ALLOWED_MCP_IMAGE_REF_KEYS)
+    return problems
+
+
+def project_item_export(item: dict[str, Any]) -> dict[str, Any]:
+    """Return the public export read model: only copy, source URL, and image refs."""
+    source_url = public_url(item.get("source_url") or item.get("canonical_url"))
+    return {
+        "object_type": "McpExportItem",
+        "id": item.get("id"),
+        "source": item.get("source"),
+        "published_at": item.get("published_at"),
+        "copy_text": item.get("copy_text") or "",
+        "source_url": source_url,
+        "image_refs": _mcp_image_refs(item),
+    }
 
 
 def project_item_web(item: dict[str, Any], *, include_private_refs: bool = False) -> dict[str, Any]:
@@ -145,26 +188,7 @@ def project_item_web(item: dict[str, Any], *, include_private_refs: bool = False
 
 def project_item_mcp(item: dict[str, Any]) -> dict[str, Any]:
     """Return the MCP export read model — evidence/read fields only, no scores/status/refs."""
-    source_url = public_url(item.get("source_url") or item.get("canonical_url"))
-    return {
-        "object_type": "McpExportItem",
-        "id": item.get("id"),
-        "source": item.get("source"),
-        "source_label": item.get("source_label") or item.get("source"),
-        "source_group": item.get("source_group") or "",
-        "author": item.get("author"),
-        "published_at": item.get("published_at"),
-        "title": item.get("topic_or_hook") or "",
-        "copy_text": item.get("copy_text") or "",
-        "source_url": source_url,
-        "canonical_url": item.get("canonical_url") or "",
-        "original_image_ref": public_url(item.get("original_image_ref")),
-        "thumbnail_ref": public_url(item.get("thumbnail_ref")),
-        "image_refs": _image_refs(item),
-        "image_status": item.get("image_status") or item.get("image_quality_status") or "unknown",
-        "evidence_status": item.get("evidence_status") or "",
-        "public_url_available": bool(source_url),
-    }
+    return project_item_export(item)
 
 
 # backward-compat alias
