@@ -1,6 +1,6 @@
 # News Harness V1 — Docker Caddyfile
 
-{$NEWS_HARNESS_DOMAIN::80} {
+{$NEWS_HARNESS_DOMAIN::80}, {$NEWS_HARNESS_DOMAIN}:8443 {
     reverse_proxy {$NEWS_HARNESS_UPSTREAM:app:8765}
 
     # Root redirects to dashboard
