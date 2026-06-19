@@ -22,6 +22,10 @@ const source = arg("--source", "");
 const limit = Math.min(30, Number(arg("--limit", "10")));
 const out = arg("--out");
 const storageState = arg("--storage-state");
+const detailDelayMinMs = Math.max(0, Number(process.env.NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MIN_MS || arg("--detail-delay-min-ms", "1800")));
+const detailDelayMaxMs = Math.max(detailDelayMinMs, Number(process.env.NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MAX_MS || arg("--detail-delay-max-ms", "4600")));
+const pageSettleMinMs = Math.max(0, Number(process.env.NEWS_HARNESS_XUEQIU_PAGE_SETTLE_MIN_MS || arg("--page-settle-min-ms", "2200")));
+const pageSettleMaxMs = Math.max(pageSettleMinMs, Number(process.env.NEWS_HARNESS_XUEQIU_PAGE_SETTLE_MAX_MS || arg("--page-settle-max-ms", "5200")));
 if (!SECTIONS[source]) fail("xueqiu_section_backend_unsupported", `No exact read-only headless DOM section for ${source}`);
 if (!out) fail("xueqiu_headless_export_missing_out", "--out is required");
 
@@ -62,6 +66,15 @@ function cleanText(text) {
 
 function stripHtml(text) {
   return cleanText(String(text || "").replace(/<[^>]+>/g, " "));
+}
+
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+async function humanDelay(minMs, maxMs) {
+  if (maxMs <= 0) return;
+  await new Promise((resolve) => setTimeout(resolve, randomInt(minMs, maxMs)));
 }
 
 function looksBlocked(text) {
@@ -236,7 +249,7 @@ async function detailRow(context, row) {
   try {
     await page.goto(row.url, { waitUntil: "domcontentloaded", timeout: 20000 });
     await page.waitForSelector(".article__bd__detail, article.article__bd, article, main, [class*=detail]", { timeout: 7000 }).catch(() => {});
-    await page.waitForTimeout(1200);
+    await humanDelay(pageSettleMinMs, pageSettleMaxMs);
     const detail = await page.evaluate((listText) => {
       const clean = (text) => String(text || "").replace(/\s+/g, " ").trim();
       const preferred = document.querySelector(".article__bd__detail, article.article__bd");
@@ -304,6 +317,7 @@ try {
   const detailed = [];
   const rejected = [];
   for (const row of rows.slice(0, Math.min(rows.length, limit * 3))) {
+    await humanDelay(detailDelayMinMs, detailDelayMaxMs);
     const detail = await detailRow(context, row);
     if (detail.full_text_observed && !looksTruncated(detail.text)) {
       detailed.push(detail);

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -87,6 +88,23 @@ def _blocked_timeline_text(item: dict[str, Any]) -> bool:
     )
 
 
+def _xueqiu_item_not_full_text(item: dict[str, Any]) -> bool:
+    source = " ".join(str(item.get(field) or "") for field in ("source", "source_label")).lower()
+    if "xueqiu" not in source and "雪球" not in source:
+        return False
+    full_text_status = str(item.get("full_text_status") or "").strip()
+    detail_fetch_status = str(item.get("detail_fetch_status") or "").strip()
+    source_quality = str(item.get("source_quality") or "").strip()
+    if full_text_status and full_text_status != "full_text_observed":
+        return True
+    if source_quality in {"summary_or_list_excerpt_only", "detail_attempt_incomplete"}:
+        return True
+    if detail_fetch_status and detail_fetch_status not in {"full_text_observed", "api_full_text_observed"}:
+        return True
+    text = " ".join(str(item.get(field) or "") for field in ("copy_text", "topic_or_hook", "title"))
+    return bool(re.search(r"(\.{3,}|…|展开全文|阅读全文|查看全文)\s*$", text.strip()))
+
+
 def _load_timeline_feed_items(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
@@ -110,7 +128,7 @@ def merge_manual_timeline_items(
 
     merged: dict[str, dict[str, Any]] = {}
     for item in [*prior_items, *current_items]:
-        if isinstance(item, dict) and not _blocked_timeline_text(item):
+        if isinstance(item, dict) and not _blocked_timeline_text(item) and not _xueqiu_item_not_full_text(item):
             merged[_timeline_item_key(item)] = item
     sorted_items = sorted(merged.values(), key=_timeline_sort_key, reverse=True)
     limit = max_items if max_items is not None else _manual_timeline_max_items()

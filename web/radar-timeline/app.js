@@ -409,6 +409,7 @@ function sortItems(items, sortMode) {
 }
 
 function isBlockedTimelineItem(item) {
+  const group = sourceGroupKey(item);
   const imageText = (Array.isArray(item.image_refs) ? item.image_refs : [])
     .filter((image) => image && typeof image === "object")
     .map((image) => `${image.alt || ""} ${image.caption || ""}`)
@@ -421,7 +422,7 @@ function isBlockedTimelineItem(item) {
     item.detail_fetch_status,
     imageText,
   ].join(" ").toLowerCase();
-  return [
+  const blocked = [
     "access verification",
     "slide to complete",
     "slide to verify",
@@ -433,6 +434,16 @@ function isBlockedTimelineItem(item) {
     "安全验证",
     "滑动验证",
   ].some((marker) => text.includes(marker));
+  if (blocked) return true;
+  if (group !== "xueqiu") return false;
+  const fullTextStatus = String(item.full_text_status || "").trim();
+  const detailFetchStatus = String(item.detail_fetch_status || "").trim();
+  const sourceQuality = String(item.source_quality || "").trim();
+  if (fullTextStatus && fullTextStatus !== "full_text_observed") return true;
+  if (["summary_or_list_excerpt_only", "detail_attempt_incomplete"].includes(sourceQuality)) return true;
+  if (detailFetchStatus && !["full_text_observed", "api_full_text_observed"].includes(detailFetchStatus)) return true;
+  const xueqiuText = [item.copy_text, item.topic_or_hook, item.title].join(" ").trim();
+  return /(\.{3,}|…|展开全文|阅读全文|查看全文)\s*$/.test(xueqiuText);
 }
 
 function filterRecent(items, generatedAt, recentHours) {
