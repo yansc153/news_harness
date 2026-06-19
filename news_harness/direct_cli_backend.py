@@ -55,6 +55,10 @@ DIRECT_CLI_READ_TIMEOUT_SECONDS = 60
 REDDIT_JSON_TIMEOUT_SECONDS = 12
 REDDIT_SUBREDDIT_WORKERS = 1
 REDDIT_DETAIL_WORKERS = 2
+REDDIT_MIN_ANALYSIS_CHARS = 500
+REDDIT_SHORT_POST_MIN_SCORE = 750
+REDDIT_SHORT_POST_MIN_SCORE_WITH_COMMENTS = 300
+REDDIT_SHORT_POST_MIN_COMMENTS = 150
 REDDIT_HEADLESS_TIMEOUT_SECONDS = 150
 OPENCLI_READ_TIMEOUT_SECONDS = 45
 X_LIST_HEADLESS_TIMEOUT_SECONDS = 120
@@ -541,6 +545,8 @@ def _fetch_reddit_from_headless_export_file(source_config: dict[str, Any], expor
         text = str(row.get("text") or row.get("body") or row.get("title") or "").strip()
         if not text or _looks_like_auth_or_challenge_text(text):
             continue
+        if not _reddit_row_is_meaningful(text, row):
+            continue
         subreddit = str(row.get("subreddit") or "reddit")
         url = _row_url(row, f"https://www.reddit.com/r/{urllib.parse.quote(subreddit)}/hot/", "reddit")
         observation = _observation(
@@ -626,6 +632,8 @@ def _reddit_json_observation(data: dict[str, Any], subreddit: str) -> dict[str, 
     text = _row_copy_text(data)
     if not text or _looks_like_auth_or_challenge_text(text):
         return None
+    if not _reddit_row_is_meaningful(text, data):
+        return None
     url = _reddit_permalink(data)
     observation = _observation(
         source="reddit",
@@ -652,6 +660,26 @@ def _reddit_json_observation(data: dict[str, Any], subreddit: str) -> dict[str, 
     observation["detail_fetch_status"] = "reddit_detail_json_observed"
     observation["source_quality_risk_flags"] = []
     return observation
+
+
+def _reddit_row_is_meaningful(text: str, row: dict[str, Any]) -> bool:
+    if len(text.strip()) >= REDDIT_MIN_ANALYSIS_CHARS:
+        return True
+    metrics = _engagement_from_row(row).get("metrics", {})
+    score = _reddit_metric_number(metrics, "score", "upvotes", "ups", "likes")
+    comments = _reddit_metric_number(metrics, "num_comments", "comments", "comment_count")
+    return score >= REDDIT_SHORT_POST_MIN_SCORE or (
+        score >= REDDIT_SHORT_POST_MIN_SCORE_WITH_COMMENTS and comments >= REDDIT_SHORT_POST_MIN_COMMENTS
+    )
+
+
+def _reddit_metric_number(metrics: dict[str, Any], *names: str) -> float:
+    for name in names:
+        try:
+            return float(metrics.get(name))
+        except (TypeError, ValueError):
+            continue
+    return 0.0
 
 
 def _reddit_permalink(data: dict[str, Any]) -> str:

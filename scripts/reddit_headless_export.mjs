@@ -21,6 +21,7 @@ const limit = Math.min(30, Number(arg("--limit", "10")));
 const perSubreddit = Math.max(1, Math.min(30, Number(arg("--per-subreddit", "3"))));
 const cookieFile = arg("--cookie-file");
 const out = arg("--out");
+const minAnalysisChars = Number(arg("--min-analysis-chars", "500"));
 if (!subreddits.length) fail("reddit_headless_no_subreddits", "--subreddits is required");
 if (!cookieFile) fail("secret_env_missing", "--cookie-file is required");
 if (!out) fail("reddit_headless_export_missing_out", "--out is required");
@@ -70,6 +71,10 @@ function uniqByUrl(rows) {
     seen.add(row.url);
     return true;
   });
+}
+
+function isMeaningfulPost(row) {
+  return cleanText(row.body || row.text || "").length >= minAnalysisChars;
 }
 
 async function collectCandidates(page, subreddit) {
@@ -198,9 +203,9 @@ try {
   }
   const readableRows = rows
     .filter((row) => row.text && row.full_text_observed)
-    .filter((row) => row.text.length >= 25 || row.images?.length)
+    .filter(isMeaningfulPost)
     .slice(0, limit);
-  if (!readableRows.length) fail("reddit_headless_export_no_rows", "Reddit browser pages produced no readable post rows");
+  if (!readableRows.length) fail("reddit_headless_export_no_rows", "Reddit browser pages produced no meaningful longform post rows");
   await fs.mkdir(path.dirname(out), { recursive: true });
   await fs.writeFile(out, JSON.stringify({
     export_schema_version: "reddit_headless_dom.v1",
