@@ -58,8 +58,33 @@ def _timeline_sort_key(item: dict[str, Any]) -> tuple[float, str]:
 
 
 def _blocked_timeline_text(item: dict[str, Any]) -> bool:
-    text = str(item.get("copy_text") or item.get("topic_or_hook") or "").lower()
-    return any(marker in text for marker in ("access verification", "slide to complete", "slide to verify", "traceid"))
+    parts = [
+        str(item.get("copy_text") or ""),
+        str(item.get("topic_or_hook") or ""),
+        str(item.get("title") or ""),
+        str(item.get("source_quality") or ""),
+        str(item.get("detail_fetch_status") or ""),
+    ]
+    for image in item.get("image_refs", []) if isinstance(item.get("image_refs"), list) else []:
+        if isinstance(image, dict):
+            parts.append(str(image.get("alt") or ""))
+            parts.append(str(image.get("caption") or ""))
+    text = " ".join(parts).lower()
+    return any(
+        marker in text
+        for marker in (
+            "access verification",
+            "slide to complete",
+            "slide to verify",
+            "traceid",
+            "captcha",
+            "auth_or_challenge_required",
+            "验证码",
+            "访问验证",
+            "安全验证",
+            "滑动验证",
+        )
+    )
 
 
 def _load_timeline_feed_items(path: Path) -> list[dict[str, Any]]:

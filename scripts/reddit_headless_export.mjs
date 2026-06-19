@@ -17,8 +17,8 @@ const subreddits = String(arg("--subreddits", ""))
   .split(",")
   .map((item) => item.trim())
   .filter(Boolean);
-const limit = Math.min(10, Number(arg("--limit", "10")));
-const perSubreddit = Math.max(1, Math.min(10, Number(arg("--per-subreddit", "3"))));
+const limit = Math.min(30, Number(arg("--limit", "10")));
+const perSubreddit = Math.max(1, Math.min(30, Number(arg("--per-subreddit", "3"))));
 const cookieFile = arg("--cookie-file");
 const out = arg("--out");
 if (!subreddits.length) fail("reddit_headless_no_subreddits", "--subreddits is required");

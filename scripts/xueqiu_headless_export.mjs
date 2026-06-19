@@ -19,7 +19,7 @@ function fail(code, message) {
 }
 
 const source = arg("--source", "");
-const limit = Math.min(10, Number(arg("--limit", "10")));
+const limit = Math.min(30, Number(arg("--limit", "10")));
 const out = arg("--out");
 const storageState = arg("--storage-state");
 if (!SECTIONS[source]) fail("xueqiu_section_backend_unsupported", `No exact read-only headless DOM section for ${source}`);
@@ -312,7 +312,13 @@ try {
     }
     if (detailed.length >= limit) break;
   }
-  const outputRows = detailed.length ? detailed : rejected.slice(0, limit);
+  const outputRows = detailed.length ? detailed : [];
+  if (!outputRows.length && rejected.some((row) => row.detail_fetch_status === "auth_or_challenge_required")) {
+    fail("auth_or_challenge_required", "Xueqiu detail pages hit auth/challenge before full text");
+  }
+  if (!outputRows.length) {
+    fail("xueqiu_detail_required", "Xueqiu rows did not confirm second-level full text");
+  }
   await fs.mkdir(path.dirname(out), { recursive: true });
   await fs.writeFile(out, JSON.stringify({
     export_schema_version: "xueqiu_headless_dom.v1",

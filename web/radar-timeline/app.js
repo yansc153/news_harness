@@ -129,13 +129,27 @@ function firstContentLine(text) {
     .find(Boolean) || "";
 }
 
+function longformLead(text) {
+  return firstContentLine(text)
+    .replace(/^[\p{Script=Han}A-Za-z0-9_｜|&.\-\s]{1,42}(?:修改于|发表于|发布于)[^。！？!?]{0,64}\s+/u, "")
+    .replace(/^来自(?:雪球|Android|iPhone|iPad)\s+/u, "")
+    .trim();
+}
+
 function readableTitle(item) {
   if (isXItem(item)) return socialDisplayName(item) || "X 原文";
+  const group = sourceGroupKey(item);
+  const sourceName = sourceDisplayName(item.source_label || item.source);
   const hook = String(item.topic_or_hook || item.title || "").trim();
-  const hookLooksInternal = !hook || hook.includes("_") || /^[a-z0-9 -]{4,48}$/i.test(hook);
+  const hookLooksInternal = !hook || hook === sourceName || hook.includes("_") || /^[a-z0-9 -]{4,48}$/i.test(hook);
   if (!hookLooksInternal) return hook;
+  if (group === "xueqiu") {
+    const lead = longformLead(item.copy_text);
+    if (lead) return previewCopy(lead, 76);
+    return sourceName || "雪球原文";
+  }
   const firstLine = firstContentLine(item.copy_text);
-  if (firstLine && firstLine.length <= 180) return firstLine;
+  if (firstLine && firstLine.length <= 120) return firstLine;
   const copy = previewCopy(item.copy_text, 96);
   if (copy) return copy.replace(/[。.!?？].*$/, (match) => (match.length <= 2 ? match : match.slice(0, 1)));
   return "原文线索";
@@ -144,6 +158,14 @@ function readableTitle(item) {
 function displayCopy(item, title = readableTitle(item)) {
   const original = String(item.copy_text || "").trim();
   if (!original || isXItem(item)) return original;
+  if (sourceGroupKey(item) === "xueqiu") {
+    let text = longformLead(original);
+    const titlePrefix = String(title || "").replace(/\.\.\.$/, "").trim();
+    if (titlePrefix && text.startsWith(titlePrefix)) {
+      text = text.slice(titlePrefix.length).replace(/^[\s:：|｜,，。.!?？-]+/, "").trim();
+    }
+    return text || original;
+  }
   const lines = original.split(/\n+/).map((line) => line.trim()).filter(Boolean);
   let text = lines.length > 1 && lines[1].startsWith(lines[0]) ? lines.slice(1).join("\n") : original;
   for (const prefix of [title, firstContentLine(original)]) {
@@ -386,11 +408,39 @@ function sortItems(items, sortMode) {
   });
 }
 
+function isBlockedTimelineItem(item) {
+  const imageText = (Array.isArray(item.image_refs) ? item.image_refs : [])
+    .filter((image) => image && typeof image === "object")
+    .map((image) => `${image.alt || ""} ${image.caption || ""}`)
+    .join(" ");
+  const text = [
+    item.copy_text,
+    item.topic_or_hook,
+    item.title,
+    item.source_quality,
+    item.detail_fetch_status,
+    imageText,
+  ].join(" ").toLowerCase();
+  return [
+    "access verification",
+    "slide to complete",
+    "slide to verify",
+    "traceid",
+    "captcha",
+    "auth_or_challenge_required",
+    "验证码",
+    "访问验证",
+    "安全验证",
+    "滑动验证",
+  ].some((marker) => text.includes(marker));
+}
+
 function filterRecent(items, generatedAt, recentHours) {
+  const cleanItems = items.filter((item) => !isBlockedTimelineItem(item));
   const anchor = Date.parse(generatedAt || "");
-  if (!Number.isFinite(anchor)) return items;
+  if (!Number.isFinite(anchor)) return cleanItems;
   const cutoff = anchor - Number(recentHours || 120) * 60 * 60 * 1000;
-  return items.filter((item) => {
+  return cleanItems.filter((item) => {
     const published = Date.parse(item.published_at || "");
     return Number.isFinite(published) && published >= cutoff;
   });
@@ -451,6 +501,10 @@ function sourceDisplayName(value) {
 
 function isXItem(item) {
   return sourceGroupKey(item) === "x";
+}
+
+function isLongformItem(item) {
+  return ["xueqiu", "reddit"].includes(sourceGroupKey(item));
 }
 
 function socialDisplayName(item) {
@@ -551,7 +605,9 @@ function syncControls(feed) {
     .map((value) => `<option value="${escapeHtml(value)}"${value === state.sortMode ? " selected" : ""}>${optionLabel(value, "sort")}</option>`)
     .join("");
 
-  const sourceCandidates = (feed.items || []).filter((item) => state.sourceGroup === "all" || sourceGroupKey(item) === state.sourceGroup);
+  const sourceCandidates = (feed.items || [])
+    .filter((item) => !isBlockedTimelineItem(item))
+    .filter((item) => state.sourceGroup === "all" || sourceGroupKey(item) === state.sourceGroup);
   const sourceOptions = ["all", ...Array.from(new Set(sourceCandidates.map(sourceKey))).sort()];
   if (!sourceOptions.includes(state.sourceFilter)) state.sourceFilter = "all";
   document.getElementById("sourceFilter").innerHTML = sourceOptions
@@ -838,8 +894,10 @@ function render(feed, loadedFrom) {
       const tone = index % 2 ? "orange" : "green";
       const preview = imagePreview(item);
       const social = isXItem(item);
+      const longform = isLongformItem(item);
+      const group = sourceGroupKey(item);
       return `
-        <article class="timeline-card ${preview ? "has-media" : "no-media"} ${social ? "social-post" : ""}" data-testid="radar-card">
+        <article class="timeline-card ${preview ? "has-media" : "no-media"} ${social ? "social-post" : ""} ${longform ? "longform-post" : ""} ${escapeHtml(group)}-post" data-testid="radar-card">
           ${preview}
           <div class="card-body">
             <div class="card-meta">
@@ -883,6 +941,7 @@ function renderDialog(item) {
   const metrics = item.engagement_snapshot?.metrics || {};
   const predictionScores = item.prediction_scores || {};
   const social = isXItem(item);
+  const longform = isLongformItem(item);
   const sourceRows = [
     ["来源", sourceDisplayName(item.source_label || item.source)],
     ["作者", social ? `${socialDisplayName(item)} ${socialHandle(item)}`.trim() : item.author || ""],
@@ -921,7 +980,7 @@ function renderDialog(item) {
           <p class="social-copy">${escapeHtml(item.copy_text || "")}</p>
         </header>
       ` : `
-        <header class="detail-header">
+        <header class="detail-header ${longform ? "longform-detail" : ""}">
           <span>${escapeHtml(sourceDisplayName(item.source_label || item.source))}</span>
           <h2>${escapeHtml(title)}</h2>
           <p>${escapeHtml(copy)}</p>

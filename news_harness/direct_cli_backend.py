@@ -382,7 +382,7 @@ def _fetch_reddit_with_rdt_cli(source_config: dict[str, Any], availability: dict
 
 def _fetch_reddit_with_cookie_json(source_config: dict[str, Any], cookie: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     per_subreddit = _reddit_per_subreddit_limit(source_config)
-    target_count = max(1, min(10, int(source_config.get("batch_limit") or per_subreddit)))
+    target_count = max(1, min(30, int(source_config.get("batch_limit") or per_subreddit)))
     cookie = " ".join(part.strip() for part in str(cookie).splitlines() if part.strip())
     headers = {
         "User-Agent": "news-harness-direct-cli/0.1 read-only",
@@ -911,7 +911,7 @@ def _requested_item_count(source_config: dict[str, Any]) -> int:
 
 
 def _reddit_per_subreddit_limit(source_config: dict[str, Any]) -> int:
-    return min(10, int(source_config.get("max_items_per_subreddit_per_run") or source_config.get("batch_limit") or 10))
+    return min(30, int(source_config.get("max_items_per_subreddit_per_run") or source_config.get("batch_limit") or 10))
 
 
 def _probe_opencli(command: str) -> dict[str, Any]:
