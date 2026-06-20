@@ -12,6 +12,7 @@ services:
     network_mode: host
     volumes:
       - news_harness_artifacts:/app/artifacts
+      - news_harness_feed:/app/web/radar-timeline
       - /run/news-harness/secrets:/run/news-harness/secrets:ro
     environment:
       - PYTHONUNBUFFERED=1
@@ -52,5 +53,6 @@ services:
 
 volumes:
   news_harness_artifacts:
+  news_harness_feed:
   news_harness_caddy_data:
   news_harness_caddy_config:
