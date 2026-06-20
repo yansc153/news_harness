@@ -29,7 +29,32 @@ if [ "$CYCLE_MODE" = "manual-smoke" ]; then
         /app/artifacts/manual_smoke/latest/outcome.json \
         /app/artifacts/manual_smoke/latest/eval.json \
         /app/artifacts/manual_smoke/latest/image_assets.json; do
-        if [ -f "$artifact" ] && grep -Eq 'fixture_|fixture-only|fixture_backed|"fixture_only": true|"mode": "dry_run"|"feed_status": "demo"' "$artifact"; then
+        if [ -f "$artifact" ] && python3 - "$artifact" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+try:
+    with open(path, encoding="utf-8") as handle:
+        payload = json.load(handle)
+except Exception:
+    raise SystemExit(1)
+
+manual = payload.get("manual_smoke") if isinstance(payload.get("manual_smoke"), dict) else {}
+scoring = manual.get("scoring") if isinstance(manual.get("scoring"), dict) else {}
+runtime = payload.get("rolling_runtime") if isinstance(payload.get("rolling_runtime"), dict) else {}
+is_demo = bool(
+    payload.get("fixture_only") is True
+    or payload.get("no_real_source_access") is True
+    or payload.get("feed_status") == "demo"
+    or payload.get("mode") == "dry_run"
+    or manual.get("backend") == "fixture"
+    or scoring.get("fallback_used") == "fixture_scoring"
+    or "fixture" in str(runtime.get("runtime_stage", ""))
+)
+raise SystemExit(0 if is_demo else 1)
+PY
+        then
             rm -f "$artifact"
         fi
     done
