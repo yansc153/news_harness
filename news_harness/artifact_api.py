@@ -215,12 +215,34 @@ def latest_feed(feed_path: Path = DEFAULT_FEED, *, include_private_refs: bool = 
     }
 
 
+def _source_terms(source: str | None) -> set[str]:
+    return {term.strip().lower() for term in str(source or "").split(",") if term.strip()}
+
+
+def _source_matches(item: dict[str, Any], terms: set[str]) -> bool:
+    if not terms:
+        return True
+    source = str(item.get("source") or "").lower()
+    label = str(item.get("source_label") or "").lower()
+    values = {source, label}
+    if values & terms:
+        return True
+    return ("xueqiu" in terms and (source.startswith("xueqiu") or "雪球" in label)) or ("reddit" in terms and (source == "reddit" or label.startswith("r/")))
+
+
 def list_items(feed_path: Path = DEFAULT_FEED, *, limit: int = 50, source: str | None = None, projection: str = "web") -> dict[str, Any]:
-    feed = latest_feed(feed_path, projection=projection)
-    items = feed["items"]
-    if source:
-        items = [item for item in items if item.get("source") == source or item.get("source_label") == source]
-    return {**feed, "items": items[: max(0, limit)], "item_count": len(items[: max(0, limit)])}
+    feed = load_feed(feed_path)
+    raw_items = [item for item in feed.get("items", []) if isinstance(item, dict) and _source_matches(item, _source_terms(source))]
+    items = [_proj(projection, item) for item in raw_items]
+    return {
+        "object_type": "NewsHarnessLatestFeed",
+        "feed_id": feed.get("feed_id"),
+        "feed_version": feed.get("feed_version"),
+        "generated_at": feed.get("generated_at"),
+        "status": "demo" if is_demo_feed(feed, str(feed_path)) else "live",
+        "item_count": len(items[: max(0, limit)]),
+        "items": items[: max(0, limit)],
+    }
 
 
 def get_item(item_id: str, feed_path: Path = DEFAULT_FEED, *, include_private_refs: bool = True, projection: str = "web") -> dict[str, Any]:

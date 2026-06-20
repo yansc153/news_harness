@@ -119,7 +119,7 @@ read-only JSON endpoints for other apps:
 External agents that only need copy and image evidence should use the tokened
 export surface instead:
 
-- `GET /api/export/v1/items?limit=50&source=x_list`
+- `GET /api/export/v1/items?limit=50&source=xueqiu,reddit`
 - `GET /api/export/v1/items/{item_id}`
 - `GET /api/export/v1/items/{item_id}/images`
 

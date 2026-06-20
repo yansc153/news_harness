@@ -23,18 +23,22 @@ class ExportApiTests(unittest.TestCase):
                 "feed_id": "test",
                 "feed_version": "v1",
                 "generated_at": "2026-06-18T00:00:00Z",
-                "items": [{
-                    "id": "item-1",
-                    "source": "x_list",
-                    "published_at": "2026-06-18T00:00:00Z",
-                    "copy_text": "full copy",
-                    "source_url": "https://example.com/post",
-                    "image_refs": [{
-                        "original_image_ref": "https://example.com/image.png",
-                        "page_context_ref": "/tmp/private",
-                    }],
-                    "hotness_score": 0.99,
-                }],
+                "items": [
+                    {
+                        "id": "item-1",
+                        "source": "x_list",
+                        "published_at": "2026-06-18T00:00:00Z",
+                        "copy_text": "full copy",
+                        "source_url": "https://example.com/post",
+                        "image_refs": [{
+                            "original_image_ref": "https://example.com/image.png",
+                            "page_context_ref": "/tmp/private",
+                        }],
+                        "hotness_score": 0.99,
+                    },
+                    {"id": "item-2", "source": "xueqiu_hot", "source_label": "雪球热门", "copy_text": "xueqiu copy", "image_refs": []},
+                    {"id": "item-3", "source": "reddit", "source_label": "r/stocks", "copy_text": "reddit copy", "image_refs": []},
+                ],
             }), encoding="utf-8")
 
             os.environ["NEWS_HARNESS_EXPORT_TOKEN"] = "secret"
@@ -53,6 +57,11 @@ class ExportApiTests(unittest.TestCase):
                     headers={"Authorization": "Bearer secret"},
                 )
                 payload = json.loads(urlopen(request, timeout=5).read().decode("utf-8"))
+                request = Request(
+                    f"{base}/api/export/v1/items?source=xueqiu,reddit&limit=10",
+                    headers={"Authorization": "Bearer secret"},
+                )
+                filtered = json.loads(urlopen(request, timeout=5).read().decode("utf-8"))
             finally:
                 server.shutdown()
                 server.server_close()
@@ -62,6 +71,7 @@ class ExportApiTests(unittest.TestCase):
         self.assertEqual("full copy", item["copy_text"])
         self.assertNotIn("hotness_score", item)
         self.assertEqual([{"original_image_ref": "https://example.com/image.png"}], item["image_refs"])
+        self.assertEqual(["xueqiu_hot", "reddit"], [item["source"] for item in filtered["items"]])
 
 
 if __name__ == "__main__":
