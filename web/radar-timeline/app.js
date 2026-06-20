@@ -447,7 +447,7 @@ function isBlockedTimelineItem(item) {
 }
 
 function filterRecent(items, generatedAt, recentHours) {
-  const cleanItems = items.filter((item) => !isBlockedTimelineItem(item));
+  const cleanItems = cleanTimelineItems(items);
   const anchor = Date.parse(generatedAt || "");
   if (!Number.isFinite(anchor)) return cleanItems;
   const cutoff = anchor - Number(recentHours || 120) * 60 * 60 * 1000;
@@ -455,6 +455,19 @@ function filterRecent(items, generatedAt, recentHours) {
     const published = Date.parse(item.published_at || "");
     return Number.isFinite(published) && published >= cutoff;
   });
+}
+
+function cleanTimelineItems(items) {
+  return (items || []).filter((item) => !isBlockedTimelineItem(item));
+}
+
+function sourceGroupCounts(items, groups) {
+  const counts = Object.fromEntries(groups.map((group) => [group, group === "all" ? items.length : 0]));
+  for (const item of items) {
+    const group = sourceGroupKey(item);
+    counts[group] = (counts[group] || 0) + 1;
+  }
+  return counts;
 }
 
 function optionLabel(value, type) {
@@ -850,23 +863,25 @@ function renderMcpChannel(feed, items, loadedFrom) {
   `;
 }
 
-function renderSourceTabs(recentItems) {
+function renderSourceTabs(recentItems, totalItems = recentItems) {
   const orderedGroups = ["all", "x", "reddit", "xueqiu"];
-  const extraGroups = Array.from(new Set(recentItems.map(sourceGroupKey))).filter((group) => !orderedGroups.includes(group));
+  const extraGroups = Array.from(new Set([...recentItems, ...totalItems].map(sourceGroupKey))).filter((group) => !orderedGroups.includes(group));
   const groups = [...orderedGroups, ...extraGroups];
-  const counts = Object.fromEntries(groups.map((group) => [group, group === "all" ? recentItems.length : 0]));
-  for (const item of recentItems) {
-    const group = sourceGroupKey(item);
-    counts[group] = (counts[group] || 0) + 1;
-  }
+  const counts = sourceGroupCounts(recentItems, groups);
+  const totalCounts = sourceGroupCounts(totalItems, groups);
   if (!groups.includes(state.sourceGroup)) state.sourceGroup = "all";
   document.getElementById("sourceTabs").innerHTML = groups
-    .map((group) => `
+    .map((group) => {
+      const current = counts[group] || 0;
+      const total = totalCounts[group] || 0;
+      const totalLabel = total !== current ? `<span class="source-tab-total">总 ${compactCount(total)}</span>` : "";
+      return `
       <button class="source-tab ${state.sourceGroup === group ? "active" : ""}" type="button" data-source-group="${escapeHtml(group)}">
         <span>${escapeHtml(sourceGroupLabel(group))}</span>
-        <strong>${compactCount(counts[group] || 0)}</strong>
+        <strong><span class="source-tab-current">${compactCount(current)}</span>${totalLabel}</strong>
       </button>
-    `)
+    `;
+    })
     .join("");
 }
 
@@ -886,8 +901,10 @@ function itemChips(item) {
 
 function render(feed, loadedFrom) {
   syncControls(feed);
-  const recentItems = filterRecent(feed.items || [], feed.generated_at, state.recentHours);
-  renderSourceTabs(recentItems);
+  const feedItems = feed.items || [];
+  const cleanItems = cleanTimelineItems(feedItems);
+  const recentItems = filterRecent(feedItems, feed.generated_at, state.recentHours);
+  renderSourceTabs(recentItems, cleanItems);
   const groupItems = recentItems.filter((item) => state.sourceGroup === "all" || sourceGroupKey(item) === state.sourceGroup);
   const sourceItems = groupItems.filter((item) => state.sourceFilter === "all" || sourceKey(item) === state.sourceFilter);
   renderLanguageRadar(sourceItems);

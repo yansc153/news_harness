@@ -893,9 +893,23 @@ a {
 }
 
 .source-tab strong {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
   color: var(--ink);
   font-size: 19px;
   font-weight: 500;
+  white-space: nowrap;
+}
+
+.source-tab .source-tab-current {
+  color: var(--ink);
+}
+
+.source-tab .source-tab-total {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .timeline {
