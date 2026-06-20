@@ -903,13 +903,13 @@ a {
 }
 
 .source-tab .source-tab-current {
-  color: var(--ink);
-}
-
-.source-tab .source-tab-total {
   color: var(--muted);
   font-size: 11px;
   font-weight: 600;
+}
+
+.source-tab .source-tab-total {
+  color: var(--ink);
 }
 
 .timeline {

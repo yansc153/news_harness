@@ -874,11 +874,12 @@ function renderSourceTabs(recentItems, totalItems = recentItems) {
     .map((group) => {
       const current = counts[group] || 0;
       const total = totalCounts[group] || 0;
-      const totalLabel = total !== current ? `<span class="source-tab-total">总 ${compactCount(total)}</span>` : "";
+      const primary = total || current;
+      const currentLabel = total !== current ? `<span class="source-tab-current">当前 ${compactCount(current)}</span>` : "";
       return `
       <button class="source-tab ${state.sourceGroup === group ? "active" : ""}" type="button" data-source-group="${escapeHtml(group)}">
         <span>${escapeHtml(sourceGroupLabel(group))}</span>
-        <strong><span class="source-tab-current">${compactCount(current)}</span>${totalLabel}</strong>
+        <strong><span class="source-tab-total">${compactCount(primary)}</span>${currentLabel}</strong>
       </button>
     `;
     })
