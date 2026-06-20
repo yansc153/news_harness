@@ -28,6 +28,8 @@ const FALLBACK_FEED = {
   ],
 };
 
+const ALL_HOURS = "all";
+
 const feedCandidates = [
   "/api/timeline",
   "./timeline_feed.json",
@@ -36,7 +38,7 @@ const feedCandidates = [
 const state = {
   feed: FALLBACK_FEED,
   loadedFrom: "embedded fixture",
-  recentHours: 120,
+  recentHours: ALL_HOURS,
   sortMode: "hotness",
   sourceGroup: "all",
   sourceFilter: "all",
@@ -448,6 +450,7 @@ function isBlockedTimelineItem(item) {
 
 function filterRecent(items, generatedAt, recentHours) {
   const cleanItems = cleanTimelineItems(items);
+  if (recentHours === ALL_HOURS) return cleanItems;
   const anchor = Date.parse(generatedAt || "");
   if (!Number.isFinite(anchor)) return cleanItems;
   const cutoff = anchor - Number(recentHours || 120) * 60 * 60 * 1000;
@@ -471,6 +474,7 @@ function sourceGroupCounts(items, groups) {
 }
 
 function optionLabel(value, type) {
+  if (type === "hours" && value === ALL_HOURS) return "全部";
   if (type === "hours") return `${value} 小时`;
   if (value === "published_at") return "发布时间";
   return "可能爆分";
@@ -612,18 +616,19 @@ function formatTime(value) {
 
 function syncControls(feed) {
   const viewConfig = feed.view_config || {};
-  const hours = Array.isArray(viewConfig.supported_recent_hours) && viewConfig.supported_recent_hours.length
+  const configuredHours = Array.isArray(viewConfig.supported_recent_hours) && viewConfig.supported_recent_hours.length
     ? viewConfig.supported_recent_hours
     : [12, 24, 48, 72, 120];
+  const hours = [ALL_HOURS, ...configuredHours.filter((value) => value !== ALL_HOURS)];
   const sorts = Array.isArray(viewConfig.supported_sorts) && viewConfig.supported_sorts.length
     ? viewConfig.supported_sorts.map((sort) => sort.id)
     : ["hotness", "published_at"];
 
-  if (!hours.includes(state.recentHours)) state.recentHours = Number(viewConfig.default_recent_hours || 120);
+  if (!hours.includes(state.recentHours)) state.recentHours = ALL_HOURS;
   if (!sorts.includes(state.sortMode)) state.sortMode = viewConfig.default_sort || "hotness";
 
   document.getElementById("recentHours").innerHTML = hours
-    .map((value) => `<option value="${value}"${Number(value) === state.recentHours ? " selected" : ""}>${optionLabel(value, "hours")}</option>`)
+    .map((value) => `<option value="${value}"${value === state.recentHours ? " selected" : ""}>${optionLabel(value, "hours")}</option>`)
     .join("");
   document.getElementById("sortMode").innerHTML = sorts
     .map((value) => `<option value="${escapeHtml(value)}"${value === state.sortMode ? " selected" : ""}>${optionLabel(value, "sort")}</option>`)
@@ -1128,7 +1133,7 @@ async function refreshFeed() {
 }
 
 document.getElementById("recentHours").addEventListener("change", (event) => {
-  state.recentHours = Number(event.target.value || 120);
+  state.recentHours = event.target.value === ALL_HOURS ? ALL_HOURS : Number(event.target.value || 120);
   render(state.feed, state.loadedFrom);
 });
 
