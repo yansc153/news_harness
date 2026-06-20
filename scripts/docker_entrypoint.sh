@@ -14,7 +14,8 @@ fi
 
 # Ensure artifact dirs exist
 mkdir -p /app/artifacts/manual_smoke/latest
-mkdir -p /app/web/radar-timeline
+FEED_PATH="${NEWS_HARNESS_FEED_PATH:-web/radar-timeline/timeline_feed.json}"
+mkdir -p "$(dirname "$FEED_PATH")"
 
 CYCLE_MODE="${NEWS_HARNESS_CYCLE_MODE:-manual-smoke}"
 CYCLE_BACKEND="${NEWS_HARNESS_CYCLE_BACKEND:-direct-cli}"
@@ -22,7 +23,7 @@ SITE_PORT="${NEWS_HARNESS_SITE_PORT:-8765}"
 
 if [ "$CYCLE_MODE" = "manual-smoke" ]; then
     for artifact in \
-        /app/web/radar-timeline/timeline_feed.json \
+        "$FEED_PATH" \
         /app/artifacts/manual_smoke/latest/source_run.json \
         /app/artifacts/manual_smoke/latest/deepseek_scoring.json \
         /app/artifacts/manual_smoke/latest/revisit_schedule.json \
@@ -70,7 +71,7 @@ fi
             --source-config configs/all_source_runner.json \
             --score-config configs/deepseek_provider.json \
             --fixtures fixtures \
-            --out web/radar-timeline/timeline_feed.json \
+            --out "$FEED_PATH" \
             --mode "$CYCLE_MODE" \
             --backend "$CYCLE_BACKEND" \
             2>&1 || echo "  [cycle] exited with code $?"
@@ -86,5 +87,5 @@ echo "  cycle runner PID=$CYCLE_PID"
 exec python3 -m news_harness serve \
     --host 0.0.0.0 \
     --port "$SITE_PORT" \
-    --feed web/radar-timeline/timeline_feed.json \
+    --feed "$FEED_PATH" \
     --artifact-dir artifacts/manual_smoke/latest
