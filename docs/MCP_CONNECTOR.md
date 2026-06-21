@@ -24,6 +24,9 @@ python3 -m news_harness mcp \
 - Read-only only.
 - Stdio MCP is local-trusted only; remote clients should use the tokened
   `/api/export/v1/*` HTTPS surface.
+- Public remote clients that only need copy/image evidence can use the
+  no-token `/api/public/v1/*` HTTPS surface. It uses the same evidence-only
+  projection as MCP/export and does not expose scores or rule internals.
 - No source crawling.
 - No model calls.
 - No promotion.
@@ -56,3 +59,15 @@ Use this connector when another project needs stable access to crawled copy,
 source URLs, and image evidence refs. Scores, revisit/eval status, rulebook
 internals, secrets, cookies, and session material are intentionally not part of
 the MCP projection.
+
+## Public Evidence API
+
+```text
+GET /api/public/v1/items?source=xueqiu,reddit&limit=500
+GET /api/public/v1/items/{item_id}
+GET /api/public/v1/items/{item_id}/images
+```
+
+Check `/api/health` first and require `status: "ok"` before consuming a batch
+when freshness matters. The response items include only `object_type`, `id`,
+`source`, `published_at`, `copy_text`, `source_url`, and `image_refs`.

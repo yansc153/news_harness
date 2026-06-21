@@ -78,6 +78,9 @@ class NewsHarnessSiteHandler(SimpleHTTPRequestHandler):
             if path.startswith("/api/export/v1/"):
                 self._handle_export_api(path, query)
                 return
+            if path.startswith("/api/public/v1/"):
+                self._handle_evidence_api(path, query, "/api/public/v1")
+                return
             if path == "/api/timeline":
                 self._send_json(artifact_api.latest_feed(self.server.feed_path, projection="web"))
                 return
@@ -119,17 +122,21 @@ class NewsHarnessSiteHandler(SimpleHTTPRequestHandler):
         if not self._authorized_for_export():
             self._send_json({"status": "error", "error": "unauthorized"}, HTTPStatus.UNAUTHORIZED)
             return
-        if path == "/api/export/v1/items":
+        self._handle_evidence_api(path, query, "/api/export/v1")
+
+    def _handle_evidence_api(self, path: str, query: dict[str, list[str]], prefix: str) -> None:
+        items_path = f"{prefix}/items"
+        if path == items_path:
             limit = int((query.get("limit") or ["50"])[0])
             source = (query.get("source") or [None])[0]
             self._send_json(artifact_api.list_items(self.server.feed_path, limit=limit, source=source, projection="mcp"))
             return
-        if path.startswith("/api/export/v1/items/") and path.endswith("/images"):
-            item_id = unquote(path.removeprefix("/api/export/v1/items/").removesuffix("/images").strip("/"))
+        if path.startswith(f"{items_path}/") and path.endswith("/images"):
+            item_id = unquote(path.removeprefix(f"{items_path}/").removesuffix("/images").strip("/"))
             self._send_json(artifact_api.image_refs(item_id, self.server.feed_path, projection="mcp"))
             return
-        if path.startswith("/api/export/v1/items/"):
-            item_id = unquote(path.removeprefix("/api/export/v1/items/").strip("/"))
+        if path.startswith(f"{items_path}/"):
+            item_id = unquote(path.removeprefix(f"{items_path}/").strip("/"))
             self._send_json(artifact_api.get_item(item_id, self.server.feed_path, projection="mcp"))
             return
         self._send_json({"status": "error", "error": "not_found", "path": path}, HTTPStatus.NOT_FOUND)

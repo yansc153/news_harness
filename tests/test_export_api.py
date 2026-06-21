@@ -62,6 +62,13 @@ class ExportApiTests(unittest.TestCase):
                     headers={"Authorization": "Bearer secret"},
                 )
                 filtered = json.loads(urlopen(request, timeout=5).read().decode("utf-8"))
+                public_request_url = f"{base}/api/public/v1/items?source=xueqiu,reddit&limit=10"
+                public_filtered = json.loads(
+                    urlopen(public_request_url, timeout=5).read().decode("utf-8")
+                )
+                public_item = json.loads(
+                    urlopen(f"{base}/api/public/v1/items/item-1", timeout=5).read().decode("utf-8")
+                )
             finally:
                 server.shutdown()
                 server.server_close()
@@ -72,6 +79,14 @@ class ExportApiTests(unittest.TestCase):
         self.assertNotIn("hotness_score", item)
         self.assertEqual([{"original_image_ref": "https://example.com/image.png"}], item["image_refs"])
         self.assertEqual(["xueqiu_hot", "reddit"], [item["source"] for item in filtered["items"]])
+        self.assertEqual(["xueqiu_hot", "reddit"], [item["source"] for item in public_filtered["items"]])
+        self.assertNotIn("hotness_score", public_filtered["items"][0])
+        self.assertEqual("full copy", public_item["copy_text"])
+        self.assertEqual([{"original_image_ref": "https://example.com/image.png"}], public_item["image_refs"])
+        self.assertEqual(
+            {"object_type", "id", "source", "published_at", "copy_text", "source_url", "image_refs"},
+            set(public_item),
+        )
 
 
 if __name__ == "__main__":
