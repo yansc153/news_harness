@@ -2174,9 +2174,9 @@ def _parse_model_json(content: str) -> dict[str, Any]:
 
 def _manual_deepseek_model_id(config: dict[str, Any]) -> str:
     configured = str(config.get("model_id") or "")
-    if not configured or configured.endswith("-fixture") or configured == "deepseek-chat":
-        return "deepseek-v4-flash"
-    return configured
+    if configured and not configured.endswith("-fixture"):
+        return configured
+    return configured or "deepseek-chat"
 
 
 def _looks_like_challenge(body: str) -> bool:

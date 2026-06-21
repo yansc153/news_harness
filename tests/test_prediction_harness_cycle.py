@@ -199,6 +199,10 @@ def test_manual_deepseek_chunks_large_batches(monkeypatch) -> None:
     ]
 
 
+def test_manual_deepseek_model_id_respects_production_config() -> None:
+    assert manual_smoke._manual_deepseek_model_id({"model_id": "deepseek-chat"}) == "deepseek-chat"
+
+
 def test_rolling_store_saves_and_loads_prediction_record(tmp_path) -> None:
     store_path = tmp_path / "rolling.json"
     evaluated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
