@@ -8,21 +8,27 @@ from pathlib import Path
 from typing import Any
 
 from .config import find_raw_secret_material
-from .events import canonical_json
+from .events import canonical_json, sha256_json
 from .fixtures import ROOT, load_json
 from .direct_cli_backend import run_direct_cli_sources
 from .manual_smoke import (
     EVAL_ARTIFACT,
+    FAST_FEEDBACK_WINDOWS,
     OUTCOME_ARTIFACT,
     REVISIT_SCHEDULE_ARTIFACT,
     SCORING_ARTIFACT,
     SOURCE_RUN_ARTIFACT,
+    _load_optional_json,
+    _run_id,
+    _utc_now,
+    _write_manual_json,
     materialize_fixture_cycle_artifacts,
     run_eval,
     run_manual_sources,
     run_revisit,
     score_manual_deepseek,
 )
+from .rolling_store import DEFAULT_STORE_PATH, load as load_rolling_store, register_candidates, save as save_rolling_store
 from .timeline import generate_timeline_feed
 
 
@@ -140,6 +146,8 @@ def run_cycle(
     dry_run: bool = False,
     mode: str | None = None,
     backend: str = "builtin",
+    store_path: Path = DEFAULT_STORE_PATH,
+    refetch_fn: Any = None,
 ) -> dict[str, Any]:
     """Run one source -> score -> timeline cycle for local/VPS schedulers."""
 
@@ -175,19 +183,30 @@ def run_cycle(
         errors.append({"phase": "score", "status": "failed", "code": "deepseek_structured_errors", "count": score_result.get("structured_error_count")})
 
     closed_loop_result: dict[str, Any] | None = None
-    if score_result is not None and score_result.get("status") == "ok":
+    should_run_closed_loop = score_result is not None and score_result.get("status") == "ok"
+    if should_run_closed_loop:
         if selected_mode == "dry-run":
             closed_loop_result = materialize_fixture_cycle_artifacts(fixtures_dir)
         elif selected_mode == "manual-smoke":
-            revisit_result = run_revisit(REVISIT_SCHEDULE_ARTIFACT, SOURCE_RUN_ARTIFACT, OUTCOME_ARTIFACT)
+            rolling_result = _prepare_rolling_cycle(store_path)
+            revisit_result = run_revisit(
+                REVISIT_SCHEDULE_ARTIFACT,
+                SOURCE_RUN_ARTIFACT,
+                OUTCOME_ARTIFACT,
+                refetch_fn=refetch_fn or _refetch_unavailable,
+                rolling_store=rolling_result["store"],
+                preserve_existing=True,
+            )
+            save_rolling_store(rolling_result["store"], store_path)
             eval_result = run_eval(SCORING_ARTIFACT, OUTCOME_ARTIFACT, EVAL_ARTIFACT)
             closed_loop_result = {
                 "status": "ok" if revisit_result.get("status") == "ok" and eval_result.get("status") == "ok" else "failed",
                 "revisit": revisit_result,
                 "eval": eval_result,
-                "revisit_schedule_ref": str(REVISIT_SCHEDULE_ARTIFACT.relative_to(ROOT)),
-                "outcome_ref": str(OUTCOME_ARTIFACT.relative_to(ROOT)),
-                "eval_ref": str(EVAL_ARTIFACT.relative_to(ROOT)),
+                "rolling_store": rolling_result["summary"],
+                "revisit_schedule_ref": _artifact_ref(REVISIT_SCHEDULE_ARTIFACT),
+                "outcome_ref": _artifact_ref(OUTCOME_ARTIFACT),
+                "eval_ref": _artifact_ref(EVAL_ARTIFACT),
             }
         if closed_loop_result and closed_loop_result.get("status") != "ok":
             errors.append({"phase": "closed_loop", "status": closed_loop_result.get("status")})
@@ -217,10 +236,114 @@ def run_cycle(
         "scored_candidate_count": score_result.get("scored_candidate_count") if score_result else None,
         "timeline_item_count": timeline_result.get("item_count") if timeline_result else None,
         "timeline_out": str(timeline_out),
+        "rolling_store_ref": str(store_path) if selected_mode == "manual-smoke" else None,
         "production_connector_ready": False,
         "raw_secret_findings": raw_secret_findings,
         "errors": errors,
     }
+
+
+def _prepare_rolling_cycle(store_path: Path) -> dict[str, Any]:
+    store = load_rolling_store(store_path)
+    source_artifact = _load_optional_json(SOURCE_RUN_ARTIFACT, {})
+    scoring_artifact = _load_optional_json(SCORING_ARTIFACT, {})
+    candidates = scoring_artifact.get("scored_candidates", []) if isinstance(scoring_artifact, dict) else []
+    observations = source_artifact.get("observations", []) if isinstance(source_artifact, dict) else []
+    cycle_id = str(scoring_artifact.get("run_id") or _run_id("rolling_cycle")) if isinstance(scoring_artifact, dict) else _run_id("rolling_cycle")
+
+    if candidates:
+        register_candidates(store, cycle_id, candidates, observations, FAST_FEEDBACK_WINDOWS)
+        save_rolling_store(store, store_path)
+
+    schedule = _rolling_revisit_schedule(cycle_id, store)
+    _write_manual_json(REVISIT_SCHEDULE_ARTIFACT, schedule)
+    scoring = _rolling_scoring_artifact(cycle_id, scoring_artifact, store)
+    _write_manual_json(SCORING_ARTIFACT, scoring)
+    return {
+        "store": store,
+        "summary": {
+            "store_ref": str(store_path),
+            "candidate_count": len(store.get("candidates", {})),
+            "pending_window_count": len(schedule["tasks"]),
+            "registered_candidate_count": len(candidates),
+        },
+    }
+
+
+def _artifact_ref(path: Path) -> str:
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
+def _refetch_unavailable(source_url: str, source: str) -> None:
+    return None
+
+
+def _rolling_revisit_schedule(run_id: str, store: dict[str, Any]) -> dict[str, Any]:
+    tasks: list[dict[str, Any]] = []
+    for candidate_id, entry in store.get("candidates", {}).items():
+        for window, window_data in entry.get("windows", {}).items():
+            if window_data.get("status") != "pending":
+                continue
+            task = {
+                "task_id": f"revisit_{candidate_id}_{window}",
+                "run_id": run_id,
+                "candidate_id": candidate_id,
+                "source_observation_ref": entry.get("source_observation_ref"),
+                "source_url": entry.get("source_url"),
+                "canonical_url": entry.get("canonical_url"),
+                "source": entry.get("source"),
+                "window": window,
+                "window_minutes": window_data.get("window_minutes"),
+                "role": window_data.get("role"),
+                "evaluated_at": window_data.get("evaluated_at"),
+                "due_at": window_data.get("due_at"),
+                "status": "pending",
+                "prediction_score": window_data.get("prediction_score"),
+                "baseline_engagement_snapshot": entry.get("baseline_engagement_snapshot", {}),
+            }
+            task["task_hash"] = sha256_json(task)
+            tasks.append(task)
+    schedule = {
+        "object_type": "ManualSmokeRevisitSchedule",
+        "schedule_version": "manual_smoke.revisit_schedule.rolling.v1",
+        "run_id": run_id,
+        "created_at": _utc_now(),
+        "source_run_ref": _artifact_ref(SOURCE_RUN_ARTIFACT),
+        "score_run_ref": _artifact_ref(SCORING_ARTIFACT),
+        "windows": [window["window"] for window in FAST_FEEDBACK_WINDOWS],
+        "primary_feedback_windows": ["1h", "4h"],
+        "tasks": tasks,
+        "redaction_status": "passed",
+    }
+    schedule["output_hash"] = sha256_json({k: v for k, v in schedule.items() if k != "output_hash"})
+    return schedule
+
+
+def _rolling_scoring_artifact(run_id: str, latest_scoring: dict[str, Any], store: dict[str, Any]) -> dict[str, Any]:
+    candidates = [
+        entry["prediction_record"]
+        for entry in store.get("candidates", {}).values()
+        if isinstance(entry, dict) and isinstance(entry.get("prediction_record"), dict)
+    ]
+    artifact = dict(latest_scoring) if isinstance(latest_scoring, dict) else {}
+    artifact.pop("output_hash", None)
+    artifact.update(
+        {
+            "object_type": "ManualSmokeDeepSeekScoring",
+            "run_id": run_id,
+            "created_at": _utc_now(),
+            "scored_candidates": candidates,
+            "rolling_store_backed": True,
+            "rolling_candidate_count": len(candidates),
+            "structured_errors": artifact.get("structured_errors", []),
+            "redaction_status": "passed",
+        }
+    )
+    artifact["output_hash"] = sha256_json({k: v for k, v in artifact.items() if k != "output_hash"})
+    return artifact
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run all-source fixture commands.")

@@ -73,10 +73,9 @@ def _empty_store() -> dict[str, Any]:
 def save(store: dict[str, Any], path: Path = DEFAULT_STORE_PATH) -> None:
     """Persist the rolling store to disk."""
     store["updated_at"] = _utc_now()
-    import json
+    from .runtime_gates import atomic_write_json
 
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(store, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    atomic_write_json(path, store)
 
 
 def register_candidates(
@@ -100,23 +99,33 @@ def register_candidates(
     new_ids = []
 
     for candidate in candidates:
-        cid = candidate.get("candidate_id")
-        if not cid:
+        original_cid = candidate.get("candidate_id")
+        if not original_cid:
             continue
+        provider_prediction_id = candidate.get("prediction_id")
+        cid = f"{cycle_id}_{original_cid}"
         ref = candidate.get("source_observation_ref")
         observation = obs_by_ref.get(ref, {})
         evaluated_at = _parse_utc(candidate.get("evaluated_at")) or datetime.now(timezone.utc)
+        prediction_record = deepcopy(candidate)
+        prediction_record["candidate_id"] = cid
+        prediction_record.setdefault("original_candidate_id", original_cid)
+        if provider_prediction_id:
+            prediction_record.setdefault("provider_prediction_id", provider_prediction_id)
+        prediction_record.setdefault("prediction_id", f"pred_{cid}")
 
         entry = store["candidates"].get(cid, {})
         if not entry:
             entry = {
                 "candidate_id": cid,
+                "original_candidate_id": original_cid,
                 "registered_at": now,
-                "dedupe_key": candidate.get("dedupe_key", cid),
+                "dedupe_key": candidate.get("dedupe_key", ref or original_cid),
                 "source_observation_ref": ref,
                 "source_url": observation.get("source_url"),
                 "canonical_url": observation.get("canonical_url"),
                 "source": observation.get("source"),
+                "prediction_record": prediction_record,
                 "baseline_engagement_snapshot": deepcopy(observation.get("engagement_snapshot", {})),
                 "windows": {},
                 "outcomes_collected": [],

@@ -145,16 +145,19 @@ def score_manual_deepseek(config_path: Path) -> dict[str, Any]:
     run_id = _run_id("manual_score")
     env_check = _check_manual_env()
     source_run = _load_optional_json(SOURCE_RUN_ARTIFACT, {})
-    observations = source_run.get("observations", [])[:5] if isinstance(source_run, dict) else []
+    observations = source_run.get("observations", []) if isinstance(source_run, dict) else []
     candidates: list[dict[str, Any]] = []
     structured_errors: list[dict[str, Any]] = []
     provider_called = False
 
     if env_check["status"] != "ok":
         structured_errors.append(env_check["structured_error"])
+        score_status = "blocked"
     elif not observations:
         structured_errors.append(_structured_error("no_manual_source_observations", "run manual-smoke sources before scoring"))
+        score_status = "blocked"
     else:
+        score_status = "ok"
         key_file = os.environ.get("DEEPSEEK_API_KEY_FILE")
         key_read = _read_secret_file(key_file, "deepseek_api_key") if key_file else {
             "status": "blocked",
@@ -163,6 +166,7 @@ def score_manual_deepseek(config_path: Path) -> dict[str, Any]:
         if key_read["status"] != "ok":
             structured_errors.append(key_read["structured_error"])
             candidates = _fallback_scored_candidates(observations, key_read["structured_error"])
+            score_status = "blocked"
         else:
             try:
                 provider_called = True
@@ -171,6 +175,7 @@ def score_manual_deepseek(config_path: Path) -> dict[str, Any]:
                 error = _structured_error("deepseek_call_failed", str(exc))
                 structured_errors.append(error)
                 candidates = _fallback_scored_candidates(observations, error)
+                score_status = "failed"
 
     revisit_schedule = build_revisit_schedule(run_id, source_run, candidates)
     _write_manual_json(REVISIT_SCHEDULE_ARTIFACT, revisit_schedule)
@@ -192,11 +197,11 @@ def score_manual_deepseek(config_path: Path) -> dict[str, Any]:
             "network_calls_allowed": True,
             "timeout_seconds": 20,
             "max_tokens": 3000,
-            "max_candidates": 5,
+            "max_candidates": len(observations),
         },
         "provider_status": {
             "provider_called": provider_called,
-            "fallback_used": "heuristic_after_provider_error" if candidates and structured_errors else None if provider_called else "structured_error_only",
+            "fallback_used": "degraded_provider_unavailable" if candidates and structured_errors else None if provider_called else "structured_error_only",
             "llm_output_is_ground_truth": False,
         },
         "input_evidence_refs": [obs.get("evidence_ref") for obs in observations],
@@ -215,7 +220,7 @@ def score_manual_deepseek(config_path: Path) -> dict[str, Any]:
     artifact["output_hash"] = sha256_json({k: v for k, v in artifact.items() if k != "output_hash"})
     _write_manual_json(SCORING_ARTIFACT, artifact)
     return {
-        "status": "ok" if env_check["status"] == "ok" else "blocked",
+        "status": score_status,
         "command": "score",
         "mode": "manual_smoke",
         "artifact_ref": _rel(SCORING_ARTIFACT),
@@ -232,7 +237,7 @@ def score_manual_deepseek(config_path: Path) -> dict[str, Any]:
 
 def _fallback_scored_candidates(observations: list[dict[str, Any]], error: dict[str, Any]) -> list[dict[str, Any]]:
     candidates = []
-    for index, obs in enumerate(observations[:5]):
+    for index, obs in enumerate(observations):
         metrics = obs.get("engagement_snapshot", {}).get("metrics", {})
         base = 0.18
         if obs.get("source") == "x_list":
@@ -333,7 +338,7 @@ def _fallback_rationale(features: dict[str, Any]) -> str:
     else:
         signal_text = ", ".join(str(signal) for signal in signals[:5])
     return (
-        "DeepSeek was called, but its output could not be parsed; fallback scoring uses "
+        "DeepSeek was unavailable or failed; degraded fallback scoring uses "
         f"source metrics, image evidence, and source-quality flags. Observed why-hot signals: {signal_text}."
     )
 
@@ -535,6 +540,7 @@ def load_manual_timeline_items() -> tuple[list[dict[str, Any]], dict[str, Any]]:
             continue
         visual = _timeline_visual_summary(observation, assets)
         hotness = _manual_hotness_score(observation, score, quality, visual)
+        retention = _manual_retention_summary(eval_rows)
         prediction_scores = score.get("scores", {}) if isinstance(score.get("scores"), dict) else {}
         image_refs = observation.get("image_refs", [])
         image_refs = image_refs if isinstance(image_refs, list) else []
@@ -592,6 +598,7 @@ def load_manual_timeline_items() -> tuple[list[dict[str, Any]], dict[str, Any]]:
                 "outcome_status": outcome.get("status") or ("revisit_pending_manual_smoke" if task_refs else "not_revisited_manual_smoke"),
                 "revisit_status": _revisit_status(tasks_by_ref.get(evidence_ref, []), outcome),
                 "eval_status": _eval_status(eval_rows),
+                **retention,
                 "revisit_task_refs": task_refs,
                 "non_investment_advice": True,
                 "evidence_ref": evidence_ref,
@@ -719,6 +726,24 @@ def _eval_status(rows: list[dict[str, Any]]) -> str:
         return "eval_pending"
     joined = sum(1 for row in rows if row.get("join_status") == "joined")
     return f"eval_joined_{joined}_windows" if joined else "eval_missing_outcome"
+
+
+def _manual_retention_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    joined = [row for row in rows if isinstance(row, dict) and row.get("join_status") == "joined"]
+    grades = [str(row.get("success_grade") or "") for row in joined]
+    windows = {str(row.get("window") or "") for row in joined}
+    passed = any(grade in {"meaningful", "breakout"} for grade in grades)
+    if passed:
+        status = "passed"
+    elif {"1h", "4h"}.issubset(windows):
+        status = "failed_1h_4h"
+    else:
+        status = "pending"
+    return {
+        "retention_status": status,
+        "retention_failed_at": _utc_now() if status == "failed_1h_4h" else None,
+        "eval_success_grades": grades,
+    }
 
 
 def _manual_connector_health(source_run: dict[str, Any]) -> dict[str, Any]:
@@ -937,6 +962,13 @@ def _growth_delta(metrics: dict[str, Any], *fields: str) -> float:
     return 0.0
 
 
+def _metrics_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
+    metrics = snapshot.get("metrics") if isinstance(snapshot, dict) else None
+    if isinstance(metrics, dict):
+        return metrics
+    return snapshot if isinstance(snapshot, dict) else {}
+
+
 def _precision_at_k(rows: list[dict[str, Any]], k: int) -> float:
     sample = rows[:k]
     if not sample:
@@ -1064,8 +1096,8 @@ def _manual_hotness_series(hotness: float) -> list[float]:
     return [round(start, 4), round((start + mid) / 2, 4), round(mid, 4), round((mid + hotness) / 2, 4), round(hotness, 4)]
 
 
-def write_manual_timeline_store(items: list[dict[str, Any]], metadata: dict[str, Any]) -> None:
-    if not items:
+def write_manual_timeline_store(items: list[dict[str, Any]], metadata: dict[str, Any], compacted_failed_items: list[dict[str, Any]] | None = None) -> None:
+    if not items and not compacted_failed_items:
         return
     store = {
         "object_type": "ManualSmokeTimelineStore",
@@ -1077,6 +1109,7 @@ def write_manual_timeline_store(items: list[dict[str, Any]], metadata: dict[str,
         "scoring_ref": metadata.get("scoring_ref"),
         "image_asset_ref": metadata.get("image_asset_ref"),
         "items": items,
+        "compacted_failed_items": compacted_failed_items or [],
         "structured_errors": metadata.get("structured_errors", []),
         "redaction_status": "passed",
     }
@@ -1345,6 +1378,7 @@ def run_revisit(
     *,
     refetch_fn: Any = None,
     rolling_store: Any = None,
+    preserve_existing: bool = False,
 ) -> dict[str, Any]:
     """Collect revisit outcomes for due windows.
 
@@ -1376,6 +1410,13 @@ def run_revisit(
         observation = observations_by_ref.get(ref)
         if due_at and due_at > now:
             continue
+        if not observation and task.get("source_url"):
+            observation = {
+                "evidence_ref": ref,
+                "source_url": task.get("source_url"),
+                "source": task.get("source"),
+                "engagement_snapshot": task.get("baseline_engagement_snapshot", {}),
+            }
         if not observation:
             structured_errors.append(_structured_error("revisit_observation_missing", f"no current observation for {ref}"))
             continue
@@ -1397,14 +1438,22 @@ def run_revisit(
                     "revisit_refetch_failed",
                     f"refetch failed for {observation.get('source_url')}: {exc}",
                 ))
+        if refetch_fn is not None and fresh_engagement is None:
+            structured_errors.append(_structured_error(
+                "revisit_refetch_unavailable",
+                f"fresh engagement unavailable for {observation.get('source_url')}",
+            ))
+            continue
 
         baseline = task.get("baseline_engagement_snapshot", {})
         current = fresh_engagement if fresh_engagement else observation.get("engagement_snapshot", {})
+        baseline_metrics = _metrics_snapshot(baseline)
+        current_metrics = _metrics_snapshot(current)
         raw_delta = {
-            "likes": _delta(current, baseline, "likes"),
-            "comments": _delta(current, baseline, "comments"),
-            "shares": _delta(current, baseline, "shares"),
-            "views": _delta(current, baseline, "views"),
+            "likes": _delta(current_metrics, baseline_metrics, "likes"),
+            "comments": _delta(current_metrics, baseline_metrics, "comments"),
+            "shares": _delta(current_metrics, baseline_metrics, "shares"),
+            "views": _delta(current_metrics, baseline_metrics, "views"),
         }
         # OutcomeRecord format (V1)
         outcome = {
@@ -1420,8 +1469,8 @@ def run_revisit(
             "observation_status": "observed" if current else "missed",
             "metrics_source": "same_connector_same_url" if fresh_engagement else "baseline_only",
             "source_availability": "available" if observation.get("source_url") else "unavailable",
-            "baseline_snapshot": baseline,
-            "current_snapshot": current,
+            "baseline_snapshot": baseline_metrics,
+            "current_snapshot": current_metrics,
             "raw_delta": raw_delta,
             "connector_quality_ref": "",
             "failure_state": None,
@@ -1446,6 +1495,17 @@ def run_revisit(
                 outcome["outcome_id"],
                 outcome["engagement_growth"],
             )
+    existing_outcome_run = _load_optional_json(out_path, {}) if preserve_existing else {}
+    previous_outcomes = existing_outcome_run.get("outcomes", []) if isinstance(existing_outcome_run, dict) else []
+    previous_outcomes = previous_outcomes if isinstance(previous_outcomes, list) else []
+    new_keys = {(outcome.get("task_id"), outcome.get("window")) for outcome in outcomes}
+    retained_outcomes = [
+        outcome
+        for outcome in previous_outcomes
+        if isinstance(outcome, dict) and (outcome.get("task_id"), outcome.get("window")) not in new_keys
+    ]
+    all_outcomes = [*retained_outcomes, *outcomes]
+
     artifact = {
         "object_type": "ManualSmokeOutcomeRun",
         "run_id": run_id,
@@ -1454,7 +1514,8 @@ def run_revisit(
         "duration_seconds": round(time.monotonic() - started, 3),
         "schedule_ref": _rel(schedule_path),
         "source_run_ref": _rel(source_run_path),
-        "outcomes": outcomes,
+        "outcomes": all_outcomes,
+        "new_outcome_count": len(outcomes),
         "structured_errors": structured_errors,
         "redaction_status": "passed",
     }
@@ -1486,8 +1547,11 @@ def run_eval(scoring_path: Path = SCORING_ARTIFACT, outcome_path: Path = OUTCOME
     outcome_run = _load_optional_json(outcome_path, {})
     candidates = scoring.get("scored_candidates", []) if isinstance(scoring, dict) else []
     outcomes = outcome_run.get("outcomes", []) if isinstance(outcome_run, dict) else []
+    outcome_by_candidate_window: dict[tuple[str, str], dict[str, Any]] = {}
     outcome_by_ref_window: dict[tuple[str, str], dict[str, Any]] = {}
     for outcome in outcomes if isinstance(outcomes, list) else []:
+        if isinstance(outcome, dict) and isinstance(outcome.get("candidate_id"), str):
+            outcome_by_candidate_window[(outcome["candidate_id"], str(outcome.get("window") or ""))] = outcome
         if isinstance(outcome, dict) and isinstance(outcome.get("source_observation_ref"), str):
             outcome_by_ref_window[(outcome["source_observation_ref"], str(outcome.get("window") or ""))] = outcome
 
@@ -1497,10 +1561,13 @@ def run_eval(scoring_path: Path = SCORING_ARTIFACT, outcome_path: Path = OUTCOME
         if not isinstance(candidate, dict):
             continue
         ref = candidate.get("source_observation_ref")
+        candidate_id = str(candidate.get("candidate_id") or "")
         for window_info in FAST_FEEDBACK_WINDOWS:
             window = window_info["window"]
             window_role = window_info["role"]
-            outcome = outcome_by_ref_window.get((str(ref), window), {})
+            outcome = outcome_by_candidate_window.get((candidate_id, window), {})
+            if not outcome and not candidate_id:
+                outcome = outcome_by_ref_window.get((str(ref), window), {})
             if not outcome:
                 rows.append({"candidate_id": candidate.get("candidate_id"), "window": window, "join_status": "missing_outcome"})
                 continue

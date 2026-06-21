@@ -19,7 +19,7 @@ function fail(code, message) {
 }
 
 const source = arg("--source", "");
-const limit = Math.min(80, Number(arg("--limit", "10")));
+const limit = Math.min(30, Number(arg("--limit", "10")));
 const out = arg("--out");
 const storageState = arg("--storage-state");
 const detailDelayMinMs = Math.max(0, Number(process.env.NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MIN_MS || arg("--detail-delay-min-ms", "1800")));

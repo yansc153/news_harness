@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -56,6 +58,18 @@ def _timeline_sort_key(item: dict[str, Any]) -> tuple[float, str]:
         hotness = 0.0
     published_at = item.get("published_at")
     return hotness, published_at if isinstance(published_at, str) else ""
+
+
+def _parse_utc(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
 
 
 def _blocked_timeline_text(item: dict[str, Any]) -> bool:
@@ -128,11 +142,46 @@ def merge_manual_timeline_items(
 
     merged: dict[str, dict[str, Any]] = {}
     for item in [*prior_items, *current_items]:
-        if isinstance(item, dict) and not _blocked_timeline_text(item) and not _xueqiu_item_not_full_text(item):
+        if (
+            isinstance(item, dict)
+            and not _blocked_timeline_text(item)
+            and not _xueqiu_item_not_full_text(item)
+            and item.get("retention_status") != "failed_1h_4h"
+        ):
             merged[_timeline_item_key(item)] = item
     sorted_items = sorted(merged.values(), key=_timeline_sort_key, reverse=True)
     limit = max_items if max_items is not None else _manual_timeline_max_items()
     return sorted_items[: max(1, limit)]
+
+
+def compact_failed_timeline_items(items: list[dict[str, Any]], *, now: str | None = None, ttl_days: int = 3) -> list[dict[str, Any]]:
+    now_dt = _parse_utc(now) if now else datetime.now(timezone.utc)
+    if now_dt is None:
+        now_dt = datetime.now(timezone.utc)
+    compacted_at = now_dt.replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    compacted: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict) or item.get("retention_status") != "failed_1h_4h":
+            continue
+        failed_at = _parse_utc(item.get("retention_failed_at") or item.get("evaluated_at") or item.get("published_at"))
+        if failed_at is None or (now_dt - failed_at).days < ttl_days:
+            continue
+        copy_text = str(item.get("copy_text") or "")
+        compacted.append(
+            {
+                "id": item.get("id"),
+                "source": item.get("source"),
+                "source_url": item.get("source_url"),
+                "retention_status": "compacted_failed_1h_4h",
+                "copy_text_hash": "sha256:" + hashlib.sha256(copy_text.encode("utf-8")).hexdigest(),
+                "eval_summary": {
+                    "eval_status": item.get("eval_status"),
+                    "eval_success_grades": item.get("eval_success_grades", []),
+                },
+                "compacted_at": compacted_at,
+            }
+        )
+    return compacted
 
 
 def _base_fixture_item(fixtures: dict[str, Any]) -> dict[str, Any]:
@@ -377,6 +426,7 @@ def generate_timeline_feed(fixtures_dir: Path, out_path: Path, schema_path: Path
         )
         fixture_item_count = len(feed["items"])
         if manual_items:
+            compacted_failed_items = compact_failed_timeline_items(manual_items)
             prior_items = [
                 *_load_timeline_feed_items(TIMELINE_FEED_ARTIFACT),
                 *_load_timeline_feed_items(out_path),
@@ -386,7 +436,8 @@ def generate_timeline_feed(fixtures_dir: Path, out_path: Path, schema_path: Path
             feed["manual_smoke"]["current_cycle_item_count"] = len(manual_items)
             feed["manual_smoke"]["retained_prior_item_count"] = max(0, len(feed["items"]) - len(manual_items))
             feed["manual_smoke"]["timeline_max_items"] = _manual_timeline_max_items()
-            write_manual_timeline_store(feed["items"], feed["manual_smoke"])
+            feed["manual_smoke"]["compacted_failed_item_count"] = len(compacted_failed_items)
+            write_manual_timeline_store(feed["items"], feed["manual_smoke"], compacted_failed_items)
         else:
             feed["items"] = []
             feed["manual_smoke"]["fixture_items_hidden_from_product_feed"] = fixture_item_count
