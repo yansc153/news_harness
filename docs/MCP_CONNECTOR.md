@@ -7,7 +7,7 @@ cross-project access to radar copy and image evidence.
 
 ```bash
 python3 -m news_harness mcp \
-  --feed web/radar-timeline/timeline_feed.json \
+  --feed web/data/radar-timeline/timeline_feed.json \
   --artifact-dir artifacts/manual_smoke/latest
 ```
 
@@ -46,7 +46,7 @@ python3 -m news_harness mcp \
         "news_harness",
         "mcp",
         "--feed",
-        "/opt/news_harness/web/radar-timeline/timeline_feed.json",
+        "/opt/news_harness/web/data/radar-timeline/timeline_feed.json",
         "--artifact-dir",
         "/opt/news_harness/artifacts/manual_smoke/latest"
       ]

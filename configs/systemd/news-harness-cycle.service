@@ -11,7 +11,7 @@ ExecStart=/usr/bin/python3 -m news_harness run-cycle \
     --source-config configs/all_source_runner.json \
     --score-config configs/deepseek_provider.json \
     --fixtures fixtures \
-    --out web/radar-timeline/timeline_feed.json \
+    --out web/data/radar-timeline/timeline_feed.json \
     --mode manual-smoke \
     --backend direct-cli
 User=news-harness

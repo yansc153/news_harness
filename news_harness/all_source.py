@@ -30,7 +30,7 @@ DEFAULT_ALL_SOURCE_CONFIG = ROOT / "configs" / "all_source_runner.example.json"
 DEFAULT_DEEPSEEK_CONFIG = ROOT / "configs" / "deepseek_provider.example.json"
 DEFAULT_ALL_SOURCE_FIXTURE = ROOT / "fixtures" / "sample_all_source_runner_dry_run.json"
 DEFAULT_DEEPSEEK_FIXTURE = ROOT / "fixtures" / "sample_deepseek_scoring_fixture.json"
-DEFAULT_TIMELINE_OUT = ROOT / "web" / "radar-timeline" / "timeline_feed.json"
+DEFAULT_TIMELINE_OUT = ROOT / "web" / "data" / "radar-timeline" / "timeline_feed.json"
 
 
 def _blocked_without_dry_run(command: str) -> dict[str, Any]:

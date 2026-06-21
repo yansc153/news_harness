@@ -13,3 +13,5 @@ def test_source_tabs_show_current_view_and_total_counts() -> None:
     assert "当前 ${compactCount(current)}" in app_js
     assert 'recentHours: ALL_HOURS' in app_js
     assert "if (recentHours === ALL_HOURS) return cleanItems" in app_js
+    assert '"./timeline_feed.json"' not in app_js
+    assert "/opt/news_harness/web/data/radar-timeline/timeline_feed.json" in app_js

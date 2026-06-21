@@ -25,20 +25,20 @@ QUICKSTART_TEXT = """News Harness quickstart
 
 Local candidate, safe fixture-only path:
   python3 -m news_harness validate fixtures
-  python3 -m news_harness run-cycle --source-config configs/all_source_runner.example.json --score-config configs/deepseek_provider.example.json --fixtures fixtures --out web/radar-timeline/timeline_feed.json --dry-run
+  python3 -m news_harness run-cycle --source-config configs/all_source_runner.example.json --score-config configs/deepseek_provider.example.json --fixtures fixtures --out web/data/radar-timeline/timeline_feed.json --dry-run
   python3 -m news_harness serve --host 127.0.0.1 --port 8765
   open http://127.0.0.1:8765/
 
 VPS candidate, real manual-smoke cycle:
-  python3 -m news_harness run-cycle --source-config configs/all_source_runner.example.json --score-config configs/deepseek_provider.example.json --fixtures fixtures --out web/radar-timeline/timeline_feed.json --mode manual-smoke --backend direct-cli
-  python3 -m news_harness healthcheck --feed web/radar-timeline/timeline_feed.json --source-run artifacts/manual_smoke/latest/source_run.json --deepseek artifacts/manual_smoke/latest/deepseek_scoring.json --max-age-minutes 90 --require-source x_list --require-source reddit --require-source xueqiu_hot --require-source xueqiu_daren
+  python3 -m news_harness run-cycle --source-config configs/all_source_runner.example.json --score-config configs/deepseek_provider.example.json --fixtures fixtures --out web/data/radar-timeline/timeline_feed.json --mode manual-smoke --backend direct-cli
+  python3 -m news_harness healthcheck --feed web/data/radar-timeline/timeline_feed.json --source-run artifacts/manual_smoke/latest/source_run.json --deepseek artifacts/manual_smoke/latest/deepseek_scoring.json --max-age-minutes 90 --require-source x_list --require-source reddit --require-source xueqiu_hot --require-source xueqiu_daren
 
 If healthcheck fails:
   Read docs/OPERATIONS.md and docs/go-no-go-production-readiness.md.
 
 Read-only integration surfaces:
   Website/API: python3 -m news_harness serve --host 0.0.0.0 --port 8765
-  MCP stdio:   python3 -m news_harness mcp --feed web/radar-timeline/timeline_feed.json
+  MCP stdio:   python3 -m news_harness mcp --feed web/data/radar-timeline/timeline_feed.json
 """
 
 

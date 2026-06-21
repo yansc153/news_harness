@@ -14,7 +14,7 @@ fi
 
 # Ensure artifact dirs exist
 mkdir -p /app/artifacts/manual_smoke/latest
-FEED_PATH="${NEWS_HARNESS_FEED_PATH:-web/radar-timeline/timeline_feed.json}"
+FEED_PATH="${NEWS_HARNESS_FEED_PATH:-web/data/radar-timeline/timeline_feed.json}"
 mkdir -p "$(dirname "$FEED_PATH")"
 
 CYCLE_MODE="${NEWS_HARNESS_CYCLE_MODE:-manual-smoke}"

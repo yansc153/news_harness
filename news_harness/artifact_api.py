@@ -10,7 +10,7 @@ from typing import Any
 from .fixtures import ROOT
 
 
-DEFAULT_FEED = ROOT / "web" / "radar-timeline" / "timeline_feed.json"
+DEFAULT_FEED = ROOT / "web" / "data" / "radar-timeline" / "timeline_feed.json"
 DEFAULT_ARTIFACT_DIR = ROOT / "artifacts" / "manual_smoke" / "latest"
 DEFAULT_HEALTH_MAX_AGE_MINUTES = 90
 

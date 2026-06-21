@@ -16,7 +16,7 @@ python3 -m news_harness run-cycle \
   --source-config configs/all_source_runner.example.json \
   --score-config configs/deepseek_provider.example.json \
   --fixtures fixtures \
-  --out web/radar-timeline/timeline_feed.json \
+  --out web/data/radar-timeline/timeline_feed.json \
   --dry-run
 python3 -m news_harness serve --host 127.0.0.1 --port 8765
 open http://127.0.0.1:8765/
@@ -40,12 +40,12 @@ python3 -m news_harness run-cycle \
   --source-config configs/all_source_runner.json \
   --score-config configs/deepseek_provider.example.json \
   --fixtures fixtures \
-  --out web/radar-timeline/timeline_feed.json \
+  --out web/data/radar-timeline/timeline_feed.json \
   --mode manual-smoke \
   --backend direct-cli
 
 python3 -m news_harness healthcheck \
-  --feed web/radar-timeline/timeline_feed.json \
+  --feed web/data/radar-timeline/timeline_feed.json \
   --source-run artifacts/manual_smoke/latest/source_run.json \
   --deepseek artifacts/manual_smoke/latest/deepseek_scoring.json \
   --revisit artifacts/manual_smoke/latest/revisit_schedule.json \
@@ -78,7 +78,7 @@ python3 -m news_harness validate fixtures
 python3 -m news_harness replay --fixtures fixtures --out artifacts/replay/latest
 python3 -m news_harness inspect artifacts/replay/latest
 python3 -m news_harness preflight --fixtures fixtures --artifacts artifacts/replay/latest --out artifacts/preflight/latest
-python3 -m news_harness timeline --fixtures fixtures --out web/radar-timeline/timeline_feed.json
+python3 -m news_harness timeline --fixtures fixtures --out web/data/radar-timeline/timeline_feed.json
 ```
 
 The replay command writes append-only event logs under `artifacts/replay/latest`
@@ -103,7 +103,7 @@ The production-shaped website entrypoint is:
 python3 -m news_harness serve \
   --host 0.0.0.0 \
   --port 8765 \
-  --feed web/radar-timeline/timeline_feed.json \
+  --feed web/data/radar-timeline/timeline_feed.json \
   --artifact-dir artifacts/manual_smoke/latest
 ```
 
@@ -136,7 +136,7 @@ stdio server:
 
 ```bash
 python3 -m news_harness mcp \
-  --feed web/radar-timeline/timeline_feed.json \
+  --feed web/data/radar-timeline/timeline_feed.json \
   --artifact-dir artifacts/manual_smoke/latest
 ```
 
@@ -211,7 +211,7 @@ python3 -m news_harness run-cycle \
   --source-config configs/all_source_runner.json \
   --score-config configs/deepseek_provider.example.json \
   --fixtures fixtures \
-  --out web/radar-timeline/timeline_feed.json \
+  --out web/data/radar-timeline/timeline_feed.json \
   --mode manual-smoke \
   --backend direct-cli
 ```
@@ -227,7 +227,7 @@ Runtime health can be checked with:
 
 ```bash
 python3 -m news_harness healthcheck \
-  --feed web/radar-timeline/timeline_feed.json \
+  --feed web/data/radar-timeline/timeline_feed.json \
   --source-run artifacts/manual_smoke/latest/source_run.json \
   --deepseek artifacts/manual_smoke/latest/deepseek_scoring.json \
   --revisit artifacts/manual_smoke/latest/revisit_schedule.json \
@@ -284,7 +284,7 @@ need to dominate the product view.
 
 The default timeline fixture remains fixture-first, while explicit
 `manual-smoke` runs can merge real, redacted source observations into
-`web/radar-timeline/timeline_feed.json`. Manual-smoke items still do not prove
+`web/data/radar-timeline/timeline_feed.json`. Manual-smoke items still do not prove
 production readiness, and model scores remain inference rather than ground
 truth.
 

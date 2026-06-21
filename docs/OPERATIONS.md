@@ -7,7 +7,7 @@ system is loud at 03:00, read this before spelunking through code.
 
 A healthy VPS candidate has:
 
-- fresh `web/radar-timeline/timeline_feed.json`
+- fresh `web/data/radar-timeline/timeline_feed.json`
 - fresh `artifacts/manual_smoke/latest/source_run.json`
 - fresh `artifacts/manual_smoke/latest/deepseek_scoring.json`
 - `artifacts/manual_smoke/latest/revisit_schedule.json` with
@@ -23,7 +23,7 @@ python3 -m news_harness run-cycle \
   --source-config configs/all_source_runner.json \
   --score-config configs/deepseek_provider.example.json \
   --fixtures fixtures \
-  --out web/radar-timeline/timeline_feed.json \
+  --out web/data/radar-timeline/timeline_feed.json \
   --mode manual-smoke \
   --backend direct-cli
 ```
@@ -32,7 +32,7 @@ python3 -m news_harness run-cycle \
 
 ```bash
 python3 -m news_harness healthcheck \
-  --feed web/radar-timeline/timeline_feed.json \
+  --feed web/data/radar-timeline/timeline_feed.json \
   --source-run artifacts/manual_smoke/latest/source_run.json \
   --deepseek artifacts/manual_smoke/latest/deepseek_scoring.json \
   --revisit artifacts/manual_smoke/latest/revisit_schedule.json \
@@ -53,7 +53,7 @@ Run locally or on VPS:
 python3 -m news_harness serve \
   --host 0.0.0.0 \
   --port 8765 \
-  --feed web/radar-timeline/timeline_feed.json \
+  --feed web/data/radar-timeline/timeline_feed.json \
   --artifact-dir artifacts/manual_smoke/latest
 ```
 
@@ -94,7 +94,7 @@ For another project or agent to read copy and image refs, configure MCP stdio:
 
 ```bash
 python3 -m news_harness mcp \
-  --feed web/radar-timeline/timeline_feed.json \
+  --feed web/data/radar-timeline/timeline_feed.json \
   --artifact-dir artifacts/manual_smoke/latest
 ```
 

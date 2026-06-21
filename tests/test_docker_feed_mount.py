@@ -19,8 +19,15 @@ def test_hostinger_feed_volume_does_not_mask_radar_static_assets() -> None:
 def test_docker_entrypoint_uses_configurable_feed_path() -> None:
     entrypoint = (ROOT / "scripts/docker_entrypoint.sh").read_text(encoding="utf-8")
 
-    assert 'FEED_PATH="${NEWS_HARNESS_FEED_PATH:-web/radar-timeline/timeline_feed.json}"' in entrypoint
+    assert 'FEED_PATH="${NEWS_HARNESS_FEED_PATH:-web/data/radar-timeline/timeline_feed.json}"' in entrypoint
     assert 'CYCLE_TIMEOUT_SECONDS="${NEWS_HARNESS_CYCLE_TIMEOUT_SECONDS:-1500}"' in entrypoint
     assert 'timeout "$CYCLE_TIMEOUT_SECONDS" python3 -m news_harness run-cycle' in entrypoint
     assert '--out "$FEED_PATH"' in entrypoint
     assert '--feed "$FEED_PATH"' in entrypoint
+
+
+def test_runtime_defaults_use_non_static_feed_path() -> None:
+    assert not (ROOT / "web/radar-timeline/timeline_feed.json").exists()
+    for relative in ("news_harness/artifact_api.py", "news_harness/health.py", "news_harness/all_source.py"):
+        content = (ROOT / relative).read_text(encoding="utf-8")
+        assert 'ROOT / "web" / "data" / "radar-timeline" / "timeline_feed.json"' in content

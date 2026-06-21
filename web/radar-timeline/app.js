@@ -32,7 +32,6 @@ const ALL_HOURS = "all";
 
 const feedCandidates = [
   "/api/timeline",
-  "./timeline_feed.json",
 ];
 
 const state = {
@@ -816,7 +815,7 @@ function mcpClientConfig() {
           "news_harness",
           "mcp",
           "--feed",
-          "/opt/news_harness/web/radar-timeline/timeline_feed.json",
+          "/opt/news_harness/web/data/radar-timeline/timeline_feed.json",
           "--artifact-dir",
           "/opt/news_harness/artifacts/manual_smoke/latest",
         ],
@@ -830,7 +829,7 @@ function renderMcpChannel(feed, items, loadedFrom) {
   const totalItems = Array.isArray(feed.items) ? feed.items.length : items.length;
   const command = [
     "python3 -m news_harness mcp \\",
-    "  --feed /opt/news_harness/web/radar-timeline/timeline_feed.json \\",
+    "  --feed /opt/news_harness/web/data/radar-timeline/timeline_feed.json \\",
     "  --artifact-dir /opt/news_harness/artifacts/manual_smoke/latest",
   ].join("\n");
   const tools = ["get_latest_feed", "list_radar_items", "get_radar_item", "get_image_refs", "get_health"];

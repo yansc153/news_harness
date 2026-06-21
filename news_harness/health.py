@@ -16,7 +16,7 @@ from .fixtures import ROOT
 from .runtime_gates import check_liveness
 
 
-DEFAULT_FEED = ROOT / "web" / "radar-timeline" / "timeline_feed.json"
+DEFAULT_FEED = ROOT / "web" / "data" / "radar-timeline" / "timeline_feed.json"
 DEFAULT_SOURCE_RUN = ROOT / "artifacts" / "manual_smoke" / "latest" / "source_run.json"
 DEFAULT_DEEPSEEK = ROOT / "artifacts" / "manual_smoke" / "latest" / "deepseek_scoring.json"
 DEFAULT_REVISIT = ROOT / "artifacts" / "manual_smoke" / "latest" / "revisit_schedule.json"
