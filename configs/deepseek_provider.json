@@ -11,7 +11,7 @@
   "model_id": "deepseek-chat",
   "prompt_version": "prompt.deepseek.source_observation_scoring.v1",
   "scoring_version": "deepseek_scoring.v1",
-  "timeout_ms": 30000,
+  "timeout_ms": 90000,
   "max_retries": 3,
   "fallback_policy": {
     "missing_key": "heuristic",

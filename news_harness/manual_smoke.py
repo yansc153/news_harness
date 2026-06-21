@@ -26,6 +26,7 @@ from .constants import X_LIST_URL
 from .events import canonical_json, sha256_json
 from .fixtures import ROOT, load_json
 from .paths import write_json_artifact
+from .runtime_gates import retry_with_backoff
 
 
 MANUAL_SMOKE_DIR = ROOT / "artifacts" / "manual_smoke" / "latest"
@@ -195,7 +196,8 @@ def score_manual_deepseek(config_path: Path) -> dict[str, Any]:
             "provider_auth_source": "repo_external_file",
             "provider_ref": "secret_ref:deepseek_api_key_v1",
             "network_calls_allowed": True,
-            "timeout_seconds": 20,
+            "timeout_seconds": _deepseek_timeout_seconds(config),
+            "max_retries": _deepseek_max_retries(config),
             "max_tokens": 3000,
             "max_candidates": len(observations),
         },
@@ -1247,12 +1249,22 @@ def _call_deepseek(config: dict[str, Any], observations: list[dict[str, Any]], a
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
         method="POST",
     )
-    try:
-        with urllib.request.urlopen(request, timeout=20) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")[:500]
-        raise RuntimeError(f"deepseek_http_{exc.code}: {_redact_text(body)}") from exc
+    timeout_seconds = _deepseek_timeout_seconds(config)
+    max_retries = _deepseek_max_retries(config)
+
+    def read_response() -> dict[str, Any]:
+        with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+            return json.loads(response.read().decode("utf-8"))
+
+    data, _, error = retry_with_backoff(read_response, max_retries=max_retries, base_delay=2, max_delay=20)
+    if error:
+        if isinstance(error, urllib.error.HTTPError):
+            exc = error
+            body = exc.read().decode("utf-8", errors="replace")[:500]
+            raise RuntimeError(f"deepseek_http_{exc.code}: {_redact_text(body)}") from exc
+        raise error
+    if not isinstance(data, dict):
+        raise RuntimeError("deepseek_output_empty_or_unparseable")
     message = data.get("choices", [{}])[0].get("message", {})
     content = message.get("content") or message.get("reasoning_content") or data.get("content") or ""
     parsed = _parse_model_json(content)
@@ -1298,6 +1310,15 @@ def _call_deepseek(config: dict[str, Any], observations: list[dict[str, Any]], a
     if not candidates:
         raise RuntimeError("deepseek_output_empty_or_unparseable")
     return candidates
+
+
+def _deepseek_timeout_seconds(config: dict[str, Any]) -> int:
+    timeout_ms = int(config.get("timeout_ms") or 30000)
+    return max(20, min(180, math.ceil(timeout_ms / 1000)))
+
+
+def _deepseek_max_retries(config: dict[str, Any]) -> int:
+    return max(0, min(5, int(config.get("max_retries") or 0)))
 
 
 def _process_image(run_id: str, observation: dict[str, Any], image: dict[str, Any]) -> dict[str, Any]:

@@ -87,6 +87,57 @@ def test_manual_deepseek_fallback_scores_more_than_first_five(tmp_path, monkeypa
     assert artifact["provider_status"]["fallback_used"] == "degraded_provider_unavailable"
 
 
+def test_manual_deepseek_uses_configured_timeout_and_retries(monkeypatch) -> None:
+    calls: list[int] = []
+
+    class Response:
+        def __enter__(self) -> "Response":
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+        def read(self) -> bytes:
+            payload = {
+                "model": "deepseek-test",
+                "choices": [{
+                    "message": {
+                        "content": json.dumps({
+                            "scored_candidates": [{
+                                "source_observation_ref": "source_run.json#observations/obs-1",
+                                "scores": {"1h": 0.4, "4h": 0.6},
+                                "confidence": 0.7,
+                                "uncertainty": 0.3,
+                                "topic_or_hook": "hook",
+                                "rationale": "why",
+                                "risk_flags": [],
+                                "feature_contributions": {},
+                            }]
+                        })
+                    }
+                }],
+            }
+            return json.dumps(payload).encode("utf-8")
+
+    def fake_urlopen(_request: object, timeout: int) -> Response:
+        calls.append(timeout)
+        if len(calls) == 1:
+            raise TimeoutError("timed out")
+        return Response()
+
+    monkeypatch.setattr(manual_smoke.urllib.request, "urlopen", fake_urlopen)
+
+    candidates = manual_smoke._call_deepseek(
+        {"model_id": "deepseek-chat", "timeout_ms": 90000, "max_retries": 1},
+        [_observation(1)],
+        "secret",
+    )
+
+    assert calls == [90, 90]
+    assert candidates[0]["model_provider"] == "deepseek"
+    assert candidates[0]["source_observation_ref"] == "source_run.json#observations/obs-1"
+
+
 def test_rolling_store_saves_and_loads_prediction_record(tmp_path) -> None:
     store_path = tmp_path / "rolling.json"
     evaluated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
