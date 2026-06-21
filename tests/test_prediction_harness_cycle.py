@@ -138,6 +138,67 @@ def test_manual_deepseek_uses_configured_timeout_and_retries(monkeypatch) -> Non
     assert candidates[0]["source_observation_ref"] == "source_run.json#observations/obs-1"
 
 
+def test_manual_deepseek_chunks_large_batches(monkeypatch) -> None:
+    calls: list[int] = []
+
+    class Response:
+        def __init__(self, refs: list[str]) -> None:
+            self.refs = refs
+
+        def __enter__(self) -> "Response":
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+        def read(self) -> bytes:
+            payload = {
+                "model": "deepseek-test",
+                "choices": [{
+                    "message": {
+                        "content": json.dumps({
+                            "scored_candidates": [
+                                {
+                                    "source_observation_ref": ref,
+                                    "scores": {"1h": 0.4, "4h": 0.6},
+                                    "confidence": 0.7,
+                                    "uncertainty": 0.3,
+                                    "topic_or_hook": "hook",
+                                    "rationale": "why",
+                                    "risk_flags": [],
+                                    "feature_contributions": {},
+                                }
+                                for ref in self.refs
+                            ]
+                        })
+                    }
+                }],
+            }
+            return json.dumps(payload).encode("utf-8")
+
+    def fake_urlopen(request: object, timeout: int) -> Response:
+        calls.append(timeout)
+        body = json.loads(getattr(request, "data").decode("utf-8"))
+        user_payload = json.loads(body["messages"][1]["content"])
+        refs = [obs["source_observation_ref"] for obs in user_payload["observations"]]
+        return Response(refs)
+
+    monkeypatch.setattr(manual_smoke.urllib.request, "urlopen", fake_urlopen)
+
+    candidates = manual_smoke._call_deepseek(
+        {"model_id": "deepseek-chat", "timeout_ms": 90000, "max_retries": 0, "batch_size": 2},
+        [_observation(i) for i in range(3)],
+        "secret",
+    )
+
+    assert calls == [90, 90]
+    assert [candidate["candidate_id"] for candidate in candidates] == [
+        "manual_smoke_score_001",
+        "manual_smoke_score_002",
+        "manual_smoke_score_003",
+    ]
+
+
 def test_rolling_store_saves_and_loads_prediction_record(tmp_path) -> None:
     store_path = tmp_path / "rolling.json"
     evaluated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

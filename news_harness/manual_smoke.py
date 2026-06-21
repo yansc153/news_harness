@@ -1185,10 +1185,19 @@ def _fetch_xueqiu(source_config: dict[str, Any]) -> tuple[list[dict[str, Any]], 
 
 
 def _call_deepseek(config: dict[str, Any], observations: list[dict[str, Any]], api_key: str) -> list[dict[str, Any]]:
+    batch_size = _deepseek_batch_size(config)
+    if len(observations) > batch_size:
+        candidates: list[dict[str, Any]] = []
+        for offset in range(0, len(observations), batch_size):
+            batch_config = {**config, "_candidate_offset": offset}
+            candidates.extend(_call_deepseek(batch_config, observations[offset:offset + batch_size], api_key))
+        return candidates
+
+    candidate_offset = int(config.get("_candidate_offset") or 0)
     payload = {
         "model": _manual_deepseek_model_id(config),
         "temperature": 0,
-        "max_tokens": 3000,
+        "max_tokens": _deepseek_max_tokens(config),
         "response_format": {"type": "json_object"},
         "messages": [
             {
@@ -1275,6 +1284,7 @@ def _call_deepseek(config: dict[str, Any], observations: list[dict[str, Any]], a
         ref = item.get("source_observation_ref")
         if ref not in by_ref:
             ref = observations[index].get("evidence_ref")
+        global_index = candidate_offset + index
         visual = _visual_evidence_summary(by_ref.get(ref, {}))
         raw_scores = item.get("scores") if isinstance(item.get("scores"), dict) else {}
         legacy_score = item.get("hotness_score", 0)
@@ -1284,7 +1294,7 @@ def _call_deepseek(config: dict[str, Any], observations: list[dict[str, Any]], a
         confidence = _bounded_float(item.get("confidence"), 0.48)
         uncertainty = _bounded_float(item.get("uncertainty"), round(1 - confidence, 4))
         candidate = {
-            "candidate_id": f"manual_smoke_score_{index + 1:03d}",
+            "candidate_id": f"manual_smoke_score_{global_index + 1:03d}",
             "source_observation_ref": ref,
             "input_evidence_refs": [ref],
             "model_provider": "deepseek",
@@ -1319,6 +1329,14 @@ def _deepseek_timeout_seconds(config: dict[str, Any]) -> int:
 
 def _deepseek_max_retries(config: dict[str, Any]) -> int:
     return max(0, min(5, int(config.get("max_retries") or 0)))
+
+
+def _deepseek_batch_size(config: dict[str, Any]) -> int:
+    return max(1, min(50, int(config.get("batch_size") or 24)))
+
+
+def _deepseek_max_tokens(config: dict[str, Any]) -> int:
+    return max(1000, min(8000, int(config.get("max_tokens") or 3000)))
 
 
 def _process_image(run_id: str, observation: dict[str, Any], image: dict[str, Any]) -> dict[str, Any]:
