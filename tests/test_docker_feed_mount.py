@@ -16,6 +16,15 @@ def test_hostinger_feed_volume_does_not_mask_radar_static_assets() -> None:
     assert ".get('status') == 'ok'" in compose
 
 
+def test_hostinger_caddy_uses_runtime_proxy_config() -> None:
+    compose = (ROOT / "docker-compose.hostinger.yml").read_text(encoding="utf-8")
+
+    assert "image: caddy:alpine" in compose
+    assert 'command: ["caddy", "reverse-proxy", "--from", ":80", "--to", "127.0.0.1:8765"]' in compose
+    assert "docker/Dockerfile.caddy" not in compose
+    assert "NEWS_HARNESS_DOMAIN" not in compose
+
+
 def test_docker_entrypoint_uses_configurable_feed_path() -> None:
     entrypoint = (ROOT / "scripts/docker_entrypoint.sh").read_text(encoding="utf-8")
 
