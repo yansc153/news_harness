@@ -29,6 +29,12 @@ from .paths import write_json_artifact
 from .runtime_gates import retry_with_backoff
 
 
+class DeepSeekOutputParseError(RuntimeError):
+    def __init__(self, message: str, response_debug: dict[str, Any]) -> None:
+        super().__init__(message)
+        self.response_debug = response_debug
+
+
 MANUAL_SMOKE_DIR = ROOT / "artifacts" / "manual_smoke" / "latest"
 ASSET_STORE_DIR = ROOT / "artifacts" / "assets" / "manual_smoke"
 SOURCE_RUN_ARTIFACT = MANUAL_SMOKE_DIR / "source_run.json"
@@ -173,7 +179,10 @@ def score_manual_deepseek(config_path: Path) -> dict[str, Any]:
                 provider_called = True
                 candidates = _call_deepseek(config, observations, key_read["value"])
             except Exception as exc:  # noqa: BLE001 - converted to structured smoke error
-                error = _structured_error("deepseek_call_failed", str(exc))
+                extra = {}
+                if isinstance(exc, DeepSeekOutputParseError):
+                    extra["response_debug"] = exc.response_debug
+                error = _structured_error("deepseek_call_failed", str(exc), **extra)
                 structured_errors.append(error)
                 candidates = _fallback_scored_candidates(observations, error)
                 score_status = "failed"
@@ -198,7 +207,8 @@ def score_manual_deepseek(config_path: Path) -> dict[str, Any]:
             "network_calls_allowed": True,
             "timeout_seconds": _deepseek_timeout_seconds(config),
             "max_retries": _deepseek_max_retries(config),
-            "max_tokens": 3000,
+            "batch_size": _deepseek_batch_size(config),
+            "max_tokens": _deepseek_max_tokens(config),
             "max_candidates": len(observations),
         },
         "provider_status": {
@@ -1273,11 +1283,17 @@ def _call_deepseek(config: dict[str, Any], observations: list[dict[str, Any]], a
             raise RuntimeError(f"deepseek_http_{exc.code}: {_redact_text(body)}") from exc
         raise error
     if not isinstance(data, dict):
-        raise RuntimeError("deepseek_output_empty_or_unparseable")
-    message = data.get("choices", [{}])[0].get("message", {})
+        raise DeepSeekOutputParseError("deepseek_output_empty_or_unparseable", {"response_type": type(data).__name__})
+    choices = data.get("choices", [])
+    first_choice = choices[0] if isinstance(choices, list) and choices else {}
+    message = first_choice.get("message", {}) if isinstance(first_choice, dict) else {}
+    if not isinstance(message, dict):
+        message = {}
     content = message.get("content") or message.get("reasoning_content") or data.get("content") or ""
     parsed = _parse_model_json(content)
     raw_candidates = parsed.get("scored_candidates", [])
+    if not isinstance(raw_candidates, list) or not raw_candidates:
+        raise DeepSeekOutputParseError("deepseek_output_empty_or_unparseable", _deepseek_response_debug(data, message, content, parsed))
     candidates = []
     by_ref = {obs.get("evidence_ref"): obs for obs in observations}
     for index, item in enumerate(raw_candidates[: len(observations)]):
@@ -2170,6 +2186,21 @@ def _parse_model_json(content: str) -> dict[str, Any]:
             return json.loads(match.group(0))
         except json.JSONDecodeError:
             return {}
+
+
+def _deepseek_response_debug(data: dict[str, Any], message: dict[str, Any], content: str, parsed: dict[str, Any]) -> dict[str, Any]:
+    choices = data.get("choices", [])
+    reasoning = message.get("reasoning_content") or ""
+    preview = _redact_text(str(content))[:300]
+    return {
+        "response_model": str(data.get("model") or "")[:120],
+        "choice_count": len(choices) if isinstance(choices, list) else 0,
+        "message_keys": sorted(str(key) for key in message.keys())[:20],
+        "content_length": len(str(content)),
+        "reasoning_content_length": len(str(reasoning)),
+        "content_preview": preview,
+        "parsed_keys": sorted(str(key) for key in parsed.keys())[:20] if isinstance(parsed, dict) else [],
+    }
 
 
 def _manual_deepseek_model_id(config: dict[str, Any]) -> str:

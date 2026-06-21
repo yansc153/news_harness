@@ -4,6 +4,8 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
+
 from news_harness import all_source, manual_smoke, rolling_store
 from news_harness.timeline import compact_failed_timeline_items, merge_manual_timeline_items
 
@@ -201,6 +203,41 @@ def test_manual_deepseek_chunks_large_batches(monkeypatch) -> None:
 
 def test_manual_deepseek_model_id_respects_production_config() -> None:
     assert manual_smoke._manual_deepseek_model_id({"model_id": "deepseek-chat"}) == "deepseek-chat"
+
+
+def test_manual_deepseek_parse_failure_records_response_debug(monkeypatch) -> None:
+    class Response:
+        def __enter__(self) -> "Response":
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+        def read(self) -> bytes:
+            return json.dumps({
+                "model": "deepseek-test",
+                "choices": [{"message": {"content": "not json output"}}],
+            }).encode("utf-8")
+
+    def fake_urlopen(_request: object, timeout: int) -> Response:
+        assert timeout == 90
+        return Response()
+
+    monkeypatch.setattr(manual_smoke.urllib.request, "urlopen", fake_urlopen)
+
+    with pytest.raises(manual_smoke.DeepSeekOutputParseError) as exc_info:
+        manual_smoke._call_deepseek(
+            {"model_id": "deepseek-chat", "timeout_ms": 90000, "max_retries": 0},
+            [_observation(1)],
+            "secret",
+        )
+
+    debug = exc_info.value.response_debug
+    assert debug["response_model"] == "deepseek-test"
+    assert debug["choice_count"] == 1
+    assert debug["content_length"] == len("not json output")
+    assert debug["content_preview"] == "not json output"
+    assert debug["parsed_keys"] == []
 
 
 def test_rolling_store_saves_and_loads_prediction_record(tmp_path) -> None:
