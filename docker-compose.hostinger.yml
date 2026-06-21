@@ -8,8 +8,8 @@ services:
       context: https://github.com/yansc153/news_harness.git
       dockerfile: Dockerfile
     restart: unless-stopped
-    # ponytail: Caddy owns 80/443 for TLS; app stays on localhost port 8765.
-    network_mode: host
+    expose:
+      - "8765"
     volumes:
       - news_harness_artifacts:/app/artifacts
       - news_harness_feed:/app/web/data/radar-timeline
@@ -39,14 +39,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10m
-
-  caddy:
-    image: caddy:alpine
-    command: ["caddy", "reverse-proxy", "--from", ":80", "--to", "127.0.0.1:8765"]
-    restart: unless-stopped
-    network_mode: host
-    depends_on:
-      - app
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.news-harness.rule=Host(`${NEWS_HARNESS_DOMAIN:-newshardness.hellopepper.work}`)
+      - traefik.http.routers.news-harness.entrypoints=websecure
+      - traefik.http.routers.news-harness.tls=true
+      - traefik.http.routers.news-harness.tls.certresolver=letsencrypt
+      - traefik.http.services.news-harness.loadbalancer.server.port=8765
 
 volumes:
   news_harness_artifacts:

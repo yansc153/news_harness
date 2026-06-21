@@ -16,13 +16,15 @@ def test_hostinger_feed_volume_does_not_mask_radar_static_assets() -> None:
     assert ".get('status') == 'ok'" in compose
 
 
-def test_hostinger_caddy_uses_runtime_proxy_config() -> None:
+def test_hostinger_uses_platform_traefik_router() -> None:
     compose = (ROOT / "docker-compose.hostinger.yml").read_text(encoding="utf-8")
 
-    assert "image: caddy:alpine" in compose
-    assert 'command: ["caddy", "reverse-proxy", "--from", ":80", "--to", "127.0.0.1:8765"]' in compose
+    assert "traefik.enable=true" in compose
+    assert "traefik.http.routers.news-harness.rule=Host(`${NEWS_HARNESS_DOMAIN:-newshardness.hellopepper.work}`)" in compose
+    assert "traefik.http.services.news-harness.loadbalancer.server.port=8765" in compose
+    assert "network_mode: host" not in compose
+    assert "image: caddy:alpine" not in compose
     assert "docker/Dockerfile.caddy" not in compose
-    assert "NEWS_HARNESS_DOMAIN" not in compose
 
 
 def test_docker_entrypoint_uses_configurable_feed_path() -> None:
