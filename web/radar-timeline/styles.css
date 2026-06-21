@@ -508,6 +508,61 @@ a {
   line-height: 1.7;
 }
 
+.run-status {
+  display: grid;
+  grid-template-columns: minmax(180px, auto) minmax(0, 1fr);
+  gap: 12px 18px;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: rgba(244, 241, 235, 0.025);
+  padding: 12px 14px;
+}
+
+.run-status-main,
+.run-status-steps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.run-status-main strong,
+.run-status-main span,
+.run-status-steps span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.run-status-main strong {
+  color: var(--ink);
+}
+
+.run-status-steps {
+  flex-wrap: wrap;
+  justify-content: end;
+}
+
+.run-status-steps span {
+  border-left: 1px solid var(--line);
+  padding-left: 10px;
+}
+
+.run-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 18px var(--ok);
+}
+
+.run-dot.fixture {
+  background: var(--accent);
+  box-shadow: 0 0 18px var(--accent);
+}
+
 .signal-board {
   display: grid;
   grid-auto-flow: dense;
@@ -1846,6 +1901,14 @@ a {
     min-height: 34px;
     padding: 0 10px;
     font-size: 11px;
+  }
+
+  .product-frame .run-status {
+    grid-template-columns: 1fr;
+  }
+
+  .product-frame .run-status-steps {
+    justify-content: start;
   }
 
   .controls {

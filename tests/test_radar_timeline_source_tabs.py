@@ -15,3 +15,14 @@ def test_source_tabs_show_current_view_and_total_counts() -> None:
     assert "if (recentHours === ALL_HOURS) return cleanItems" in app_js
     assert '"./timeline_feed.json"' not in app_js
     assert "/opt/news_harness/web/data/radar-timeline/timeline_feed.json" in app_js
+
+
+def test_run_status_explains_refresh_and_revisit_state() -> None:
+    html = (ROOT / "web/radar-timeline/index.html").read_text(encoding="utf-8")
+    app_js = (ROOT / "web/radar-timeline/app.js").read_text(encoding="utf-8")
+
+    assert 'id="runStatus"' in html
+    assert "function renderRunStatus(feed, items, loadedFrom)" in app_js
+    assert "页面每 ${refreshSeconds} 秒自动刷新" in app_js
+    assert "等 1h/4h 回看" in app_js
+    assert "renderRunStatus(feed, items, loadedFrom)" in app_js

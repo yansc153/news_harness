@@ -47,6 +47,7 @@ const state = {
   filterTimer: null,
   motionObserver: null,
   restoringHash: false,
+  lastLoadedAt: "",
 };
 
 function escapeHtml(value) {
@@ -755,6 +756,38 @@ function renderStats(feed, items, loadedFrom) {
   `;
 }
 
+function minutesSince(isoTime) {
+  const time = Date.parse(isoTime || "");
+  if (!Number.isFinite(time)) return null;
+  return Math.max(0, Math.round((Date.now() - time) / 60000));
+}
+
+function renderRunStatus(feed, items, loadedFrom) {
+  const isFixture = isDemoFeed(feed, loadedFrom);
+  const evaluated = items.filter((item) => evalLabel(item).includes("已")).length;
+  const revisited = items.filter((item) => outcomeLabel(item).includes("已")).length;
+  const pending = Math.max(0, items.length - evaluated);
+  const refreshSeconds = Math.max(15, Number(feed.auto_refresh?.poll_interval_seconds || 60));
+  const age = minutesSince(feed.generated_at);
+  const loaded = state.lastLoadedAt ? formatTime(state.lastLoadedAt) : "刚刚";
+  const freshness = age === null ? "更新时间未知" : `${age} 分钟前生成`;
+  const waitText = pending ? `还有 ${compactCount(pending)} 条等 1h/4h 回看` : "这一屏都已完成回看";
+
+  document.getElementById("runStatus").innerHTML = `
+    <div class="run-status-main">
+      <span class="run-dot ${isFixture ? "fixture" : "live"}"></span>
+      <strong>${isFixture ? "演示数据" : "线上运行中"}</strong>
+      <span>${escapeHtml(freshness)}</span>
+    </div>
+    <div class="run-status-steps">
+      <span>页面每 ${refreshSeconds} 秒自动刷新</span>
+      <span>${escapeHtml(waitText)}</span>
+      <span>${compactCount(revisited)} 条已回看 / ${compactCount(evaluated)} 条已验真</span>
+      <span>上次读取 ${escapeHtml(loaded)}</span>
+    </div>
+  `;
+}
+
 function renderTelemetryPanels(items) {
   const sourceCount = new Set(items.map((item) => item.source_label || item.source)).size;
   const imageCount = items.filter((item) => bestAsset(item) || item.image_status === "available").length;
@@ -916,6 +949,7 @@ function render(feed, loadedFrom) {
 
   const items = visibleItems(feed);
   state.renderedItems = items;
+  renderRunStatus(feed, items, loadedFrom);
   renderStats(feed, items, loadedFrom);
   renderTelemetryPanels(items);
   renderMcpChannel(feed, items, loadedFrom);
@@ -1122,6 +1156,7 @@ async function refreshFeed() {
   const { feed, loadedFrom } = await loadFeed();
   state.feed = feed;
   state.loadedFrom = loadedFrom;
+  state.lastLoadedAt = new Date().toISOString();
   render(feed, loadedFrom);
   const refresh = feed.auto_refresh || {};
   if (state.refreshTimer) window.clearInterval(state.refreshTimer);
