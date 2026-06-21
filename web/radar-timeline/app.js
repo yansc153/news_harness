@@ -772,6 +772,7 @@ function renderRunStatus(feed, items, loadedFrom) {
   const loaded = state.lastLoadedAt ? formatTime(state.lastLoadedAt) : "刚刚";
   const freshness = age === null ? "更新时间未知" : `${age} 分钟前生成`;
   const waitText = pending ? `还有 ${compactCount(pending)} 条等 1h/4h 回看` : "这一屏都已完成回看";
+  const leaders = items.slice(0, 3).map((item) => readableTitle(item)).filter(Boolean);
 
   document.getElementById("runStatus").innerHTML = `
     <div class="run-status-main">
@@ -780,10 +781,15 @@ function renderRunStatus(feed, items, loadedFrom) {
       <span>${escapeHtml(freshness)}</span>
     </div>
     <div class="run-status-steps">
-      <span>页面每 ${refreshSeconds} 秒自动刷新</span>
+      <span>页面每 ${refreshSeconds} 秒读取一次，后台跑完才会变</span>
       <span>${escapeHtml(waitText)}</span>
       <span>${compactCount(revisited)} 条已回看 / ${compactCount(evaluated)} 条已验真</span>
       <span>上次读取 ${escapeHtml(loaded)}</span>
+      <a href="#timeline">看 ${compactCount(items.length)} 条队列</a>
+    </div>
+    <div class="run-status-leaders">
+      <b>最新预测</b>
+      ${leaders.map((title) => `<span>${escapeHtml(title)}</span>`).join("") || "<span>暂无预测</span>"}
     </div>
   `;
 }

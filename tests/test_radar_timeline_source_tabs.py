@@ -23,6 +23,7 @@ def test_run_status_explains_refresh_and_revisit_state() -> None:
 
     assert 'id="runStatus"' in html
     assert "function renderRunStatus(feed, items, loadedFrom)" in app_js
-    assert "页面每 ${refreshSeconds} 秒自动刷新" in app_js
+    assert "页面每 ${refreshSeconds} 秒读取一次，后台跑完才会变" in app_js
     assert "等 1h/4h 回看" in app_js
+    assert "最新预测" in app_js
     assert "renderRunStatus(feed, items, loadedFrom)" in app_js

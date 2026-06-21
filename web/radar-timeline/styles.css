@@ -549,6 +549,35 @@ a {
   padding-left: 10px;
 }
 
+.run-status-steps a,
+.run-status-leaders span {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.run-status-leaders {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.run-status-leaders b {
+  color: var(--ok);
+  font-size: 12px;
+}
+
+.run-status-leaders span {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .run-dot {
   width: 8px;
   height: 8px;
