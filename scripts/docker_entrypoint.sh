@@ -19,6 +19,7 @@ mkdir -p "$(dirname "$FEED_PATH")"
 
 CYCLE_MODE="${NEWS_HARNESS_CYCLE_MODE:-manual-smoke}"
 CYCLE_BACKEND="${NEWS_HARNESS_CYCLE_BACKEND:-direct-cli}"
+CYCLE_TIMEOUT_SECONDS="${NEWS_HARNESS_CYCLE_TIMEOUT_SECONDS:-1500}"
 SITE_PORT="${NEWS_HARNESS_SITE_PORT:-8765}"
 
 if [ "$CYCLE_MODE" = "manual-smoke" ]; then
@@ -67,7 +68,7 @@ fi
     sleep 10
     while true; do
         echo "  [cycle] $(date -Iseconds) starting mode=$CYCLE_MODE backend=$CYCLE_BACKEND..."
-        python3 -m news_harness run-cycle \
+        timeout "$CYCLE_TIMEOUT_SECONDS" python3 -m news_harness run-cycle \
             --source-config configs/all_source_runner.json \
             --score-config configs/deepseek_provider.json \
             --fixtures fixtures \

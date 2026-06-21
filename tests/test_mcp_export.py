@@ -69,6 +69,21 @@ class McpExportTests(unittest.TestCase):
         self.assertEqual("McpExportItem", payload["object_type"])
         self.assertEqual([], artifact_api.validate_mcp_export(payload))
 
+    def test_health_marks_stale_feed_degraded(self) -> None:
+        with tempfile.TemporaryDirectory() as name:
+            tmp = Path(name)
+            feed_path = self._feed_path(tmp)
+            feed = json.loads(feed_path.read_text(encoding="utf-8"))
+            feed["generated_at"] = "2000-01-01T00:00:00Z"
+            feed_path.write_text(json.dumps(feed), encoding="utf-8")
+            for filename in ("source_run.json", "image_assets.json", "deepseek_scoring.json", "revisit_schedule.json", "outcome.json", "eval.json"):
+                (tmp / filename).write_text("{}", encoding="utf-8")
+
+            health = artifact_api.artifact_health(feed_path, tmp)
+
+        self.assertEqual("degraded", health["status"])
+        self.assertTrue(health["feed_stale"])
+
     def test_stdio_supports_content_length_framing(self) -> None:
         def frame(message: dict) -> bytes:
             payload = json.dumps(message).encode("utf-8")

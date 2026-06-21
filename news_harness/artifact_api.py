@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,7 @@ from .fixtures import ROOT
 
 DEFAULT_FEED = ROOT / "web" / "radar-timeline" / "timeline_feed.json"
 DEFAULT_ARTIFACT_DIR = ROOT / "artifacts" / "manual_smoke" / "latest"
+DEFAULT_HEALTH_MAX_AGE_MINUTES = 90
 
 
 class ArtifactReadError(ValueError):
@@ -263,6 +265,19 @@ def image_refs(item_id: str, feed_path: Path = DEFAULT_FEED, *, projection: str 
     }
 
 
+def _age_minutes(value: Any) -> float | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    age_seconds = (datetime.now(timezone.utc) - parsed.astimezone(timezone.utc)).total_seconds()
+    return round(max(0.0, age_seconds / 60), 2)
+
+
 def artifact_health(feed_path: Path = DEFAULT_FEED, artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> dict[str, Any]:
     feed = load_feed(feed_path)
     artifacts = {
@@ -282,12 +297,18 @@ def artifact_health(feed_path: Path = DEFAULT_FEED, artifact_dir: Path = DEFAULT
         if isinstance(status, dict) and status.get("status") != "ok"
     ] if isinstance(source_run, dict) else []
     feed_status = "demo" if is_demo_feed(feed, str(feed_path)) else "live"
+    feed_age_minutes = _age_minutes(feed.get("generated_at"))
+    feed_stale = feed_age_minutes is None or feed_age_minutes > DEFAULT_HEALTH_MAX_AGE_MINUTES
+    status = "ok" if not missing and feed_status == "live" and not failed_sources and not feed_stale else "degraded"
     return {
         "object_type": "NewsHarnessWebsiteHealth",
-        "status": "ok" if not missing and feed_status == "live" and not failed_sources else "degraded",
+        "status": status,
         "feed_status": feed_status,
         "feed_path": str(feed_path),
         "generated_at": feed.get("generated_at"),
+        "feed_age_minutes": feed_age_minutes,
+        "max_feed_age_minutes": DEFAULT_HEALTH_MAX_AGE_MINUTES,
+        "feed_stale": feed_stale,
         "item_count": len(feed.get("items", [])),
         "missing_artifacts": missing,
         "failed_sources": failed_sources,
