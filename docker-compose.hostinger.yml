@@ -27,6 +27,8 @@ services:
       - NEWS_HARNESS_X_HEADLESS=1
       - NEWS_HARNESS_XUEQIU_HEADLESS=1
       - NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE=/run/news-harness/secrets/xueqiu-storage-state.json
+      - NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MIN_MS=400
+      - NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MAX_MS=1200
       - NEWS_HARNESS_X_COOKIE_FILE=/run/news-harness/secrets/x-list-reader-cookie
       - NEWS_HARNESS_REDDIT_COOKIE_FILE=/run/news-harness/secrets/reddit-reader-cookie
       - NEWS_HARNESS_EXPORT_TOKEN_FILE=/run/news-harness/secrets/export-token

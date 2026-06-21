@@ -11,6 +11,8 @@ def test_hostinger_feed_volume_does_not_mask_radar_static_assets() -> None:
     assert "news_harness_feed:/app/web/radar-timeline" not in compose
     assert "NEWS_HARNESS_FEED_PATH=web/data/radar-timeline/timeline_feed.json" in compose
     assert "NEWS_HARNESS_CYCLE_TIMEOUT_SECONDS=1500" in compose
+    assert "NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MIN_MS=400" in compose
+    assert "NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MAX_MS=1200" in compose
     assert ".get('status') == 'ok'" in compose
 
 
