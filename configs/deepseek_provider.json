@@ -13,7 +13,7 @@
   "scoring_version": "deepseek_scoring.v1",
   "timeout_ms": 90000,
   "max_retries": 3,
-  "batch_size": 24,
+  "batch_size": 8,
   "max_tokens": 3000,
   "fallback_policy": {
     "missing_key": "heuristic",

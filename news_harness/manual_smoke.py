@@ -1290,10 +1290,13 @@ def _call_deepseek(config: dict[str, Any], observations: list[dict[str, Any]], a
     if not isinstance(message, dict):
         message = {}
     content = message.get("content") or message.get("reasoning_content") or data.get("content") or ""
-    parsed = _parse_model_json(content)
+    parsed, parse_error = _parse_model_json_with_error(content)
     raw_candidates = parsed.get("scored_candidates", [])
     if not isinstance(raw_candidates, list) or not raw_candidates:
-        raise DeepSeekOutputParseError("deepseek_output_empty_or_unparseable", _deepseek_response_debug(data, message, content, parsed))
+        response_debug = _deepseek_response_debug(data, message, content, parsed)
+        if parse_error:
+            response_debug["parse_error"] = parse_error
+        raise DeepSeekOutputParseError("deepseek_output_empty_or_unparseable", response_debug)
     candidates = []
     by_ref = {obs.get("evidence_ref"): obs for obs in observations}
     for index, item in enumerate(raw_candidates[: len(observations)]):
@@ -2176,16 +2179,36 @@ def _mime_ext(mime: str) -> str:
 
 
 def _parse_model_json(content: str) -> dict[str, Any]:
+    parsed, _error = _parse_model_json_with_error(content)
+    return parsed
+
+
+def _parse_model_json_with_error(content: str) -> tuple[dict[str, Any], dict[str, Any]]:
     try:
-        return json.loads(content)
-    except json.JSONDecodeError:
+        return json.loads(content), {}
+    except json.JSONDecodeError as exc:
+        first_error = _json_parse_error_debug(exc, content)
         match = re.search(r"\{.*\}", content, re.DOTALL)
         if not match:
-            return {}
+            return {}, first_error
         try:
-            return json.loads(match.group(0))
-        except json.JSONDecodeError:
-            return {}
+            return json.loads(match.group(0)), {}
+        except json.JSONDecodeError as nested_exc:
+            nested_error = _json_parse_error_debug(nested_exc, match.group(0))
+            nested_error["initial_error"] = first_error
+            return {}, nested_error
+
+
+def _json_parse_error_debug(exc: json.JSONDecodeError, content: str) -> dict[str, Any]:
+    start = max(0, exc.pos - 80)
+    end = min(len(content), exc.pos + 160)
+    return {
+        "message": str(exc)[:240],
+        "position": exc.pos,
+        "line": exc.lineno,
+        "column": exc.colno,
+        "context": _redact_text(content[start:end])[:260],
+    }
 
 
 def _deepseek_response_debug(data: dict[str, Any], message: dict[str, Any], content: str, parsed: dict[str, Any]) -> dict[str, Any]:

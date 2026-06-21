@@ -238,6 +238,8 @@ def test_manual_deepseek_parse_failure_records_response_debug(monkeypatch) -> No
     assert debug["content_length"] == len("not json output")
     assert debug["content_preview"] == "not json output"
     assert debug["parsed_keys"] == []
+    assert debug["parse_error"]["position"] == 0
+    assert "Expecting value" in debug["parse_error"]["message"]
 
 
 def test_rolling_store_saves_and_loads_prediction_record(tmp_path) -> None:
