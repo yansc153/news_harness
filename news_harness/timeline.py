@@ -51,13 +51,13 @@ def _timeline_item_key(item: dict[str, Any]) -> str:
     return f"id:{item.get('id', '')}"
 
 
-def _timeline_sort_key(item: dict[str, Any]) -> tuple[float, str]:
+def _timeline_sort_key(item: dict[str, Any]) -> tuple[str, float]:
     try:
         hotness = float(item.get("hotness_score", 0) or 0)
     except (TypeError, ValueError):
         hotness = 0.0
     published_at = item.get("published_at")
-    return hotness, published_at if isinstance(published_at, str) else ""
+    return published_at if isinstance(published_at, str) else "", hotness
 
 
 def _parse_utc(value: Any) -> datetime | None:
@@ -296,7 +296,7 @@ def build_rolling_timeline_feed(fixtures: dict[str, Any]) -> dict[str, Any]:
     revisit = fixtures[REVISIT_SCHEDULE_FIXTURE]
     retention = store.get("retention_policy", {})
     items = _rolling_timeline_items(store)
-    items = sorted(items, key=lambda item: (item["hotness_score"], item["published_at"]), reverse=True)
+    items = sorted(items, key=_timeline_sort_key, reverse=True)
 
     return {
         "object_type": "RadarTimelineFeed",
@@ -307,8 +307,8 @@ def build_rolling_timeline_feed(fixtures: dict[str, Any]) -> dict[str, Any]:
         "no_real_source_access": True,
         "source_refs": _rolling_source_refs(),
         "sorting_policy": {
-            "default_sort": "hotness",
-            "sort_by": ["hotness_score_desc", "published_at_desc"],
+            "default_sort": "published_at",
+            "sort_by": ["published_at_desc", "hotness_score_desc"],
             "supported_sorts": ["hotness", "published_at"],
             "hotness_series_units": "relative_fixture_score_0_to_1",
             "outcome_ground_truth": "not_ground_truth_fixture_only",
@@ -345,10 +345,10 @@ def build_rolling_timeline_feed(fixtures: dict[str, Any]) -> dict[str, Any]:
         "view_config": {
             "default_recent_hours": retention.get("export_window_hours", 120),
             "supported_recent_hours": [12, 24, 48, 72, 120],
-            "default_sort": "hotness",
+            "default_sort": "published_at",
             "supported_sorts": [
-                {"id": "hotness", "field": "hotness_score", "direction": "desc"},
                 {"id": "published_at", "field": "published_at", "direction": "desc"},
+                {"id": "hotness", "field": "hotness_score", "direction": "desc"},
             ],
         },
         "auto_refresh": {
@@ -367,7 +367,7 @@ def build_timeline_feed(fixtures: dict[str, Any]) -> dict[str, Any]:
         return build_rolling_timeline_feed(fixtures)
 
     items = [_base_fixture_item(fixtures), *_shadow_timeline_items(fixtures)]
-    items = sorted(items, key=lambda item: (item["hotness_score"], item["published_at"]), reverse=True)
+    items = sorted(items, key=_timeline_sort_key, reverse=True)
 
     return {
         "object_type": "RadarTimelineFeed",
@@ -385,7 +385,7 @@ def build_timeline_feed(fixtures: dict[str, Any]) -> dict[str, Any]:
             f"fixtures/{SHADOW_SOURCE_FIXTURE}",
         ],
         "sorting_policy": {
-            "sort_by": ["hotness_score_desc", "published_at_desc"],
+            "sort_by": ["published_at_desc", "hotness_score_desc"],
             "hotness_series_units": "relative_fixture_score_0_to_1",
             "outcome_ground_truth": "not_ground_truth_fixture_only",
         },

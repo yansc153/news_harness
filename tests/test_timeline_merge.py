@@ -43,14 +43,14 @@ class TimelineMergeTests(unittest.TestCase):
         merged = merge_manual_timeline_items(current_items, prior_items, max_items=10)
 
         self.assertEqual(3, len(merged))
-        self.assertEqual("same-new", merged[0]["id"])
+        self.assertEqual("new-1", merged[0]["id"])
         self.assertNotIn("stale text", {item["copy_text"] for item in merged})
         self.assertEqual(
             {"https://example.com/old", "https://example.com/same", "https://example.com/new"},
             {item["source_url"] for item in merged},
         )
 
-    def test_manual_timeline_merge_applies_item_cap_after_sorting(self) -> None:
+    def test_manual_timeline_merge_applies_item_cap_after_latest_sorting(self) -> None:
         merged = merge_manual_timeline_items(
             current_items=[
                 {"id": "low", "published_at": "2026-06-18T02:00:00Z", "hotness_score": 1},
@@ -60,7 +60,7 @@ class TimelineMergeTests(unittest.TestCase):
             max_items=2,
         )
 
-        self.assertEqual(["high", "mid"], [item["id"] for item in merged])
+        self.assertEqual(["mid", "low"], [item["id"] for item in merged])
 
     def test_manual_timeline_merge_drops_challenge_pages(self) -> None:
         merged = merge_manual_timeline_items(

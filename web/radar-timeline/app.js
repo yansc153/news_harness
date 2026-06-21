@@ -6,10 +6,10 @@ const FALLBACK_FEED = {
   view_config: {
     default_recent_hours: 120,
     supported_recent_hours: [12, 24, 48, 72, 120],
-    default_sort: "hotness",
+    default_sort: "published_at",
     supported_sorts: [
-      { id: "hotness", field: "hotness_score", direction: "desc" },
       { id: "published_at", field: "published_at", direction: "desc" },
+      { id: "hotness", field: "hotness_score", direction: "desc" },
     ],
   },
   items: [
@@ -38,7 +38,8 @@ const state = {
   feed: FALLBACK_FEED,
   loadedFrom: "embedded fixture",
   recentHours: ALL_HOURS,
-  sortMode: "hotness",
+  sortMode: "published_at",
+  sortTouched: false,
   sourceGroup: "all",
   sourceFilter: "all",
   languageFilter: "all",
@@ -625,7 +626,8 @@ function syncControls(feed) {
     : ["hotness", "published_at"];
 
   if (!hours.includes(state.recentHours)) state.recentHours = ALL_HOURS;
-  if (!sorts.includes(state.sortMode)) state.sortMode = viewConfig.default_sort || "hotness";
+  if (!state.sortTouched) state.sortMode = sorts.includes(viewConfig.default_sort) ? viewConfig.default_sort : "published_at";
+  if (!sorts.includes(state.sortMode)) state.sortMode = "published_at";
 
   document.getElementById("recentHours").innerHTML = hours
     .map((value) => `<option value="${value}"${value === state.recentHours ? " selected" : ""}>${optionLabel(value, "hours")}</option>`)
@@ -1178,7 +1180,8 @@ document.getElementById("recentHours").addEventListener("change", (event) => {
 });
 
 document.getElementById("sortMode").addEventListener("change", (event) => {
-  state.sortMode = event.target.value || "hotness";
+  state.sortTouched = true;
+  state.sortMode = event.target.value || "published_at";
   render(state.feed, state.loadedFrom);
 });
 
