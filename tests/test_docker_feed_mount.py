@@ -7,9 +7,9 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_hostinger_feed_volume_does_not_mask_radar_static_assets() -> None:
     compose = (ROOT / "docker-compose.hostinger.yml").read_text(encoding="utf-8")
 
-    assert "news_harness_feed:/app/data/radar-timeline" in compose
+    assert "news_harness_feed:/app/web/data/radar-timeline" in compose
     assert "news_harness_feed:/app/web/radar-timeline" not in compose
-    assert "NEWS_HARNESS_FEED_PATH=/app/data/radar-timeline/timeline_feed.json" in compose
+    assert "NEWS_HARNESS_FEED_PATH=web/data/radar-timeline/timeline_feed.json" in compose
 
 
 def test_docker_entrypoint_uses_configurable_feed_path() -> None:

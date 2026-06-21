@@ -12,12 +12,12 @@ services:
     network_mode: host
     volumes:
       - news_harness_artifacts:/app/artifacts
-      - news_harness_feed:/app/data/radar-timeline
+      - news_harness_feed:/app/web/data/radar-timeline
       - /run/news-harness/secrets:/run/news-harness/secrets:ro
     environment:
       - PYTHONUNBUFFERED=1
       - NEWS_HARNESS_SITE_PORT=8765
-      - NEWS_HARNESS_FEED_PATH=/app/data/radar-timeline/timeline_feed.json
+      - NEWS_HARNESS_FEED_PATH=web/data/radar-timeline/timeline_feed.json
       - NEWS_HARNESS_CYCLE_MODE=manual-smoke
       - NEWS_HARNESS_CYCLE_BACKEND=direct-cli
       - NEWS_HARNESS_MANUAL_SMOKE_ACK=1
