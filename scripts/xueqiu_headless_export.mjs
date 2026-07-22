@@ -309,8 +309,16 @@ try {
   const page = await context.newPage();
   const candidateLimit = Math.max(limit * 8, limit);
   // D-15：v2 以「最新」为准 → 优先点击「最新」tab 取 DOM 行；hot list JSON 仅作兜底。
-  let rows = await sectionRows(page, SECTIONS[source], candidateLimit);
-  if (!rows.length) rows = await jsonRows(context, candidateLimit);
+  // 2026-07-22 fix: xueqiu_hot prefer hot/list.json API over DOM scraping
+  // DOM-based sectionRows returns stale content (July 21 posts even for "latest" tab)
+  let rows;
+  if (source === "xueqiu_hot") {
+    rows = await jsonRows(context, candidateLimit);
+    if (!rows.length) rows = await sectionRows(page, SECTIONS[source], candidateLimit);
+  } else {
+    rows = await sectionRows(page, SECTIONS[source], candidateLimit);
+    if (!rows.length) rows = await jsonRows(context, candidateLimit);
+  }
   if (!rows.length) {
     const body = await page.locator("body").innerText({ timeout: 3000 }).catch(() => "");
     if (/登录|验证码|安全|访问受限|访问验证|滑块|risk|captcha/i.test(body)) fail("auth_or_challenge_required", "Xueqiu page indicates auth/challenge/risk-control state");
