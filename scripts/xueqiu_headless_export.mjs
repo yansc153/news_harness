@@ -110,19 +110,21 @@ function uniqImages(images) {
 }
 
 async function jsonRows(context, maxRows) {
+  console.error('jsonRows called with maxRows=' + maxRows);
   const items = [];
   let maxId = "-1";
   for (let page = 0; page < 5 && items.length < maxRows * 4; page += 1) {
     const url = `https://xueqiu.com/statuses/hot/list.json?since_id=-1&max_id=${maxId}&size=20`;
     const response = await context.request.get(url, { headers: { Referer: "https://xueqiu.com/" }, timeout: 12000 }).catch(() => null);
-    if (!response || !response.ok()) break;
-    const data = await response.json().catch(() => null);
+    if (!response || !response.ok()) { console.error('jsonRows API returned', response ? response.status() : 'null'); break; }
+    console.error('jsonRows API page ' + page + ' OK');
+    const data = await response.json().catch(() => { console.error("jsonRows parse failed"); return null; });
     const pageItems = Array.isArray(data?.items) ? data.items : [];
-    items.push(...pageItems);
+    items.push(...pageItems); console.error("jsonRows page " + page + " items=" + pageItems.length);
     maxId = String(data?.next_max_id || "");
     if (!pageItems.length || !maxId || maxId === "-1") break;
   }
-  const rows = items.flatMap((item) => {
+  console.error("jsonRows total items before filter=" + items.length); const rows = items.flatMap((item) => {
     const status = item?.original_status || item?.status || item;
     if (!status?.id || !status?.user_id) return [];
     const user = status.user || {};
@@ -151,7 +153,7 @@ async function jsonRows(context, maxRows) {
       candidate_source: "hot_list_json",
     }];
   });
-  return uniqRows(rows).filter((row) => row.text.length >= 20).slice(0, maxRows);
+  console.error("jsonRows after filter rows=" + rows.length); return uniqRows(rows).filter((row) => row.text.length >= 20).slice(0, maxRows);
 }
 
 async function sectionRows(page, label, maxRows) {
