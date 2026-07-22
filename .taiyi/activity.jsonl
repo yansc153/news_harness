@@ -21,3 +21,11 @@
 {"ts":"2026-07-22T04:30:29.418Z","event":"aux:completed","slug":"arch-review-repack-tool","skill":"taiyi-health"}
 {"ts":"2026-07-22T04:33:53.851Z","event":"quality:passed","slug":"arch-review-repack-tool","phase":"review","qualityScores":{"completeness":true,"consistency":true,"verifiability":true,"traceability":true,"engineering_quality":true},"hints":[]}
 {"ts":"2026-07-22T04:33:53.960Z","event":"phase:complete","slug":"arch-review-repack-tool","phase":"review"}
+{"ts":"2026-07-22T06:47:51.392Z","event":"audit:blocked","slug":"arch-review-repack-tool","findings":1}
+{"ts":"2026-07-22T06:49:44.925Z","event":"audit:blocked","slug":"arch-review-repack-tool","findings":1}
+{"ts":"2026-07-22T06:52:40.467Z","event":"audit:blocked","slug":"arch-review-repack-tool","findings":1}
+{"ts":"2026-07-22T06:53:16.233Z","event":"integration:arch-warning","slug":"arch-review-repack-tool","details":"测试文件数: 测试文件 0 < 最低要求 1"}
+{"ts":"2026-07-22T06:53:16.233Z","event":"integration:readiness-warning","slug":"arch-review-repack-tool","warnings":["missing package.json"]}
+{"ts":"2026-07-22T06:53:16.509Z","event":"quality:passed","slug":"arch-review-repack-tool","phase":"integration","qualityScores":{"completeness":true,"consistency":true,"verifiability":true,"traceability":true,"engineering_quality":true},"hints":[]}
+{"ts":"2026-07-22T06:53:22.844Z","event":"phase:complete","slug":"arch-review-repack-tool","phase":"integration"}
+{"ts":"2026-07-22T06:53:28.115Z","event":"change:archived","slug":"arch-review-repack-tool","reason":"sh: openspec: command not found\n"}
