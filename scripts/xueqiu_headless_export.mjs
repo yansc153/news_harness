@@ -46,7 +46,9 @@ async function jsonRows(page, maxRows) {
     }];
   });
   return uniqRows(rows).filter((row) => row.text.length >= 20).slice(0, maxRows);
-}#!/usr/bin/env node
+}
+
+#!/usr/bin/env node
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
