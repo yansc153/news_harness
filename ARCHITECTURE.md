@@ -102,7 +102,7 @@
 
 ### 4.2 Processing 层（翻译 + LLM，v2 核心 —— D-08/D-09）
 - **translate.py**：外文→中文机翻（Reddit 英文帖）。保留原文，生成 `translated_text`。
-- **llm.py**：基于翻译/原文做结构化与重写，产出 `llm_summary`（搬运稿/摘要）。LLM 仅做处理，**不参与抓取决策、不自评**。
+- **llm.py**：仅用于 Reddit 等外文源的翻译后改写，产出 `llm_summary`（搬运稿/摘要），并注入 anti-AI 清理规则。**雪球不做 DeepSeek 改写，直接保留原文**。LLM 仅做处理，**不参与抓取决策、不自评**。
 - **输出**：`ProcessedContent`（见 §7），供 store 与 MCP 导出。
 - **调度**：雪球每 30min 批后整批过 Processing；Reddit 抓取后逐条过 Processing。
 

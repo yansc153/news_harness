@@ -96,11 +96,13 @@ class TestTranslateRepackConnector(unittest.TestCase):
         self.assertEqual(pc.processing_status, "llm_done")
         self.assertIsNotNone(pc.model_ref)
 
-    def test_xueqiu_item_skips_translation(self):
+    def test_xueqiu_item_skips_translation_and_llm(self):
         conn = TranslateRepackConnector(translator=_fake_translate, llm=_fake_llm)
         pc = conn.process(_xueqiu_item())
-        self.assertIsNone(pc.translated_text)  # 中文源不翻译
-        self.assertTrue(pc.llm_summary.startswith("[摘要]"))
+        self.assertIsNone(pc.translated_text)  # 雪球不翻译
+        self.assertIsNone(pc.llm_summary)      # 雪球不做 DeepSeek 改写
+        self.assertEqual(pc.processing_status, "raw")
+        self.assertEqual(pc.model_ref, "source.passthrough.xueqiu")
 
     def test_translation_failure_degrades_gracefully(self):
         def boom(text, source_lang=None):

@@ -83,7 +83,7 @@ class TestBatchPipeline(unittest.TestCase):
             processor=self.processor,
             store=self.store,
             exporter=lambda item, processed: self.exports.append(
-                {"id": item.id, "translated_text": processed.translated_text, "video_refs": item.video_refs}
+                {"id": item.id, "translated_text": processed.translated_text, "llm_summary": processed.llm_summary, "video_refs": item.video_refs}
             ),
         )
 
@@ -102,6 +102,7 @@ class TestBatchPipeline(unittest.TestCase):
         xueqiu_export = next(e for e in self.exports if e["id"] == "xq_1")
         self.assertTrue(reddit_export["translated_text"].startswith("[译]"))
         self.assertIsNone(xueqiu_export["translated_text"])
+        self.assertIsNone(xueqiu_export.get("llm_summary"))
         # 视频 seam 透传
         self.assertEqual(len(xueqiu_export["video_refs"]), 1)
 
