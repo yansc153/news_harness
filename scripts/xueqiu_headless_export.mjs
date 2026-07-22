@@ -162,10 +162,14 @@ function uniqImages(images) {
 
 async function sectionRows(page, label, maxRows) {
   await page.goto("https://xueqiu.com/", { waitUntil: "domcontentloaded", timeout: 15000 });
-  await page.waitForTimeout(1000);
-  // D-15：雪球「最新」必须显式点击 tab 才能加载（非网页刷新 / 非热门 API）。
-  await page.getByText(label, { exact: false }).first().click({ timeout: 8000 }).catch(() => {});
   await page.waitForTimeout(1500);
+  // D-15：雪球「最新」必须显式点击 tab 才能加载（非网页刷新 / 非热门 API）。
+  // 2026-07-22: 如果已在该 tab 上，再次点击不会刷新。先切到"推荐"tab 再切回目标 tab 强制刷新。
+  const otherTab = label === "最新" ? "推荐" : "最新";
+  await page.getByText(otherTab, { exact: false }).first().click({ timeout: 8000 }).catch(() => {});
+  await page.waitForTimeout(1000);
+  await page.getByText(label, { exact: false }).first().click({ timeout: 8000 }).catch(() => {});
+  await page.waitForTimeout(2500);
   const rows = await page.evaluate((maxRows) => {
     const abs = (url) => {
       try {
