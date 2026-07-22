@@ -85,6 +85,15 @@ def main(argv: list[str] | None = None) -> int:
     run_sources_parser.add_argument("--mode", choices=["dry-run", "manual-smoke"], default=None, help="Runtime mode")
     run_sources_parser.add_argument("--backend", choices=["fixture", "builtin", "direct-cli"], default="builtin", help="Source runner backend")
 
+    cycle_parser = subparsers.add_parser("run-cycle", help="Run one source, scoring, and timeline cycle")
+    cycle_parser.add_argument("--source-config", type=Path, default=all_source_module.DEFAULT_ALL_SOURCE_CONFIG)
+    cycle_parser.add_argument("--score-config", type=Path, default=all_source_module.DEFAULT_DEEPSEEK_CONFIG)
+    cycle_parser.add_argument("--fixtures", type=Path, default=all_source_module.ROOT / "fixtures")
+    cycle_parser.add_argument("--out", type=Path, default=all_source_module.DEFAULT_TIMELINE_OUT)
+    cycle_parser.add_argument("--dry-run", action="store_true", help="Use fixture-only dry-run mode")
+    cycle_parser.add_argument("--mode", choices=["dry-run", "manual-smoke"], default=None, help="Runtime mode")
+    cycle_parser.add_argument("--backend", choices=["fixture", "builtin", "direct-cli"], default="builtin", help="Source runner backend")
+
     health_parser = subparsers.add_parser("healthcheck", help="Check rolling runtime health")
     health_parser.add_argument("--auto", action="store_true", help="Run automatic healthcheck with artifact discovery")
     health_parser.add_argument("--feed", type=Path, default=health_module.DEFAULT_FEED, help="Timeline feed path")
@@ -137,6 +146,15 @@ def main(argv: list[str] | None = None) -> int:
         return timeline_module.main(["--fixtures", str(args.fixtures), "--out", str(args.out), "--schema", str(args.schema)])
     if args.command == "run-sources":
         argv = ["run-sources", "--config", str(args.config)]
+        if args.dry_run:
+            argv.append("--dry-run")
+        if args.mode:
+            argv.extend(["--mode", args.mode])
+        argv.extend(["--backend", args.backend])
+        return all_source_module.main(argv)
+    if args.command == "run-cycle":
+        argv = ["run-cycle", "--source-config", str(args.source_config), "--score-config", str(args.score_config)]
+        argv.extend(["--fixtures", str(args.fixtures), "--out", str(args.out)])
         if args.dry_run:
             argv.append("--dry-run")
         if args.mode:
