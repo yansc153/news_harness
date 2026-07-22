@@ -64,11 +64,11 @@ downstream: [requirement]
 ## Step 6: Success Criteria
 > **[ALL]** Goal: 定义"做完"的客观标准
 
-- [ ] **SC-01**: 输出明确架构结论（对/错）及理由
-- [ ] **SC-02**: 给出 ≥2 套重构方案并对比（优劣/工作量/风险）
-- [ ] **SC-03**: 产出模块删/留/建清单，与现有代码文件一一对应
-- [ ] **SC-04**: 定义 MCP v2 schema（含 video_refs），且不破坏白名单/禁令牌测试（secret 不外泄）
-- [ ] **SC-05**: 定义存储层契约（SQLite 索引 + 哈希媒体库 + janitor 配额/TTL/LRU），能解决磁盘/缓存问题
+- [x] **SC-01**: 输出明确架构结论（对/错）及理由
+- [x] **SC-02**: 给出 ≥2 套重构方案并对比（优劣/工作量/风险）
+- [x] **SC-03**: 产出模块删/留/建清单，与现有代码文件一一对应
+- [x] **SC-04**: 定义 MCP v2 schema（含 video_refs），且不破坏白名单/禁令牌测试（secret 不外泄）
+- [x] **SC-05**: 定义存储层契约（SQLite 索引 + 哈希媒体库 + janitor 配额/TTL/LRU），能解决磁盘/缓存问题
 
 ## Step 7: Dream State
 > **[MEDIUM+]** Goal: 确认在正确方向
