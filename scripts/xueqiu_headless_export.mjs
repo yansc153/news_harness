@@ -1,4 +1,52 @@
-#!/usr/bin/env node
+async function jsonRows(page, maxRows) {
+  const items = [];
+  let maxId = "-1";
+  for (let p = 0; p < 5 && items.length < maxRows * 4; p += 1) {
+    const url = "https://xueqiu.com/statuses/hot/list.json?since_id=-1&max_id=" + maxId + "&size=20";
+    try {
+      const result = await page.evaluate(async (fetchUrl) => {
+        const r = await fetch(fetchUrl, { credentials: "include", headers: { Referer: "https://xueqiu.com/" } });
+        if (!r.ok) return { error: "status_" + r.status };
+        return await r.json();
+      }, url);
+      if (result.error) break;
+      const pageItems = Array.isArray(result?.items) ? result.items : [];
+      items.push(...pageItems);
+      maxId = String(result?.next_max_id || "");
+      if (!pageItems.length || !maxId || maxId === "-1") break;
+    } catch { break; }
+  }
+  const rows = items.flatMap((item) => {
+    const status = item?.original_status || item?.status || item;
+    if (!status?.id || !status?.user_id) return [];
+    const user = status.user || {};
+    const verifiedInfos = Array.isArray(user.verified_infos) ? user.verified_infos : [];
+    const isDaren = verifiedInfos.some((info) => String(info?.verified_type) === "10" || String(info?.verified_desc || "").includes("创作者"));
+    if (source === "xueqiu_daren" && !isDaren) return [];
+    const images = [];
+    for (const value of [status.firstImg, status.cover_pic, status.pic]) {
+      if (typeof value === "string") {
+        for (const url of value.split(",")) images.push({ url: url.trim() });
+      }
+    }
+    for (const image of Array.isArray(status.image_info_list) ? status.image_info_list : []) {
+      const url = image?.url || image?.originUrl || image?.thumbnailUrl;
+      if (url) images.push({ url, width: image?.width, height: image?.height });
+    }
+    const description = stripHtml(status.description || status.text || "");
+    return [{
+      title: cleanText(status.title || ""),
+      text: description,
+      url: `https://xueqiu.com/${status.user_id}/${status.id}`,
+      author: user.screen_name || "",
+      published_at: status.created_at ? new Date(Number(status.created_at)).toISOString() : "",
+      images: uniqImages(images).filter((image) => /^https?:/.test(image.url)),
+      section_label: SECTIONS[source],
+      candidate_source: "hot_list_json",
+    }];
+  });
+  return uniqRows(rows).filter((row) => row.text.length >= 20).slice(0, maxRows);
+}#!/usr/bin/env node
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
@@ -109,52 +157,6 @@ function uniqImages(images) {
   });
 }
 
-async function jsonRows(context, maxRows) {
-  console.error('jsonRows called with maxRows=' + maxRows);
-  const items = [];
-  let maxId = "-1";
-  for (let page = 0; page < 5 && items.length < maxRows * 4; page += 1) {
-    const url = `https://xueqiu.com/statuses/hot/list.json?since_id=-1&max_id=${maxId}&size=20`;
-    const response = await context.request.get(url, { headers: { Referer: "https://xueqiu.com/" }, timeout: 12000 }).catch(() => null);
-    if (!response || !response.ok()) { console.error('jsonRows API returned', response ? response.status() : 'null'); break; }
-    console.error('jsonRows API page ' + page + ' OK');
-    const data = await response.json().catch(() => { console.error("jsonRows parse failed"); return null; });
-    const pageItems = Array.isArray(data?.items) ? data.items : [];
-    items.push(...pageItems); console.error("jsonRows page " + page + " items=" + pageItems.length);
-    maxId = String(data?.next_max_id || "");
-    if (!pageItems.length || !maxId || maxId === "-1") break;
-  }
-  console.error("jsonRows total items before filter=" + items.length); const rows = items.flatMap((item) => {
-    const status = item?.original_status || item?.status || item;
-    if (!status?.id || !status?.user_id) return [];
-    const user = status.user || {};
-    const verifiedInfos = Array.isArray(user.verified_infos) ? user.verified_infos : [];
-    const isDaren = verifiedInfos.some((info) => String(info?.verified_type) === "10" || String(info?.verified_desc || "").includes("创作者"));
-    if (source === "xueqiu_daren" && !isDaren) return [];
-    const images = [];
-    for (const value of [status.firstImg, status.cover_pic, status.pic]) {
-      if (typeof value === "string") {
-        for (const url of value.split(",")) images.push({ url: url.trim() });
-      }
-    }
-    for (const image of Array.isArray(status.image_info_list) ? status.image_info_list : []) {
-      const url = image?.url || image?.originUrl || image?.thumbnailUrl;
-      if (url) images.push({ url, width: image?.width, height: image?.height });
-    }
-    const description = stripHtml(status.description || status.text || "");
-    return [{
-      title: cleanText(status.title || ""),
-      text: description,
-      url: `https://xueqiu.com/${status.user_id}/${status.id}`,
-      author: user.screen_name || "",
-      published_at: status.created_at ? new Date(Number(status.created_at)).toISOString() : "",
-      images: uniqImages(images).filter((image) => /^https?:/.test(image.url)),
-      section_label: SECTIONS[source],
-      candidate_source: "hot_list_json",
-    }];
-  });
-  console.error("jsonRows after filter rows=" + rows.length); return uniqRows(rows).filter((row) => row.text.length >= 20).slice(0, maxRows);
-}
 
 async function sectionRows(page, label, maxRows) {
   await page.goto("https://xueqiu.com/", { waitUntil: "domcontentloaded", timeout: 15000 });
@@ -315,11 +317,11 @@ try {
   // DOM-based sectionRows returns stale content (July 21 posts even for "latest" tab)
   let rows;
   if (source === "xueqiu_hot") {
-    rows = await jsonRows(context, candidateLimit);
+    rows = await jsonRows(page, candidateLimit);
     if (!rows.length) rows = await sectionRows(page, SECTIONS[source], candidateLimit);
   } else {
     rows = await sectionRows(page, SECTIONS[source], candidateLimit);
-    if (!rows.length) rows = await jsonRows(context, candidateLimit);
+    if (!rows.length) rows = await jsonRows(page, candidateLimit);
   }
   if (!rows.length) {
     const body = await page.locator("body").innerText({ timeout: 3000 }).catch(() => "");
