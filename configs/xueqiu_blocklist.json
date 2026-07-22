@@ -1,0 +1,5 @@
+{
+  "version": "v1",
+  "description": "雪球摄入 Gate A 账号块列表（ARCHITECTURE.md §4.4，D-10/D-13）。命中 user.id / screen_name / handle 的媒体/机构号直接不扒，不进素材池。数据文件驱动，增删账号只改本 JSON 不发版。",
+  "accounts": []
+}

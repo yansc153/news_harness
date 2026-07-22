@@ -12,7 +12,7 @@
   "batch_policy": {
     "batch_processing_required": true,
     "per_item_full_serial_pipeline_allowed": false,
-    "max_items_per_source_per_run": 30,
+    "max_items_per_source_per_run": 20,
     "continue_on_source_error": true
   },
   "sources": [
@@ -64,7 +64,7 @@
       "source_label": "雪球热门",
       "source_entry_url": "https://xueqiu.com/",
       "refresh_interval_seconds": 1800,
-      "batch_limit": 30,
+      "batch_limit": 20,
       "secret_ref": "secret_ref:xueqiu_reader_cookie_v1",
       "session_ref": "session_ref:xueqiu_small_account_v1",
       "two_level_crawl": true,
@@ -75,7 +75,7 @@
       "source_label": "雪球达人",
       "source_entry_url": "https://xueqiu.com/",
       "refresh_interval_seconds": 1800,
-      "batch_limit": 30,
+      "batch_limit": 20,
       "secret_ref": "secret_ref:xueqiu_reader_cookie_v1",
       "session_ref": "session_ref:xueqiu_small_account_v1",
       "two_level_crawl": true,

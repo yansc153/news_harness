@@ -1,0 +1,5 @@
+{
+  "version": "v1",
+  "description": "雪球 Gate A 候选块列表（D-13 无样本先行策略）。首次抓取时，被 Gate C 启发式判定为 institutional 的账号自动追加于此，人工复核后转正进 xueqiu_blocklist.json。不直接生效。",
+  "accounts": []
+}

@@ -1,0 +1,113 @@
+{
+  "title": "news_harness 架构评审：从 harness 转向国内爆款搬运工具",
+  "techStack": {
+    "selected": "Python 3.12（沿用 stdlib-only，零第三方依赖）+ SQLite（元数据索引）+ 本地文件系统（哈希媒体库）。与现有 direct_cli_backend.py 凭证层、Reddit connector 同栈。",
+    "reason": "零依赖保证可移植与 VPS 部署简单；SQLite 解决『散落 JSON + 扫文件』问题；复用已有 credential / Reddit / artifact_api 投影，不引入新基础设施（Innovation Token = 0）。"
+  },
+  "existingArchitecture": {
+    "touchedModules": [
+      "news_harness/manual_smoke.py（删预测/打分/回访链路，仅留抓取骨架）",
+      "news_harness/artifact_api.py（投影分层复用，扩展 MCP v2）",
+      "news_harness/direct_cli_backend.py（保留凭证/auth，重构为 connector）",
+      "schemas/v1/mcp_export_item.schema.json（升 v2 扩展）"
+    ],
+    "newModules": [
+      "news_harness/connectors/（base.py + 各平台 connector + registry.py）",
+      "news_harness/store/（db.py + media.py + cache.py + janitor.py）",
+      "news_harness/models.py（ContentItem 规范模型）",
+      "news_harness/mcp_v2.py（视频就绪导出）",
+      "news_harness/publish.py（未来受控发布层）"
+    ]
+  },
+  "modules": [],
+  "options": [
+    {
+      "id": "A",
+      "name": "分层重构：connector 框架 + 存储层 + MCP v2（推荐）",
+      "pros": [
+        "可插拔：加新平台只写一个 connector 模块，不动核心",
+        "SQLite + 哈希媒体库根治磁盘/缓存问题（配额/TTL/LRU）",
+        "MCP v2 视频就绪，未来接视频零改造",
+        "删预测内核，代码量大幅下降（去掉 evaluator/baseline/rulebook/loop_driver）"
+      ],
+      "cons": [
+        "前期设计成本较高",
+        "需把 manual_smoke 编排逻辑重写为 connector 驱动"
+      ]
+    },
+    {
+      "id": "B",
+      "name": "最小改动：保留 manual_smoke 编排器，只换抓取源 + 补媒体库",
+      "pros": [
+        "改动最小，最快出活",
+        "复用现有 orchestrator 心智模型"
+      ],
+      "cons": [
+        "编排器仍是 2338 行巨石，加平台要改核心",
+        "无统一 ContentItem，各平台字段散落",
+        "媒体库只是补丁，缓存/配额仍是脚本逻辑",
+        "未来视频/发布要再重构一次，技术债翻倍"
+      ]
+    },
+    {
+      "id": "C",
+      "name": "微服务：抓取/存储/MCP 独立服务",
+      "pros": [
+        "各服务独立伸缩",
+        "故障隔离彻底"
+      ],
+      "cons": [
+        "引入进程间通信/队列/部署复杂度",
+        "零依赖优势丧失，VPS 运维成本陡增",
+        "对当前规模严重过度设计（Innovation Token 超支）"
+      ]
+    }
+  ],
+  "decision": {
+    "chosen": "A",
+    "reason": "新方向本质是『多源抓取 → 统一素材池 → 可发布输出』，可插拔 connector + 统一存储层是最小正确抽象。最小改动(B)把技术债留到视频阶段，微服务(C)过度设计。A 在删除预测内核的同时一次性解决磁盘/缓存/视频扩展三件事，且零新依赖。"
+  },
+  "current_state": "现有 news_harness 是 outcome-first 预测 harness：manual_smoke.py(2338行) 编排 Fetch→Predict(DeepSeek)→Revisit→Evaluate→Rulebook，围绕『预测爆款』打造，含 baseline/rulebook/evaluator/loop_driver。产物是每轮 dump 的 JSON（artifacts/），无缓存淘汰、无磁盘配额；Media 仅 image_refs 引用，无本地下载/去重。结论：这套骨架对『搬运工具』是错的——①不需要预测/评估/回访；②散落 JSON + 无配额会撑爆磁盘；③MCP 无视频字段；④connector 不可插拔（X/Reddit/Xueqiu 硬编码）。",
+  "data_model": "统一 ContentItem（取代 RadarTimelineItem）：{id, platform, source_label, author{id,name,handle,avatar_url,follower_count?}, published_at, observed_at, copy_text, source_url, canonical_url, media:[{kind:'image'|'video', url|local_ref, mime, dimensions, duration_s?, thumbnail_ref?, byte_size?, hash, rights_status}], engagement{likes,comments,shares,views}, dedup_hash, raw_refs}。媒体以 content hash 去重，local_ref 指向哈希媒体库。",
+  "api_changes": "MCP v1→v2：McpExportItem 增加 author 对象、video_refs[]、media_kind 字段；image_refs 保留。保持白名单(ALLOWED_MCP_KEYS) + 禁令牌(FORBIDDEN_MCP_KEYS) 测试，secret/cookie/session 永不外泄。MCP 保持只读；发布走独立 publish.py 受控层。schemas/v1/mcp_export_item.schema.json 升 v2。",
+  "key_flow": "1) scheduler/loop 触发 → 2) registry 解析启用的 connector → 3) connector.fetch_feed() 拉平台热帖 → 4) 归一化为 ContentItem → 5) store.db 去重+写索引，媒体落哈希库(media.py) → 6) janitor 按配额/TTL/LRU 清理 → 7) mcp_v2 只读导出（文案+图片+视频）→ 8)（未来）publish.py 受控发布。",
+  "security_threats": [
+    { "threat": "Secret 泄露", "vector": "导出/工件含 cookie/session", "mitigation": "复用 forbidden-keys 测试，白名单校验，secret 永不序列化" },
+    { "threat": "版权/风控内容搬运", "vector": "搬运未授权内容", "mitigation": "rights_status 字段发布前过滤" },
+    { "threat": "磁盘写满", "vector": "媒体无限堆积", "mitigation": "janitor 配额 + TTL + LRU 兜底" },
+    { "threat": "反爬封号", "vector": "高频抓取触发风控", "mitigation": "connector 限速/退避/配置化" }
+  ],
+  "blast_radius": [
+    { "decision": "删除预测内核(evaluator/baseline/rulebook/loop_driver)", "radius": "中", "worst_case": "历史评估数据/规则书失效", "isolation": "旧模块独立，删除不影响 connector/store" },
+    { "decision": "重构 manual_smoke → connector 驱动", "radius": "中", "worst_case": "抓取逻辑短暂回归", "isolation": "先建新模块再切，旧文件 git revert 可回滚" },
+    { "decision": "direct_cli_backend 重构为 connector", "radius": "低", "worst_case": "X/Reddit 抓取临时中断", "isolation": "Reddit 线保留，X 非首批重点" },
+    { "decision": "artifact_api 扩展 MCP v2", "radius": "低", "worst_case": "下游 MCP 消费方需适配 v2", "isolation": "v1 字段保留，向后兼容" },
+    { "decision": "mcp_export_item.schema 升 v2", "radius": "低", "worst_case": "校验不通过", "isolation": "独立 schema 文件" },
+    { "decision": "新增 connectors/store/models/mcp_v2", "radius": "低", "worst_case": "新代码 bug", "isolation": "独立包，单测覆盖" }
+  ],
+  "tradeoffs": [
+    { "point": "删预测内核", "choice": "用 engagement 阈值规则替代 ML 预测", "reason": "搬运工具不需预测爆款，简单规则足够，去掉 ML 依赖" },
+    { "point": "存储选型", "choice": "SQLite 单文件", "reason": "当前单进程够用；多进程并发写用 WAL 即可，避免过度设计" },
+    { "point": "媒体库位置", "choice": "本地哈希文件系统", "reason": "简单可移植；未来可换对象存储，接口抽象隔离" }
+  ],
+  "dependency_sandbox": [
+    { "name": "Python stdlib", "version_range": "3.12", "purpose": "全部运行时，零第三方依赖", "alternatives_considered": "引入 requests/playwright（增加依赖与部署复杂度）", "npm_latest": "n/a", "staleness_check": "✅" },
+    { "name": "SQLite (sqlite3)", "version_range": "内置", "purpose": "元数据索引，替代散落 JSON", "alternatives_considered": "Postgres（过度，需独立服务）", "npm_latest": "n/a", "staleness_check": "✅" },
+    { "name": "credential 层（沿用）", "version_range": "现有", "purpose": "NEWS_HARNESS_* 环境变量 + json 配置管理密钥", "alternatives_considered": "引入 vault（当前规模不必要）", "npm_latest": "n/a", "staleness_check": "✅" }
+  ],
+  "rollout_steps": [
+    "1. 建 connectors/ store/ models.py mcp_v2.py 骨架（接口 + 空实现）",
+    "2. 实现 store 层 + janitor，接 SQLite + 哈希媒体库",
+    "3. 迁移 manual_smoke 抓取逻辑到 Reddit connector（保留线）",
+    "4. 加微博 / B站 connector（第一批，易爬 + 视频就绪）",
+    "5. 扩展 artifact_api → mcp_v2 + schema v2",
+    "6. 删 evaluator/baseline/rulebook/loop_driver + manual_smoke 预测链路",
+    "7. 小红书 connector（第二批）；抖音/快手（三期，反爬方案成熟后）"
+  ],
+  "evolutionSuggestions": [
+    { "type": "reusable-abstraction", "description": "媒体库抽象可换 S3/对象存储" },
+    { "type": "reusable-abstraction", "description": "加感知哈希相似度去重，防搬运撞车" },
+    { "type": "tech-decision", "description": "publish.py 支持多平台一键发布 + 水印" },
+    { "type": "cross-module-contract", "description": "网页看板按 DESIGN.md 重做，消费 mcp_v2" }
+  ]
+}

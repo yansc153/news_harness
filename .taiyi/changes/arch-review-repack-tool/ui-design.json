@@ -1,0 +1,14 @@
+{
+  "title": "news_harness 架构评审：从 harness 转向国内爆款搬运工具",
+  "scope": "CLI/workflow only; no user interface surfaces. UI 重做归入后续独立 DESIGN.md 流程。",
+  "styling_contract": {
+    "scheme": "",
+    "no_inline_styles": true,
+    "theme_var_only": true
+  },
+  "is_cli_only": true,
+  "component_name": "",
+  "states": [],
+  "accessibility": [],
+  "links": ["DESIGN.md: 架构评审结论（方案 A 推荐）与数据模型", "REQUIREMENT.md: 验收标准 AC-01~AC-07"]
+}

@@ -1,0 +1,9 @@
+{
+  "slug": "arch-review-repack-tool",
+  "round": 5,
+  "maxRounds": 5,
+  "lastVerdict": "approve",
+  "completedRounds": [1, 2, 3, 4, 5],
+  "loopStartedAt": "2026-07-22T04:33:48Z",
+  "updatedAt": "2026-07-22T04:33:48Z"
+}

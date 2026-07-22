@@ -1,10 +1,14 @@
-"""Connector-boundary checks for fixture preflight."""
+"""Connector-boundary checks for fixture preflight。
+
+从原 news_harness/connectors.py 迁入：v2 将 connectors 升级为包（connectors/），
+此处保留 preflight 的运行时边界检查（fixture-only 模式）。
+"""
 
 from __future__ import annotations
 
 from typing import Any
 
-from .constants import REQUIRED_CONNECTOR_PERMISSIONS
+from ..constants import REQUIRED_CONNECTOR_PERMISSIONS
 
 
 def check_connector_runtime_boundary(config: dict[str, Any]) -> tuple[bool, dict[str, Any]]:

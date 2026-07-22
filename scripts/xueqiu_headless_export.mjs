@@ -4,7 +4,7 @@ import path from "node:path";
 import process from "node:process";
 
 const SECTIONS = {
-  xueqiu_hot: "热门",
+  xueqiu_hot: "最新",
   xueqiu_daren: "达人",
 };
 
@@ -19,7 +19,7 @@ function fail(code, message) {
 }
 
 const source = arg("--source", "");
-const limit = Math.min(30, Number(arg("--limit", "10")));
+const limit = Math.min(20, Number(arg("--limit", "10")));
 const out = arg("--out");
 const storageState = arg("--storage-state");
 const detailDelayMinMs = Math.max(0, Number(process.env.NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MIN_MS || arg("--detail-delay-min-ms", "1800")));
@@ -157,6 +157,7 @@ async function jsonRows(context, maxRows) {
 async function sectionRows(page, label, maxRows) {
   await page.goto("https://xueqiu.com/", { waitUntil: "domcontentloaded", timeout: 15000 });
   await page.waitForTimeout(1000);
+  // D-15：雪球「最新」必须显式点击 tab 才能加载（非网页刷新 / 非热门 API）。
   await page.getByText(label, { exact: false }).first().click({ timeout: 8000 }).catch(() => {});
   await page.waitForTimeout(1500);
   const rows = await page.evaluate((maxRows) => {
@@ -307,8 +308,9 @@ try {
   await context.addInitScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
   const page = await context.newPage();
   const candidateLimit = Math.max(limit * 8, limit);
-  let rows = await jsonRows(context, candidateLimit);
-  if (!rows.length) rows = await sectionRows(page, SECTIONS[source], candidateLimit);
+  // D-15：v2 以「最新」为准 → 优先点击「最新」tab 取 DOM 行；hot list JSON 仅作兜底。
+  let rows = await sectionRows(page, SECTIONS[source], candidateLimit);
+  if (!rows.length) rows = await jsonRows(context, candidateLimit);
   if (!rows.length) {
     const body = await page.locator("body").innerText({ timeout: 3000 }).catch(() => "");
     if (/登录|验证码|安全|访问受限|访问验证|滑块|risk|captcha/i.test(body)) fail("auth_or_challenge_required", "Xueqiu page indicates auth/challenge/risk-control state");

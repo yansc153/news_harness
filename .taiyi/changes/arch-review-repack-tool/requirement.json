@@ -1,0 +1,101 @@
+{
+  "title": "news_harness 架构评审：从 harness 转向国内爆款搬运工具",
+  "one_liner": "对现有预测 harness 骨架做架构评审，给出『对/错』结论与重建契约（connector 框架 + 存储层 + MCP v2），不动业务代码。",
+  "user_stories": [
+    {
+      "as_a": "内容运营/创作者",
+      "i_want": "一个能从国内爆款平台抓取并统一沉淀素材的工具",
+      "so_that": "我可以挑选题、搬运发布，不用手动逐个平台扒",
+      "priority": "P0"
+    },
+    {
+      "as_a": "项目维护者",
+      "i_want": "可插拔的 connector 框架和统一存储层",
+      "so_that": "加新平台/视频时不用重写整套骨架",
+      "priority": "P0"
+    },
+    {
+      "as_a": "下游自动化（通过 MCP）",
+      "i_want": "只读拿到『文案+图片+视频』的标准化内容",
+      "so_that": "我做二次创作/发布时格式稳定",
+      "priority": "P1"
+    }
+  ],
+  "scope_v1": [
+    "架构评审结论：当前 harness 骨架对新方向是否正确（对/错 + 理由）",
+    "connector 可插拔框架设计（接口 / 注册表 / 配置驱动）",
+    "存储层设计：SQLite 元数据索引 + 哈希去重媒体库 + janitor（配额/TTL/LRU）",
+    "MCP v2 schema 设计（含 video_refs，视频就绪），且不破坏白名单/禁令牌",
+    "模块删/留/建清单，与现有代码文件一一对应"
+  ],
+  "scope_v2": [
+    "实现 connectors（微博 / B站 / 小红书 / 抖音 + 保留 Reddit）",
+    "实现 store 层与 janitor 守护进程",
+    "实现 mcp_v2 导出 + 受控发布适配层",
+    "网页看板按新 DESIGN.md 重做"
+  ],
+  "scope_out": [
+    "预测 / 评分 / 回访 / 规则书等 harness 能力",
+    "具体平台反爬破解细节",
+    "转码 / 水印 / 多平台一键发布逻辑",
+    "UI 实现（归入后续 DESIGN.md 流程）"
+  ],
+  "functional_requirements": [
+    {
+      "module": "架构评审",
+      "items": [
+        { "id": "FR-01", "description": "输出明确结论（当前 harness 骨架对新方向是否正确）及理由" },
+        { "id": "FR-02", "description": "给出 ≥2 套重构方案并对比（优劣 / 工作量 / 风险）" }
+      ]
+    },
+    {
+      "module": "connector 框架",
+      "items": [
+        { "id": "FR-03", "description": "定义 Connector 接口：fetch_feed(opts) / fetch_by_url(url) → 统一 ContentItem" },
+        { "id": "FR-04", "description": "定义 registry：按平台名自动发现 connector，配置驱动启用" },
+        { "id": "FR-05", "description": "定义 ContentItem 规范模型：platform / author / copy_text / media[](image|video) / engagement / urls / timestamps / raw_refs / dedup_hash" }
+      ]
+    },
+    {
+      "module": "存储层",
+      "items": [
+        { "id": "FR-06", "description": "SQLite 元数据索引：内容去重、发布状态、历史，替代每轮 dump JSON" },
+        { "id": "FR-07", "description": "哈希媒体库：内容哈希去重落盘 + manifest（size/refcount/last_accessed/rights_status）" },
+        { "id": "FR-08", "description": "janitor 守护：磁盘配额上限 + TTL + LRU 淘汰，refcount=0 即删" }
+      ]
+    },
+    {
+      "module": "MCP v2",
+      "items": [
+        { "id": "FR-09", "description": "导出含 copy_text / image_refs / video_refs + author，media_kind 区分 text/image/video/mixed" },
+        { "id": "FR-10", "description": "保持白名单 + 禁令牌测试：secret/cookie/session 永不外泄" },
+        { "id": "FR-11", "description": "MCP 保持只读；真正『发布』走独立受控适配层（publish.py），不并入导出" }
+      ]
+    },
+    {
+      "module": "模块清单",
+      "items": [
+        { "id": "FR-12", "description": "列出删（evaluator/baseline/rulebook/loop_driver + manual_smoke 预测链路）/ 留（credential 层 / Reddit / artifact_api 投影）/ 建（connectors/ store/ models.py mcp_v2.py）" }
+      ]
+    }
+  ],
+  "non_functional": {
+    "performance": [
+      { "id": "NFR-P01", "description": "媒体库支持磁盘配额上限与 LRU 淘汰，单进程 SQLite 读写，索引查询 O(1) 而非扫 JSON" },
+      { "id": "NFR-P02", "description": "connector 失败隔离：单平台故障/限速不影响整体抓取循环" }
+    ],
+    "security": [
+      { "id": "NFR-S01", "description": "导出与工件永不包含 secret/cookie/session/登录态（沿用现有 forbidden-keys 测试）" },
+      { "id": "NFR-S02", "description": "媒体 rights_status 字段用于在搬运前过滤版权/风控内容" }
+    ]
+  },
+  "acceptance_criteria": [
+    { "id": "AC-01", "description": "SC-01：输出明确架构结论（对/错）及理由", "is_checked": false },
+    { "id": "AC-02", "description": "SC-02：给出 ≥2 套重构方案并对比（优劣/工作量/风险）", "is_checked": false },
+    { "id": "AC-03", "description": "SC-03：产出模块删/留/建清单，与现有代码文件一一对应", "is_checked": false },
+    { "id": "AC-04", "description": "SC-04：定义 MCP v2 schema（含 video_refs），且不破坏白名单/禁令牌测试", "is_checked": false },
+    { "id": "AC-05", "description": "SC-05：定义存储层契约（SQLite 索引 + 哈希媒体库 + janitor 配额/TTL/LRU）", "is_checked": false },
+    { "id": "AC-06", "description": "给出 connector 接口签名与 ContentItem 字段表", "is_checked": false },
+    { "id": "AC-07", "description": "给出 janitor 配额/TTL/LRU 参数与清理语义", "is_checked": false }
+  ]
+}

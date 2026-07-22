@@ -1,0 +1,26 @@
+{
+  "title": "news_harness 架构评审：从 harness 转向国内爆款搬运工具",
+  "motivation": "现有架构是 outcome-first 预测引擎（Fetch→Predict(DeepSeek)→Revisit→Evaluate→Rulebook），围绕「预测爆款」打造；新方向是「国内爆款内容搬运工具」（多平台抓取→统一素材池→可发布输出），预测/评估/回访链路全部不再需要。当前 manual_smoke.py（2338 行）编排器、evaluator/baseline/rulebook 成为负担；且产物是散落的 JSON 脚本文件，无缓存淘汰/磁盘配额，媒体（图片/未来视频）积累会撑爆磁盘。需要一次架构评审，给出「对/错」结论与重构方案，并为磁盘/缓存/MCP-v2 定下契约。",
+  "scope": {
+    "includes": [
+      "架构评审：当前程序架构对新方向是否正确",
+      "connector 可插拔框架设计（微博 / B站 / 小红书 / 抖音 + 保留 Reddit）",
+      "存储层设计：SQLite 元数据索引 + 哈希去重媒体库 + janitor（配额/TTL/LRU）",
+      "MCP v2 schema 设计（含 video_refs，为视频铺路）",
+      "模块删/留/建清单（去预测内核、留凭证与 Reddit、建 connectors/store/mcp_v2）"
+    ],
+    "excludes": [
+      "实际代码实现（归入 dev 阶段）",
+      "具体平台 connector 的抓取实现",
+      "发布/转码/水印逻辑",
+      "网页看板 UI 重做（后续单独 DESIGN.md 流程）"
+    ]
+  },
+  "success_criteria": [
+    { "id": "SC-01", "description": "输出明确架构结论（对/错）及理由", "is_checked": false },
+    { "id": "SC-02", "description": "给出 ≥2 套重构方案并对比（优劣/工作量/风险）", "is_checked": false },
+    { "id": "SC-03", "description": "产出模块删/留/建清单，与现有代码文件一一对应", "is_checked": false },
+    { "id": "SC-04", "description": "定义 MCP v2 schema（含 video_refs），且不破坏白名单/禁令牌测试（secret 不外泄）", "is_checked": false },
+    { "id": "SC-05", "description": "定义存储层契约（SQLite 索引 + 哈希媒体库 + janitor 配额/TTL/LRU），能解决磁盘/缓存问题", "is_checked": false }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "slug": "arch-review-repack-tool",
+  "currentPhase": "integration",
+  "completedPhases": [
+    "change",
+    "requirement",
+    "design",
+    "ui-design",
+    "task",
+    "dev",
+    "test",
+    "review"
+  ],
+  "profile": "full",
+  "skippedPhases": [],
+  "strictDev": false,
+  "autoHarness": false,
+  "complexity": {
+    "level": "medium",
+    "score": 8,
+    "recommendedSkills": [
+      "taiyi-intel-scan",
+      "taiyi-architect",
+      "taiyi-health"
+    ]
+  },
+  "auxiliaryCompleted": [
+    "taiyi-health"
+  ],
+  "workflowStatus": "active",
+  "createdAt": "2026-07-22T00:14:07.845Z",
+  "updatedAt": "2026-07-22T04:33:53.853Z",
+  "version": 18
+}

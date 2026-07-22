@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .config import DEFAULT_PREFLIGHT_CONFIG, check_preflight_config, find_raw_secret_material, load_preflight_config
-from .connectors import check_connector_runtime_boundary
+from .connectors.runtime_boundary import check_connector_runtime_boundary
 from .constants import GUARDRAILS, REQUIRED_PATH_EVENTS
 from .events import canonical_json
 from .fixtures import DEFAULT_SCHEMA, ROOT, load_fixture_set, load_json

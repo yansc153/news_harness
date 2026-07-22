@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "slug": "arch-review-repack-tool",
+  "totalTokens": 807,
+  "estimatedCostUsd": 0.002421,
+  "byPhase": {
+    "change": 807
+  },
+  "entries": [
+    {
+      "at": "2026-07-22T00:14:07.925Z",
+      "phase": "change",
+      "kind": "scan",
+      "tokens": 807,
+      "label": "1 files"
+    }
+  ]
+}
