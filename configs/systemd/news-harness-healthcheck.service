@@ -14,8 +14,6 @@ ExecStart=/usr/bin/python3 -m news_harness healthcheck \
     --outcome artifacts/manual_smoke/latest/outcome.json \
     --eval artifacts/manual_smoke/latest/eval.json \
     --max-age-minutes 90 \
-    --require-source x_list \
-    --require-source reddit \
     --require-source xueqiu_hot \
     --require-source xueqiu_daren
 User=news-harness

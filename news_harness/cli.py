@@ -9,6 +9,7 @@ from pathlib import Path
 from . import all_source as all_source_module
 from . import health as health_module
 from . import inspect as inspect_module
+from . import janitor_cli as janitor_module
 from . import manual_smoke as manual_smoke_module
 from . import mcp_server as mcp_server_module
 from . import preflight as preflight_module
@@ -31,6 +32,7 @@ Local candidate, safe fixture-only path:
 Read-only integration surfaces:
   Website/API: python3 -m news_harness serve --host 0.0.0.0 --port 8765
   MCP stdio:   python3 -m news_harness mcp --feed web/data/radar-timeline/timeline_feed.json
+  Retention:   python3 -m news_harness janitor --dry-run
 """
 
 
@@ -117,6 +119,14 @@ def main(argv: list[str] | None = None) -> int:
     mcp_parser.add_argument("--feed", type=Path, default=mcp_server_module.artifact_api.DEFAULT_FEED, help="Timeline feed path")
     mcp_parser.add_argument("--artifact-dir", type=Path, default=mcp_server_module.artifact_api.DEFAULT_ARTIFACT_DIR, help="Latest artifact dir")
 
+    janitor_parser = subparsers.add_parser("janitor", help="Plan or run retention cleanup")
+    janitor_parser.add_argument("--db", type=Path, default=janitor_module.DEFAULT_DB_PATH, help="SQLite metadata DB path")
+    janitor_parser.add_argument("--media-root", type=Path, default=janitor_module.DEFAULT_MEDIA_ROOT, help="Media library root")
+    janitor_parser.add_argument("--quota-gb", type=float, default=None, help="Media quota in GiB")
+    janitor_parser.add_argument("--ttl-days", type=int, default=None, help="Unpublished item TTL in days")
+    janitor_parser.add_argument("--dry-run", action="store_true", help="Plan cleanup without deleting data")
+    janitor_parser.add_argument("--apply", action="store_true", help="Delete data according to the janitor plan")
+
     args = parser.parse_args(argv)
     if args.command == "quickstart":
         print(QUICKSTART_TEXT)
@@ -182,6 +192,17 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "mcp":
         mcp_server_module.run_stdio(args.feed, args.artifact_dir)
         return 0
+    if args.command == "janitor":
+        argv = ["--db", str(args.db), "--media-root", str(args.media_root)]
+        if args.quota_gb is not None:
+            argv.extend(["--quota-gb", str(args.quota_gb)])
+        if args.ttl_days is not None:
+            argv.extend(["--ttl-days", str(args.ttl_days)])
+        if args.apply:
+            argv.append("--apply")
+        else:
+            argv.append("--dry-run")
+        return janitor_module.main(argv)
     parser.error(f"unknown command {args.command!r}")
     return 2
 

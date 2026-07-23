@@ -504,14 +504,12 @@ function sourceGroupKey(item) {
   const key = String(item.source || item.source_label || "").toLowerCase();
   if (key.includes("reddit") || key.startsWith("r/")) return "reddit";
   if (key.includes("xueqiu") || key.includes("雪球")) return "xueqiu";
-  if (key === "x_list" || key.includes("twitter") || key.includes("推特") || key.includes("x list")) return "x";
   return "other";
 }
 
 function sourceGroupLabel(group) {
   const map = {
     all: "全部",
-    x: "X",
     reddit: "Reddit",
     xueqiu: "雪球",
     other: "其他",
@@ -529,7 +527,9 @@ function sourceDisplayName(value) {
 }
 
 function isXItem(item) {
-  return sourceGroupKey(item) === "x";
+  // X list is retired from the active source pool. Keep the helper for
+  // rendering legacy fixture rows, but never expose it as an active filter.
+  return false;
 }
 
 function isLongformItem(item) {

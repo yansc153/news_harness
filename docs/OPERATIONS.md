@@ -39,10 +39,15 @@ python3 -m news_harness healthcheck \
   --outcome artifacts/manual_smoke/latest/outcome.json \
   --eval artifacts/manual_smoke/latest/eval.json \
   --max-age-minutes 90 \
-  --require-source x_list \
-  --require-source reddit \
   --require-source xueqiu_hot \
   --require-source xueqiu_daren
+```
+
+Docker uses the same server endpoint for liveness:
+
+```bash
+docker compose ps
+docker inspect --format '{{json .State.Health}}' news-harness | python3 -m json.tool
 ```
 
 ## Website And API Server
@@ -228,25 +233,77 @@ sudo systemctl start news-harness-healthcheck.service
 journalctl -u news-harness-healthcheck.service -n 120 --no-pager
 ```
 
+## Docker Security Baseline
+
+The local Docker compose profile runs the app with:
+
+- non-root image user `news-harness` (`10001:10001`)
+- read-only container root filesystem
+- writable mounts only for `/app/artifacts` and `/app/web/data/radar-timeline`
+- read-only secret mount at `/run/news-harness/secrets`
+- `no-new-privileges`, `cap_drop: [ALL]`, and a writable `/tmp` tmpfs
+- `/api/health` wired into the container healthcheck
+
+The Caddy sidecar also runs with a read-only root filesystem and
+`no-new-privileges`. It keeps its default capability set because it binds
+container port `80`; move the sidecar to an unprivileged container port before
+dropping all capabilities there.
+
+Before first local start, make the host-side writable mounts available to the
+container user:
+
+```bash
+mkdir -p docker/artifacts docker/feed docker/secrets
+chmod 700 docker/secrets
+chmod 775 docker/artifacts docker/feed
+```
+
+If a host creates those bind paths as root-only, the app should fail at startup
+or first artifact write rather than silently fall back to an in-container path.
+Fix the host permissions; do not move secrets or artifacts into the image.
+
+## Retention / Janitor
+
+Retention cleanup is observable before it is destructive. The Docker profile
+sets:
+
+- `NEWS_HARNESS_JANITOR_MODE=dry-run`
+- `NEWS_HARNESS_JANITOR_QUOTA_GB=20`
+- `NEWS_HARNESS_JANITOR_TTL_DAYS=7`
+
+Run the plan-only janitor check:
+
+```bash
+python3 -m news_harness janitor --dry-run \
+  --db artifacts/store/meta.sqlite \
+  --media-root artifacts/media
+```
+
+The command prints the exact `media_evicted`, `items_purged`, and
+`media_pruned` sets without deleting files or rows. Only run destructive cleanup
+with an explicit maintenance window and fresh backup:
+
+```bash
+python3 -m news_harness janitor --apply \
+  --db artifacts/store/meta.sqlite \
+  --media-root artifacts/media
+```
+
 ## Required Environment References
 
 Use repo-external files only. Do not store secret values in this repo.
 
 - `DEEPSEEK_API_KEY_FILE`
-- `NEWS_HARNESS_X_COOKIE_FILE`
 - `NEWS_HARNESS_MANUAL_SMOKE_ACK=I_UNDERSTAND_THIS_IS_READ_ONLY_MANUAL_SMOKE`
 - `NEWS_HARNESS_REAL_SOURCE_SMOKE=1`
 - `NEWS_HARNESS_DEEPSEEK_SMOKE=1`
-- `NEWS_HARNESS_X_HEADLESS=1`
-- `NEWS_HARNESS_REDDIT_COOKIE_FILE`
 - `NEWS_HARNESS_XUEQIU_HEADLESS=1`
 - `NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE`
 - `NEWS_HARNESS_XUEQIU_EXPORT_DIR`
 
-Use `configs/all_source_runner.json` for the production-shaped three-source
-candidate: X list, Reddit, Xueqiu `热门`, and Xueqiu `达人`. Do not describe it
-as production ready until a real run and healthcheck verify all four required
-source IDs.
+Use `configs/all_source_runner.json` for the production-shaped candidate:
+Reddit, Xueqiu `热门`, and Xueqiu `达人`. Do not describe it as production ready
+until a real run and healthcheck verify all required source IDs.
 
 ## Promotion Rule
 
@@ -258,6 +315,8 @@ regression safety.
 ## Do Not Do This
 
 - Do not hand-edit engagement numbers.
+- Do not run `news_harness janitor --apply` until the dry-run output has been
+  reviewed and the current artifact/media volume has been backed up.
 - Do not turn quote repost wrappers into candidates unless the quoted original
   is preserved.
 - Do not replace missing evidence images with generated images.

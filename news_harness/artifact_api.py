@@ -86,7 +86,8 @@ def _image_refs(item: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 ALLOWED_MCP_KEYS: set[str] = {
-    "object_type", "id", "source", "published_at", "copy_text", "source_url", "image_refs",
+    "object_type", "id", "source", "published_at", "fetched_at", "copy_text",
+    "source_url", "image_refs", "processing_status",
 }
 
 ALLOWED_MCP_IMAGE_REF_KEYS: set[str] = {
@@ -99,7 +100,18 @@ FORBIDDEN_MCP_KEYS: set[str] = {
     "rule_ids", "structure_tags", "outcome_labels", "learning_eligibility",
     "eval_status", "promotion_status", "revisit_status",
     "artifact_refs", "non_investment_advice",
+    "translated_text", "llm_summary", "model_ref",
 }
+
+RAW_COPY_FIELDS = (
+    "raw_copy_text",
+    "original_copy_text",
+    "source_copy_text",
+    "raw_text",
+    "original_text",
+)
+
+XUEQIU_DEEPSEEK_PROCESSING_STATUSES = {"translated", "llm_done"}
 
 
 def _mcp_image_refs(item: dict[str, Any]) -> list[dict[str, Any]]:
@@ -115,7 +127,36 @@ def _mcp_image_refs(item: dict[str, Any]) -> list[dict[str, Any]]:
     return refs
 
 
-def validate_mcp_export(item: dict[str, Any]) -> list[str]:
+def _is_xueqiu_item(item: dict[str, Any]) -> bool:
+    source = str(item.get("source") or item.get("platform") or "").lower()
+    label = str(item.get("source_label") or "").lower()
+    return source.startswith("xueqiu") or "雪球" in label
+
+
+def _xueqiu_raw_policy_problems(source_item: dict[str, Any]) -> list[str]:
+    if not _is_xueqiu_item(source_item):
+        return []
+
+    problems: list[str] = []
+    copy_text = str(source_item.get("copy_text") or "")
+    for field in RAW_COPY_FIELDS:
+        if field in source_item and source_item.get(field) is not None and copy_text != str(source_item.get(field) or ""):
+            problems.append(f"xueqiu_raw_policy:copy_text_mismatch:{field}")
+
+    processing_status = str(source_item.get("processing_status") or "").strip().lower()
+    if processing_status in XUEQIU_DEEPSEEK_PROCESSING_STATUSES or "deepseek" in processing_status:
+        problems.append(f"xueqiu_raw_policy:deepseek_processing_status:{processing_status}")
+
+    model_ref = str(source_item.get("model_ref") or source_item.get("processing_model_ref") or "").strip().lower()
+    if "deepseek" in model_ref:
+        problems.append("xueqiu_raw_policy:deepseek_model_ref")
+
+    if source_item.get("translated_text") or source_item.get("llm_summary"):
+        problems.append("xueqiu_raw_policy:processed_text_present")
+    return problems
+
+
+def validate_mcp_export(item: dict[str, Any], *, source_item: dict[str, Any] | None = None) -> list[str]:
     """Return list of forbidden keys found in an MCP export dict (empty = clean)."""
     problems = [f"forbidden:{key}" for key in FORBIDDEN_MCP_KEYS if key in item]
     problems.extend(f"unexpected:{key}" for key in item if key not in ALLOWED_MCP_KEYS)
@@ -124,21 +165,30 @@ def validate_mcp_export(item: dict[str, Any]) -> list[str]:
             problems.append(f"image_refs[{index}]:not_object")
             continue
         problems.extend(f"image_refs[{index}].unexpected:{key}" for key in ref if key not in ALLOWED_MCP_IMAGE_REF_KEYS)
+    problems.extend(_xueqiu_raw_policy_problems(source_item or item))
     return problems
 
 
 def project_item_export(item: dict[str, Any]) -> dict[str, Any]:
-    """Return the public export read model: only copy, source URL, and image refs."""
+    """Return the public export read model: source evidence, freshness, and raw processing state."""
     source_url = public_url(item.get("source_url") or item.get("canonical_url"))
-    return {
+    projected = {
         "object_type": "McpExportItem",
         "id": item.get("id"),
         "source": item.get("source"),
         "published_at": item.get("published_at"),
+        "fetched_at": item.get("fetched_at") or item.get("observed_at") or item.get("last_observed_at"),
         "copy_text": item.get("copy_text") or "",
         "source_url": source_url,
         "image_refs": _mcp_image_refs(item),
     }
+    if "processing_status" in item:
+        projected["processing_status"] = item.get("processing_status")
+    problems = validate_mcp_export(projected, source_item=item)
+    if problems:
+        item_id = item.get("id") or "<unknown>"
+        raise ArtifactReadError(f"mcp_export_invalid:{item_id}:{','.join(problems)}")
+    return projected
 
 
 def project_item_web(item: dict[str, Any], *, include_private_refs: bool = False) -> dict[str, Any]:
@@ -189,7 +239,7 @@ def project_item_web(item: dict[str, Any], *, include_private_refs: bool = False
 
 
 def project_item_mcp(item: dict[str, Any]) -> dict[str, Any]:
-    """Return the MCP export read model — evidence/read fields only, no scores/status/refs."""
+    """Return the MCP export read model — evidence/read fields only, no scores or rule internals."""
     return project_item_export(item)
 
 

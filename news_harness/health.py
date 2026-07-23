@@ -35,7 +35,7 @@ def run_healthcheck(
     max_age_minutes: int = 90,
     required_sources: list[str] | None = None,
 ) -> dict[str, Any]:
-    required_sources = required_sources or ["x_list", "reddit", "xueqiu_hot", "xueqiu_daren"]
+    required_sources = required_sources or ["xueqiu_hot", "xueqiu_daren"]
     checks: list[dict[str, Any]] = []
     artifacts: dict[str, Any] = {}
     raw_secret_findings: list[Any] = []
@@ -197,7 +197,7 @@ def run_automatic_healthcheck(
     required_sources: list[str] | None = None,
 ) -> dict[str, Any]:
     """Run all automated health checks with artifact discovery (--auto mode)."""
-    required_sources = required_sources or ["x_list", "reddit", "xueqiu_hot", "xueqiu_daren"]
+    required_sources = required_sources or ["xueqiu_hot", "xueqiu_daren"]
     if artifact_dir is None:
         artifact_dir = DEFAULT_SOURCE_RUN.parent
 

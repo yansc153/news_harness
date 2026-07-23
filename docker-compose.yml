@@ -2,8 +2,6 @@
 #
 # Secrets: place files in ./docker/secrets/ before starting:
 #   ./docker/secrets/deepseek-api-key
-#   ./docker/secrets/x-list-reader-cookie
-#   ./docker/secrets/reddit-reader-cookie
 #   ./docker/secrets/xueqiu-storage-state.json
 #
 # Start:  docker compose up -d
@@ -14,26 +12,34 @@ services:
     build: .
     container_name: news-harness
     restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     expose:
       - "8765"
+    tmpfs:
+      - /tmp:size=256m,mode=1777
     volumes:
       - ./docker/secrets:/run/news-harness/secrets:ro
-      - ./docker/artifacts:/app/artifacts
-      - ./docker/feed:/app/web/data/radar-timeline
+      - ./docker/artifacts:/app/artifacts:rw
+      - ./docker/feed:/app/web/data/radar-timeline:rw
     environment:
+      - HOME=/tmp
       - PYTHONUNBUFFERED=1
       - NEWS_HARNESS_FEED_PATH=web/data/radar-timeline/timeline_feed.json
       - NEWS_HARNESS_CYCLE_TIMEOUT_SECONDS=1500
+      - NEWS_HARNESS_JANITOR_MODE=dry-run
+      - NEWS_HARNESS_JANITOR_QUOTA_GB=20
+      - NEWS_HARNESS_JANITOR_TTL_DAYS=7
       - NEWS_HARNESS_MANUAL_SMOKE_ACK=1
       - NEWS_HARNESS_REAL_SOURCE_SMOKE=1
       - NEWS_HARNESS_DEEPSEEK_SMOKE=1
-      - NEWS_HARNESS_X_HEADLESS=1
       - NEWS_HARNESS_XUEQIU_HEADLESS=1
       - NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE=/run/news-harness/secrets/xueqiu-storage-state.json
       - NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MIN_MS=400
       - NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MAX_MS=1200
-      - NEWS_HARNESS_X_COOKIE_FILE=/run/news-harness/secrets/x-list-reader-cookie
-      - NEWS_HARNESS_REDDIT_COOKIE_FILE=/run/news-harness/secrets/reddit-reader-cookie
       - DEEPSEEK_API_KEY_FILE=/run/news-harness/secrets/deepseek-api-key
     healthcheck:
       test: ["CMD", "python3", "-c", "import json, sys, urllib.request; sys.exit(0 if json.load(urllib.request.urlopen('http://127.0.0.1:8765/api/health')).get('status') == 'ok' else 1)"]
@@ -48,14 +54,19 @@ services:
       dockerfile: docker/Dockerfile.caddy
     container_name: news-harness-caddy
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
     ports:
       # ponytail: Hostinger often owns 80/443/8080; change NEWS_HARNESS_HTTP_PORT if 18765 is busy.
       - "${NEWS_HARNESS_HTTP_PORT:-18765}:80"
     volumes:
       - ./web:/srv/web:ro
       - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - app
 
 volumes:
   caddy_data:
+  caddy_config:

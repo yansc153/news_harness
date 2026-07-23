@@ -14,3 +14,9 @@ def test_xueqiu_headless_export_allows_configured_20_item_batch() -> None:
     }
     assert xueqiu_limits == {"xueqiu_hot": 20, "xueqiu_daren": 20}
     assert config["batch_policy"]["max_items_per_source_per_run"] == 20
+
+
+def test_xueqiu_headless_export_fails_below_minimum_confirmed_rows() -> None:
+    script = Path("scripts/xueqiu_headless_export.mjs").read_text(encoding="utf-8")
+    assert "const MIN_CONFIRMED_XUEQIU_ROWS = 5;" in script
+    assert "xueqiu_min_rows_not_met" in script

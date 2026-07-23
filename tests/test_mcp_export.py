@@ -23,9 +23,11 @@ class McpExportTests(unittest.TestCase):
                     "source_label": "X list",
                     "author": "reader",
                     "published_at": "2026-06-18T00:00:00Z",
+                    "fetched_at": "2026-06-18T00:01:00Z",
                     "topic_or_hook": "Evidence item",
                     "copy_text": "full source text",
                     "source_url": "https://example.com/post",
+                    "processing_status": "raw",
                     "image_status": "available",
                     "image_refs": [{
                         "original_image_ref": "https://example.com/image.png",
@@ -50,10 +52,72 @@ class McpExportTests(unittest.TestCase):
             item = artifact_api.latest_feed(self._feed_path(Path(name)), projection="mcp")["items"][0]
         self.assertEqual(item["object_type"], "McpExportItem")
         self.assertEqual("full source text", item["copy_text"])
+        self.assertEqual("2026-06-18T00:00:00Z", item["published_at"])
+        self.assertEqual("2026-06-18T00:01:00Z", item["fetched_at"])
+        self.assertEqual("raw", item["processing_status"])
         self.assertEqual([{"original_image_ref": "https://example.com/image.png"}], item["image_refs"])
         self.assertEqual([], artifact_api.validate_mcp_export(item))
         for key in artifact_api.FORBIDDEN_MCP_KEYS:
             self.assertNotIn(key, item)
+
+    def test_mcp_projection_rejects_xueqiu_copy_that_differs_from_raw_text(self) -> None:
+        feed = {
+            "feed_id": "test-feed",
+            "feed_version": "v1",
+            "generated_at": "2026-06-18T00:00:00Z",
+            "items": [
+                {
+                    "id": "xq-mutated",
+                    "source": "xueqiu_hot",
+                    "source_label": "雪球热门",
+                    "published_at": "2026-06-18T00:00:00Z",
+                    "fetched_at": "2026-06-18T00:01:00Z",
+                    "copy_text": "DeepSeek 改写后的文案",
+                    "raw_copy_text": "雪球原始正文",
+                    "source_url": "https://xueqiu.com/1",
+                    "image_refs": [],
+                    "processing_status": "raw",
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as name:
+            path = Path(name) / "timeline_feed.json"
+            path.write_text(json.dumps(feed), encoding="utf-8")
+            with self.assertRaisesRegex(
+                artifact_api.ArtifactReadError,
+                "xueqiu_raw_policy:copy_text_mismatch:raw_copy_text",
+            ):
+                artifact_api.latest_feed(path, projection="mcp")
+
+    def test_mcp_projection_rejects_xueqiu_deepseek_processing(self) -> None:
+        feed = {
+            "feed_id": "test-feed",
+            "feed_version": "v1",
+            "generated_at": "2026-06-18T00:00:00Z",
+            "items": [
+                {
+                    "id": "xq-deepseek",
+                    "source": "xueqiu_hot",
+                    "source_label": "雪球热门",
+                    "published_at": "2026-06-18T00:00:00Z",
+                    "fetched_at": "2026-06-18T00:01:00Z",
+                    "copy_text": "雪球原始正文",
+                    "raw_copy_text": "雪球原始正文",
+                    "source_url": "https://xueqiu.com/1",
+                    "image_refs": [],
+                    "processing_status": "llm_done",
+                    "model_ref": "deepseek",
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as name:
+            path = Path(name) / "timeline_feed.json"
+            path.write_text(json.dumps(feed), encoding="utf-8")
+            with self.assertRaisesRegex(
+                artifact_api.ArtifactReadError,
+                "xueqiu_raw_policy:deepseek_processing_status:llm_done",
+            ):
+                artifact_api.latest_feed(path, projection="mcp")
 
     def test_mcp_tool_call_uses_mcp_projection(self) -> None:
         with tempfile.TemporaryDirectory() as name:

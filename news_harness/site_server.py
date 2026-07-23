@@ -79,6 +79,15 @@ class NewsHarnessSiteHandler(SimpleHTTPRequestHandler):
                 self._handle_export_api(path, query)
                 return
             if path.startswith("/api/public/v1/"):
+                # Evidence is still a read-only projection, but it is not
+                # anonymous: exposing source text and image references lets
+                # callers bypass the export boundary and its audit trail.
+                if not self.server.export_token:
+                    self._send_json({"status": "error", "error": "export_token_not_configured"}, HTTPStatus.SERVICE_UNAVAILABLE)
+                    return
+                if not self._authorized_for_export():
+                    self._send_json({"status": "error", "error": "unauthorized"}, HTTPStatus.UNAUTHORIZED)
+                    return
                 self._handle_evidence_api(path, query, "/api/public/v1")
                 return
             if path == "/api/timeline":

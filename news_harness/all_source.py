@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -29,6 +30,7 @@ from .manual_smoke import (
     score_manual_deepseek,
 )
 from .rolling_store import DEFAULT_STORE_PATH, load as load_rolling_store, register_candidates, save as save_rolling_store
+from .runtime_gates import write_liveness_artifact
 from .timeline import generate_timeline_feed
 
 
@@ -151,6 +153,96 @@ def run_cycle(
 ) -> dict[str, Any]:
     """Run one source -> score -> timeline cycle for local/VPS schedulers."""
 
+    artifact_dir = SOURCE_RUN_ARTIFACT.parent
+    started_at = _utc_now()
+    lock_path = artifact_dir / "run_cycle.lock"
+    lock_fd = _acquire_cycle_lock(lock_path, started_at)
+    if lock_fd is None:
+        completed_at = _utc_now()
+        error = {
+            "phase": "cycle",
+            "status": "failed",
+            "code": "cycle_overlap_blocked",
+            "message": f"Another run-cycle appears active; lock exists at {_artifact_ref(lock_path)}",
+        }
+        write_liveness_artifact(
+            artifact_dir,
+            last_cycle_started=started_at,
+            last_cycle_completed=completed_at,
+            last_error=canonical_json(error),
+        )
+        return {
+            "status": "failed",
+            "command": "run-cycle",
+            "mode": _selected_mode(dry_run, mode) or "blocked",
+            "backend": backend,
+            "source_status": "skipped",
+            "score_status": "skipped",
+            "timeline_status": "skipped",
+            "closed_loop_status": "skipped",
+            "closed_loop": None,
+            "source_observation_count": None,
+            "scored_candidate_count": None,
+            "timeline_item_count": None,
+            "timeline_out": str(timeline_out),
+            "rolling_store_ref": str(store_path) if _selected_mode(dry_run, mode) == "manual-smoke" else None,
+            "production_connector_ready": False,
+            "raw_secret_findings": [],
+            "errors": [error],
+        }
+
+    try:
+        write_liveness_artifact(artifact_dir, last_cycle_started=started_at)
+        result = _run_cycle_inner(
+            source_config=source_config,
+            score_config=score_config,
+            fixtures_dir=fixtures_dir,
+            timeline_out=timeline_out,
+            dry_run=dry_run,
+            mode=mode,
+            backend=backend,
+            store_path=store_path,
+            refetch_fn=refetch_fn,
+        )
+        completed_at = _utc_now()
+        if result.get("status") == "ok":
+            write_liveness_artifact(
+                artifact_dir,
+                last_cycle_completed=completed_at,
+                last_success=completed_at,
+            )
+        else:
+            write_liveness_artifact(
+                artifact_dir,
+                last_cycle_completed=completed_at,
+                last_error=canonical_json({"status": result.get("status"), "errors": result.get("errors", [])}),
+            )
+        return result
+    except Exception as exc:
+        write_liveness_artifact(
+            artifact_dir,
+            last_cycle_completed=_utc_now(),
+            last_error=canonical_json({"status": "failed", "code": type(exc).__name__, "message": str(exc)}),
+        )
+        raise
+    finally:
+        _release_cycle_lock(lock_fd, lock_path)
+
+
+def _run_cycle_inner(
+    *,
+    source_config: Path,
+    score_config: Path,
+    fixtures_dir: Path,
+    timeline_out: Path,
+    dry_run: bool,
+    mode: str | None,
+    backend: str,
+    store_path: Path,
+    refetch_fn: Any = None,
+) -> dict[str, Any]:
+    """Run one source -> score -> timeline cycle after runtime gates pass."""
+
     selected_mode = _selected_mode(dry_run, mode)
     source_result = run_sources(source_config, dry_run=dry_run, mode=selected_mode, backend=backend)
     score_result: dict[str, Any] | None = None
@@ -268,6 +360,28 @@ def _prepare_rolling_cycle(store_path: Path) -> dict[str, Any]:
             "registered_candidate_count": len(candidates),
         },
     }
+
+
+def _acquire_cycle_lock(lock_path: Path, started_at: str) -> int | None:
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        return None
+    payload = canonical_json({"pid": os.getpid(), "started_at": started_at}) + "\n"
+    os.write(fd, payload.encode("utf-8"))
+    os.fsync(fd)
+    return fd
+
+
+def _release_cycle_lock(lock_fd: int, lock_path: Path) -> None:
+    try:
+        os.close(lock_fd)
+    finally:
+        try:
+            lock_path.unlink()
+        except FileNotFoundError:
+            pass
 
 
 def _artifact_ref(path: Path) -> str:

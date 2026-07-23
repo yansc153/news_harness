@@ -1,6 +1,16 @@
+#!/usr/bin/env node
+import fs from "node:fs/promises";
+import path from "node:path";
+import process from "node:process";
+
 async function jsonRows(page, maxRows) {
   const items = [];
   let maxId = "-1";
+  // Xueqiu 热门不会因刷新或 tab 切换更新；真实分页来自持续下滑。
+  for (let i = 0; i < 6; i += 1) {
+    await page.mouse.wheel(0, 1100);
+    await page.waitForTimeout(500);
+  }
   for (let p = 0; p < 5 && items.length < maxRows * 4; p += 1) {
     const url = "https://xueqiu.com/statuses/hot/list.json?since_id=-1&max_id=" + maxId + "&size=20";
     try {
@@ -48,15 +58,11 @@ async function jsonRows(page, maxRows) {
   return uniqRows(rows).filter((row) => row.text.length >= 20).slice(0, maxRows);
 }
 
-#!/usr/bin/env node
-import fs from "node:fs/promises";
-import path from "node:path";
-import process from "node:process";
-
 const SECTIONS = {
   xueqiu_hot: "最新",
   xueqiu_daren: "达人",
 };
+const MIN_CONFIRMED_XUEQIU_ROWS = 5;
 
 function arg(name, fallback = null) {
   const index = process.argv.indexOf(name);
@@ -352,6 +358,12 @@ try {
   }
   if (!outputRows.length) {
     fail("xueqiu_detail_required", "Xueqiu rows did not confirm second-level full text");
+  }
+  if (outputRows.length < MIN_CONFIRMED_XUEQIU_ROWS) {
+    fail(
+      "xueqiu_min_rows_not_met",
+      `Xueqiu ${source} confirmed ${outputRows.length} full-text rows; minimum is ${MIN_CONFIRMED_XUEQIU_ROWS}`,
+    );
   }
   await fs.mkdir(path.dirname(out), { recursive: true });
   await fs.writeFile(out, JSON.stringify({
