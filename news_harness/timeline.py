@@ -412,6 +412,10 @@ def generate_timeline_feed(fixtures_dir: Path, out_path: Path, schema_path: Path
             "production_connector_ready": False,
             **manual_metadata,
         }
+        xueqiu_only_cycle = all(
+            isinstance(row, dict) and row.get("source") == "xueqiu_targeted"
+            for row in (manual_metadata.get("source_statuses") or [])
+        ) and bool(manual_metadata.get("source_statuses"))
         feed["source_refs"].extend(
             ref
             for ref in [
@@ -427,7 +431,7 @@ def generate_timeline_feed(fixtures_dir: Path, out_path: Path, schema_path: Path
         fixture_item_count = len(feed["items"])
         if manual_items:
             compacted_failed_items = compact_failed_timeline_items(manual_items)
-            prior_items = [
+            prior_items = [] if xueqiu_only_cycle else [
                 *_load_timeline_feed_items(TIMELINE_FEED_ARTIFACT),
                 *_load_timeline_feed_items(out_path),
             ]
@@ -439,7 +443,7 @@ def generate_timeline_feed(fixtures_dir: Path, out_path: Path, schema_path: Path
             feed["manual_smoke"]["compacted_failed_item_count"] = len(compacted_failed_items)
             write_manual_timeline_store(feed["items"], feed["manual_smoke"], compacted_failed_items)
         else:
-            prior_items = [
+            prior_items = [] if xueqiu_only_cycle else [
                 *_load_timeline_feed_items(TIMELINE_FEED_ARTIFACT),
                 *_load_timeline_feed_items(out_path),
             ]
