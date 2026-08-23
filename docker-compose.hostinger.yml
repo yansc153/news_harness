@@ -4,10 +4,8 @@
 
 services:
   app:
-    build:
-      # Deploy the reviewed single-source branch until it is merged to main.
-      context: https://github.com/yansc153/news_harness.git#codex/kaipanla-guided-xueqiu
-      dockerfile: Dockerfile
+    # Hostinger Docker Manager pulls this prebuilt VPS-local image.
+    image: news_harness-app:latest
     restart: unless-stopped
     expose:
       - "8765"
