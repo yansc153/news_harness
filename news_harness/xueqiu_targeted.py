@@ -27,6 +27,19 @@ def apply_comment_filter(rows: list[dict], *, min_comments: int) -> list[dict]:
     return [r for r in rows if int(r.get("reply_count") or r.get("comments") or 0) >= min_comments]
 
 
+def apply_analysis_filter(rows: list[dict], *, min_text_chars: int = 100) -> list[dict]:
+    """Keep medium-length analysis and reject short opinions or obvious replies."""
+    kept: list[dict] = []
+    for row in rows:
+        text = _strip_html(row.get("description") or row.get("text") or "")
+        if len(text) < max(1, int(min_text_chars)):
+            continue
+        if re.match(r"^(?:回复|转发|引用|@)\s*", text):
+            continue
+        kept.append(row)
+    return kept
+
+
 def _strip_html(text: str) -> str:
     text = re.sub(r"<[^>]+>", " ", str(text or ""))
     text = text.replace("&nbsp;", " ").replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
@@ -176,12 +189,14 @@ def fetch_stock_discussions(
     stocks: list[dict],
     *,
     min_comments: int = 10,
+    min_text_chars: int = 100,
     per_stock_limit: int = 20,
 ) -> tuple[list[dict], list[dict]]:
     """Compatibility entrypoint returning observations and structured errors."""
     result = collect_stock_discussions(
         stocks,
         min_comments=min_comments,
+        min_text_chars=min_text_chars,
         per_stock_limit=per_stock_limit,
     )
     return result["observations"], result["structured_errors"]
@@ -191,6 +206,7 @@ def collect_stock_discussions(
     stocks: list[dict],
     *,
     min_comments: int = 10,
+    min_text_chars: int = 100,
     per_stock_limit: int = 20,
 ) -> dict[str, Any]:
     """Fetch all targets and return observations plus auditable collection counts."""
@@ -237,7 +253,8 @@ def collect_stock_discussions(
         collection_meta = next((row.get("__collection_meta__") for row in rows if isinstance(row, dict) and row.get("__collection_meta__")), None)
         rows = [row for row in rows if not (isinstance(row, dict) and row.get("__collection_meta__"))]
         raw_row_count += int(collection_meta.get("raw_row_count", len(rows))) if isinstance(collection_meta, dict) else len(rows)
-        filtered = apply_comment_filter(rows, min_comments=min_comments)
+        comment_filtered = apply_comment_filter(rows, min_comments=min_comments)
+        filtered = apply_analysis_filter(comment_filtered, min_text_chars=min_text_chars)
         threshold_pass_count += int(collection_meta.get("threshold_pass_count", len(filtered))) if isinstance(collection_meta, dict) else len(filtered)
         before_symbol = len(all_obs)
         for row in filtered:
@@ -252,6 +269,8 @@ def collect_stock_discussions(
             "status": "ok" if len(all_errors) == symbol_error_start else "failed",
             "raw_row_count": int(collection_meta.get("raw_row_count", len(rows))) if isinstance(collection_meta, dict) else len(rows),
             "threshold_pass_count": len(filtered),
+            "analysis_pass_count": len(filtered),
+            "analysis_rejected_count": len(comment_filtered) - len(filtered),
             "observation_count": len(all_obs) - before_symbol,
             "error_count": len(all_errors) - symbol_error_start,
         })

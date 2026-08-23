@@ -249,6 +249,7 @@ def _fetch_xueqiu_targeted(source_config: dict[str, Any]) -> tuple[list[dict[str
     collection_result = collect_stock_discussions(
         stocks,
         min_comments=int(targeting_config["min_comments"]),
+        min_text_chars=int(targeting_config.get("min_text_chars", 100)),
         per_stock_limit=int(source_config.get("batch_limit") or 20),
     )
     observations = collection_result["observations"]

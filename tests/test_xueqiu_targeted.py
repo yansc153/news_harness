@@ -3,6 +3,7 @@
 import unittest
 
 from news_harness.xueqiu_targeted import (
+    apply_analysis_filter,
     apply_comment_filter,
     deduplicate_observations,
     map_discussion_row_to_observation,
@@ -20,6 +21,17 @@ class TestApplyCommentFilter(unittest.TestCase):
     def test_empty_rows_ok(self):
         passed = apply_comment_filter([], min_comments=10)
         self.assertEqual(passed, [])
+
+
+class TestApplyAnalysisFilter(unittest.TestCase):
+    def test_rejects_short_and_reply_only_rows(self):
+        rows = [
+            {"id": "short", "text": "二板分歧，能成妖吗"},
+            {"id": "reply", "text": "回复 @用户：" + "这是一段足够长但仍然是回复的内容。" * 8},
+            {"id": "analysis", "text": "基本面与订单变化值得继续跟踪：" + "这是一段中等长度的逻辑分析。" * 8},
+        ]
+        passed = apply_analysis_filter(rows, min_text_chars=100)
+        self.assertEqual([row["id"] for row in passed], ["analysis"])
 
 
 class TestMapDiscussionRow(unittest.TestCase):

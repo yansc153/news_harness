@@ -6,6 +6,7 @@
   "max_stocks_per_theme": 3,
   "max_stocks_total": 12,
   "min_comments": 10,
+  "min_text_chars": 100,
   "request_delay_seconds": 1,
   "timeout_seconds": 15
 }
