@@ -20,6 +20,7 @@ mkdir -p "$(dirname "$FEED_PATH")"
 CYCLE_MODE="${NEWS_HARNESS_CYCLE_MODE:-manual-smoke}"
 CYCLE_BACKEND="${NEWS_HARNESS_CYCLE_BACKEND:-direct-cli}"
 CYCLE_TIMEOUT_SECONDS="${NEWS_HARNESS_CYCLE_TIMEOUT_SECONDS:-1500}"
+CYCLE_INTERVAL_SECONDS="${NEWS_HARNESS_CYCLE_INTERVAL_SECONDS:-3600}"
 SITE_PORT="${NEWS_HARNESS_SITE_PORT:-8765}"
 
 if [ "$CYCLE_MODE" = "manual-smoke" ]; then
@@ -76,8 +77,8 @@ fi
             --mode "$CYCLE_MODE" \
             --backend "$CYCLE_BACKEND" \
             2>&1 || echo "  [cycle] exited with code $?"
-        echo "  [cycle] $(date -Iseconds) done. sleeping 30m..."
-        sleep 1800
+        echo "  [cycle] $(date -Iseconds) done. sleeping ${CYCLE_INTERVAL_SECONDS}s..."
+        sleep "$CYCLE_INTERVAL_SECONDS"
     done
 ) &
 CYCLE_PID=$!

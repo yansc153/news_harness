@@ -10,8 +10,10 @@ V1: Outcome-first prediction harness. Fetch → Predict (1h/4h) → Revisit → 
 
 Not a news aggregator, content farm, publishing system, or investment advice product.
 
-## Architecture (V1 outcome-first)
+## Architecture (V2 kaipanla-guided)
 
+- Discovery: Kaipanla API generates hourly TargetSet (max 12 stocks) from market signals (themes, limit-up, bidding anomalies).
+- Collection: Per-stock Xueqiu discussion crawl with fixed comment threshold >= 10. Never auto-relaxed.
 - Windows: 1h early_momentum, 4h primary_outcome. 24h audit (sampled only).
 - Evaluator: deterministic (`evaluator.py`). `delta > 0` is NOT a win. Low-base protection, platform baselines, connector quality gates applied before learning.
 - Rulebook (V2): shadow-only. Consumes `OutcomeEvaluation`, never raw growth. Compute-and-log only; blocked from production scoring.

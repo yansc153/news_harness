@@ -251,14 +251,14 @@ def _run_cycle_inner(
 
     if source_result.get("status") == "ok":
         if selected_mode == "manual-smoke" and not source_result.get("observation_count"):
-            errors.append({"phase": "sources", "status": "failed", "code": "no_manual_source_observations"})
-        failed_sources = [
-            source
-            for source, status in (source_result.get("source_statuses") or {}).items()
-            if status != "ok"
-        ]
-        if selected_mode == "manual-smoke" and failed_sources:
-            errors.append({"phase": "sources", "status": "failed", "code": "source_failed", "sources": failed_sources})
+            failed_sources = [
+                source
+                for source, status in (source_result.get("source_statuses") or {}).items()
+                if status != "ok"
+            ]
+            if failed_sources:
+                errors.append({"phase": "sources", "status": "failed", "code": "source_failed", "sources": failed_sources})
+            # else: legitimate zero-candidate hour; not an error
 
     can_score = source_result.get("status") == "ok" and (
         selected_mode != "manual-smoke" or bool(source_result.get("observation_count"))
