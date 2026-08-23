@@ -38,6 +38,7 @@ cycle, then checks freshness and required sources.
 ## V2 Kaipanla-Guided Mode (current)
 
 The production source is now `xueqiu_targeted`: Kaipanla discovers active themes and stocks, then Xueqiu is crawled per-stock with a fixed comment threshold (default 10). The cycle runs hourly.
+KPL-46 remains disabled because the restored historical request contract returns live `errcode=1020`; KPL-79/80 remain disabled until a non-empty auction-window schema is observed. KPL-47, KPL-78, and KPL-94 are dynamically parameterized from the current stock/theme set instead of using historical fixture IDs.
 
 ```bash
 python3 -m news_harness run-cycle \
@@ -63,11 +64,9 @@ python3 -m news_harness healthcheck \
   --revisit artifacts/manual_smoke/latest/revisit_schedule.json \
   --outcome artifacts/manual_smoke/latest/outcome.json \
   --eval artifacts/manual_smoke/latest/eval.json \
+  --target-set artifacts/manual_smoke/latest/hourly_target_set.json \
   --max-age-minutes 90 \
-  --require-source x_list \
-  --require-source reddit \
-  --require-source xueqiu_hot \
-  --require-source xueqiu_daren
+  --require-source xueqiu_targeted
 ```
 
 If healthcheck fails, start with `docs/OPERATIONS.md`. The expected launch
@@ -176,7 +175,7 @@ runtime: shadow batch run, append/update store, 12h/24h revisit registration,
 and rolling feed export. The store keeps a 120-hour / five-day window; expired
 store items are excluded from exported `timeline_feed.json`.
 
-Rolling source cadence is fixture-enforced:
+The legacy fixture replay keeps its historical cadence for regression tests only:
 
 - X list: every 1 hour, max 10 items per source run.
 - Xueqiu `热门` and `达人`: every 30 minutes, max 10 items per source run.
@@ -229,7 +228,7 @@ python3 -m news_harness run-cycle \
 ```
 
 The cycle performs one complete source -> score -> timeline pass and is intended
-to be triggered every 30 minutes by systemd or cron. It also runs the closed-loop
+to be triggered every hour by systemd or cron. It also runs the closed-loop
 revisit/eval phase: dry-run mode writes fixture-backed source/scoring/revisit/
 outcome/eval artifacts, while manual-smoke mode collects only due revisit tasks
 and leaves future 24h outcomes pending. See
@@ -245,40 +244,32 @@ python3 -m news_harness healthcheck \
   --revisit artifacts/manual_smoke/latest/revisit_schedule.json \
   --outcome artifacts/manual_smoke/latest/outcome.json \
   --eval artifacts/manual_smoke/latest/eval.json \
+  --target-set artifacts/manual_smoke/latest/hourly_target_set.json \
   --max-age-minutes 90 \
-  --require-source x_list \
-  --require-source reddit \
-  --require-source xueqiu_hot \
-  --require-source xueqiu_daren
+  --require-source xueqiu_targeted
 ```
 
 Example systemd unit/timer files are in `configs/systemd/`.
 
 Healthcheck is a closed-loop gate. It fails when predictions have no revisit
 schedule, due revisit tasks have no outcome, outcomes have no eval join, the
-feed is stale, high-scoring items lack image evidence, required sources fail, or
+feed is stale, required sources fail, the current Target Set is unhealthy, or
 raw secret material appears in artifacts.
 
 Promotion is always shadow-first. Fixture, manual-smoke, and fast-feedback eval
 artifacts must not automatically promote prompts, scoring rules, models, or
 connector behavior.
 
-The recommended real-processing backend is now `direct-cli`. It uses
-`twitter-cli` for the X list and `rdt-cli` for Reddit, avoiding the
-Agent-Reach route. Xueqiu can be diagnosed locally through OpenCLI Browser
-Bridge or a repo-external Chrome DOM export, but that bridge is not the future
-VPS runtime. The production-shaped Xueqiu path is a source-specific headless
-browser connector with a repo-external storage-state/session file, strict
-read-only DOM extraction, and structured failure on login challenge, captcha,
-WAF, or parse failure. `scripts/xueqiu_headless_export.mjs` is the first
-headless-ready extraction surface; `run-sources --backend direct-cli` can call it
-when `NEWS_HARNESS_XUEQIU_HEADLESS=1`. The Docker runtime also uses
-`NEWS_HARNESS_X_HEADLESS=1` for the X list when `twitter-cli` is unavailable.
-See `docs/direct-cli-real-processing-runbook.md`.
+The real-processing backend is `direct-cli`: Kaipanla discovers the current
+themes and target stocks, then `xueqiu_targeted` reads only those stocks. On VPS,
+the primary Xueqiu path is `scripts/xueqiu_targeted_export.mjs` with a
+repo-external Playwright storage-state file. OpenCLI is a local diagnostic
+fallback. Authentication, captcha, WAF, schema drift, and detail-fetch failures
+remain structured failures.
 
-The production source config is `configs/all_source_runner.json`. It targets
-the X list, Reddit's 20-subreddit pool, and Xueqiu `热门` / `达人`; `争议讨论`
-stays out until the connector is fully supported and verified.
+The production source config is `configs/all_source_runner.json`. Its only active
+content source is `xueqiu_targeted`; X list, Reddit, and generic Xueqiu
+`热门` / `达人` remain legacy fixture material and are not production inputs.
 
 `fixtures/sample_shadow_source_fetch_result.json` is the MVP shadow-source
 contract for the future X list / Xueqiu runner. It models one X list item and

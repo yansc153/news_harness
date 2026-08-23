@@ -27,7 +27,7 @@
       "two_level_crawl": true,
       "js_render_required": true,
       "targeting_config_ref": "configs/hourly_targeting.v1.json"
-    },
+    }
   ],
   "forbidden_actions": [
     "login",

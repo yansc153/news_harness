@@ -1,0 +1,119 @@
+{
+  "info": {
+    "title": "Kaipanla upstream contract: apparticle.longhuvip.com",
+    "version": "2026-08-20"
+  },
+  "openapi": "3.1.2",
+  "paths": {
+    "/w1/api/index.php": {
+      "get": {
+        "operationId": "kaipanla_apparticle_longhuvip_com_w1_api_index_php_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "DeviceID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Index",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "PhoneOSNew",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Token",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Type",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "UserID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "VerSion",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "a",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "apiv",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "c",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "st",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed upstream response; capability-specific schema is validated by cases"
+          }
+        },
+        "summary": "Kaipanla physical GET operation on apparticle.longhuvip.com",
+        "x-huajiao-capability-ids": [
+          "KPL-95",
+          "KPL-96"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://apparticle.longhuvip.com"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "Date": {
+      "type": "string"
+    },
+    "DateList": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "List": {
+      "items": {
+        "anyOf": [
+          {
+            "items": {
+              "type": [
+                "integer",
+                "string"
+              ]
+            },
+            "type": "array"
+          },
+          {}
+        ]
+      },
+      "type": "array"
+    },
+    "State": {
+      "type": "integer"
+    },
+    "Sum_ZCC": {
+      "type": "string"
+    },
+    "Sum_ZCJE": {
+      "type": [
+        "integer",
+        "string"
+      ]
+    },
+    "ZCJE": {
+      "type": "integer"
+    },
+    "ZCZB": {
+      "type": "integer"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "Date",
+    "DateList",
+    "List",
+    "State",
+    "Sum_ZCJE",
+    "errcode",
+    "ttag"
+  ],
+  "title": "KPL-89 observed response",
+  "type": "object"
+}

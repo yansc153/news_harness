@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://news-harness.local/schemas/v1/hourly_target_set.schema.json",
+  "title": "HourlyTargetSet",
+  "type": "object",
+  "required": [
+    "object_type",
+    "cycle_id",
+    "generated_at",
+    "endpoint_ids_called",
+    "endpoint_results",
+    "themes_discovered",
+    "target_stocks",
+    "stock_count",
+    "structured_errors",
+    "status",
+    "output_hash"
+  ],
+  "properties": {
+    "object_type": {"const": "HourlyTargetSet"},
+    "cycle_id": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "endpoint_ids_called": {"type": "array", "items": {"type": "string"}},
+    "endpoint_results": {"type": "array", "items": {"type": "object"}},
+    "themes_discovered": {"type": "array", "items": {"type": "object"}},
+    "target_stocks": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": ["symbol"],
+        "properties": {
+          "symbol": {"type": "string", "pattern": "^(SH|SZ|BJ)[0-9]{5,6}$"},
+          "stock_code": {"type": "string"},
+          "stock_name": {"type": "string"},
+          "theme_ids": {"type": "array", "items": {"type": "string"}},
+          "signal_sources": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "stock_count": {"type": "integer", "minimum": 0, "maximum": 12},
+    "structured_errors": {"type": "array", "items": {"type": "object"}},
+    "status": {"enum": ["ok", "no_targets", "partial_failure"]},
+    "collection": {"type": "object"},
+    "output_hash": {"type": "string", "minLength": 32}
+  },
+  "additionalProperties": true
+}

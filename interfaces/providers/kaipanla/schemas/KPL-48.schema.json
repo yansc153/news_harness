@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "List": {
+      "items": {
+        "anyOf": [
+          {},
+          {
+            "additionalProperties": false,
+            "properties": {
+              "Boom_ZS": {
+                "type": "string"
+              },
+              "Date": {
+                "type": "string"
+              },
+              "GNSM": {
+                "type": "string"
+              },
+              "Group_Str": {
+                "type": "string"
+              },
+              "PZSCode": {
+                "type": "string"
+              },
+              "QitaPos": {
+                "type": "integer"
+              },
+              "QitaStr": {
+                "type": "string"
+              },
+              "Reason": {
+                "type": "string"
+              },
+              "SCDW": {
+                "type": "string"
+              },
+              "SCLT": {
+                "type": "string"
+              },
+              "Type": {
+                "type": "string"
+              },
+              "ZSCode": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "Boom_ZS",
+              "Date",
+              "GNSM",
+              "Group_Str",
+              "PZSCode",
+              "QitaPos",
+              "QitaStr",
+              "Reason",
+              "SCDW",
+              "SCLT",
+              "Type",
+              "ZSCode"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "type": "array"
+    },
+    "StockID": {
+      "type": "string"
+    },
+    "Time": {
+      "type": "integer"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "List",
+    "Time",
+    "errcode",
+    "ttag"
+  ],
+  "title": "KPL-48 observed response",
+  "type": "object"
+}

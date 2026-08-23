@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "date": {
+      "type": "string"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "list": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "LBstatus": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "content2": {
+            "type": "string"
+          },
+          "plate_type": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          },
+          "status_color": {
+            "type": "integer"
+          },
+          "stock_name": {
+            "type": "string"
+          },
+          "stockid": {
+            "type": "string"
+          },
+          "time": {
+            "type": "integer"
+          },
+          "zf": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "LBstatus",
+          "content",
+          "content2",
+          "plate_type",
+          "status",
+          "status_color",
+          "stock_name",
+          "stockid",
+          "time",
+          "zf"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "num": {
+      "type": "integer"
+    },
+    "time": {
+      "type": "integer"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "date",
+    "errcode",
+    "list",
+    "num",
+    "time",
+    "ttag"
+  ],
+  "title": "KPL-70 observed response",
+  "type": "object"
+}

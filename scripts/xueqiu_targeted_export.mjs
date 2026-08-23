@@ -14,6 +14,7 @@
  */
 
 import fs from "node:fs/promises";
+import path from "node:path";
 import process from "node:process";
 
 function arg(name, fallback = null) {
@@ -28,6 +29,7 @@ function fail(code, message) {
 
 const symbol = arg("--symbol", "");
 const limit = Math.min(100, Math.max(1, Number(arg("--limit", "20"))));
+const minComments = Math.max(0, Number(arg("--min-comments", "10")));
 const out = arg("--out");
 const storageStatePath = arg("--storage-state") || process.env.NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE;
 
@@ -71,7 +73,12 @@ try {
     userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
   };
   if (storageStatePath) {
-    try { await fs.access(storageStatePath); contextOptions.storageState = storageStatePath; } catch {}
+    try {
+      await fs.access(storageStatePath);
+      contextOptions.storageState = storageStatePath;
+    } catch {
+      fail("storage_state_unreadable", `Configured storage state is not readable: ${storageStatePath}`);
+    }
   }
   const context = await browser.newContext(contextOptions);
   await context.addInitScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
@@ -83,12 +90,14 @@ try {
 
   // Check for auth challenge
   const bodyText = await page.locator("body").innerText({ timeout: 3000 }).catch(() => "");
-  if (/登录|验证码|安全验证|访问受限|滑块|captcha|challenge/i.test(bodyText)) {
+  if (/验证码|安全验证|访问受限|滑块|captcha|challenge/i.test(bodyText)) {
     fail("auth_or_challenge_required", "Xueqiu page indicates auth/challenge state");
   }
 
   // Fetch discussions via the symbol API from within the page context
   const rows = [];
+  let rawRowCount = 0;
+  let thresholdPassCount = 0;
   let pageNum = 1;
   const pageSize = Math.min(limit, 20);
 
@@ -125,24 +134,66 @@ try {
       fail("auth_required", `HTTP ${response.status}: login cookies may be expired`);
     }
     if (response.error || response.status !== 200) {
-      break; // Stop pagination but keep what we have
+      fail(
+        response.error || "http_error",
+        `page=${pageNum} status=${response.status} ${(response.snippet || "").slice(0, 200)}`,
+      );
     }
 
     const list = response.json?.list || response.json?.data?.list || [];
     if (!list.length) break;
+    rawRowCount += list.length;
 
     for (const item of list) {
       if (rows.length >= limit) break;
-      const user = item.user || {};
+      const replyCount = Number(item.reply_count || 0);
+      if (replyCount < minComments) continue;
+      thresholdPassCount += 1;
+
+      const detailResponse = await page.evaluate(async (statusId) => {
+        try {
+          const url = new URL("https://xueqiu.com/statuses/show.json");
+          url.searchParams.set("id", statusId);
+          const r = await fetch(url, {
+            credentials: "include",
+            headers: { "accept": "application/json, text/plain, */*", "x-requested-with": "XMLHttpRequest" },
+          });
+          const text = await r.text();
+          return { status: r.status, text };
+        } catch (e) {
+          return { status: 0, error: "detail_fetch_exception", text: e.message };
+        }
+      }, String(item.id || ""));
+      if (detailResponse.status === 401 || detailResponse.status === 403) {
+        fail("auth_required", `Detail HTTP ${detailResponse.status} for status ${item.id}`);
+      }
+      if (detailResponse.error || detailResponse.status !== 200) {
+        fail(detailResponse.error || "detail_http_error", `status=${detailResponse.status} id=${item.id}`);
+      }
+      let detail;
+      try {
+        detail = JSON.parse(detailResponse.text);
+      } catch {
+        fail("detail_non_json_response", `Cannot parse detail for status ${item.id}`);
+      }
+      if (detail?.error_code || (detail?.errcode && String(detail.errcode) !== "0")) {
+        fail("detail_business_error", `Detail API rejected status ${item.id}`);
+      }
+
+      const full = detail?.status || detail?.data || detail || item;
+      const fullText = String(full.description || full.text || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      if (!fullText) fail("detail_text_missing", `Detail API returned no full text for status ${item.id}`);
+      const user = full.user || item.user || {};
       const images = [];
       for (const field of ["firstImg", "cover_pic"]) {
-        const val = item[field];
+        const val = full[field] || item[field];
         if (typeof val === "string" && val.startsWith("http")) {
           images.push(...val.split(",").map(u => u.trim()).filter(u => u.startsWith("http")));
         }
       }
-      if (Array.isArray(item.image_info_list)) {
-        for (const img of item.image_info_list) {
+      const imageInfoList = full.image_info_list || item.image_info_list;
+      if (Array.isArray(imageInfoList)) {
+        for (const img of imageInfoList) {
           const url = img?.url || img?.originUrl;
           if (url && url.startsWith("http")) images.push(url);
         }
@@ -150,14 +201,16 @@ try {
       rows.push({
         id: String(item.id || ""),
         user_id: String(user.id || ""),
-        text: String(item.description || item.text || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
-        created_at: item.created_at,
-        reply_count: Number(item.reply_count || 0),
-        fav_count: Number(item.fav_count || 0),
-        retweet_count: Number(item.retweet_count || 0),
+        text: fullText,
+        created_at: full.created_at || item.created_at,
+        reply_count: Number(full.reply_count ?? replyCount),
+        fav_count: Number(full.fav_count ?? item.fav_count ?? 0),
+        retweet_count: Number(full.retweet_count ?? item.retweet_count ?? 0),
         author: String(user.screen_name || ""),
         url: user.id && item.id ? `https://xueqiu.com/${user.id}/${item.id}` : "",
         images,
+        detail_fetch_status: "api_full_text_observed",
+        full_text_status: "full_text_observed",
       });
     }
 
@@ -166,11 +219,16 @@ try {
     await page.waitForTimeout(1500 + Math.floor(Math.random() * 2000));
   }
 
-  await fs.mkdir(require("path").dirname(out), { recursive: true });
+  await fs.mkdir(path.dirname(out), { recursive: true });
   await fs.writeFile(out, JSON.stringify({
     export_schema_version: "xueqiu_targeted_headless.v1",
     symbol,
     fetched_at: new Date().toISOString(),
+    collection: {
+      raw_row_count: rawRowCount,
+      threshold_pass_count: thresholdPassCount,
+      comment_threshold: minComments,
+    },
     rows,
   }, null, 2));
 

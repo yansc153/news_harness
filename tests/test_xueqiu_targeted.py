@@ -4,6 +4,7 @@ import unittest
 
 from news_harness.xueqiu_targeted import (
     apply_comment_filter,
+    deduplicate_observations,
     map_discussion_row_to_observation,
     merge_stock_results,
 )
@@ -31,6 +32,7 @@ class TestMapDiscussionRow(unittest.TestCase):
             "reply_count": 15,
             "fav_count": 42,
             "retweet_count": 3,
+            "full_text_status": "full_text_observed",
             "user": {"screen_name": "analyst_wang"},
         }
         obs = map_discussion_row_to_observation(
@@ -43,8 +45,32 @@ class TestMapDiscussionRow(unittest.TestCase):
 
     def test_missing_user_handled(self):
         row = {"id": "12345", "text": "text", "reply_count": 12}
-        obs = map_discussion_row_to_observation(row, symbol="SZ000001", stock_name="test")
-        self.assertIsNotNone(obs["observation_id"])
+        with self.assertRaisesRegex(ValueError, "canonical post URL"):
+            map_discussion_row_to_observation(row, symbol="SZ000001", stock_name="test")
+
+    def test_headless_images_and_canonical_url_are_preserved(self):
+        row = {
+            "id": "12345",
+            "url": "https://xueqiu.com/999/12345",
+            "text": "analysis",
+            "reply_count": 12,
+            "images": ["https://example.com/original.jpg"],
+            "full_text_status": "full_text_observed",
+        }
+        obs = map_discussion_row_to_observation(row, symbol="SH600519", stock_name="贵州茅台")
+        self.assertEqual(obs["source_url"], row["url"])
+        self.assertEqual(obs["image_refs"][0]["url"], row["images"][0])
+        self.assertEqual(obs["source_status_id"], "12345")
+
+
+class TestDeduplicateObservations(unittest.TestCase):
+    def test_duplicate_status_merges_target_refs(self):
+        first = {"source_status_id": "1", "target_symbol": "SH600000", "target_symbols": ["SH600000"], "target_theme_refs": ["AI"]}
+        second = {"source_status_id": "1", "target_symbol": "SZ000001", "target_symbols": ["SZ000001"], "target_theme_refs": ["医药"]}
+        merged = deduplicate_observations([first, second])
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(merged[0]["target_symbols"], ["SH600000", "SZ000001"])
+        self.assertEqual(merged[0]["target_theme_refs"], ["AI", "医药"])
 
 
 class TestMergeResults(unittest.TestCase):

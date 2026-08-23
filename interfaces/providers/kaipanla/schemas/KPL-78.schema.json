@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "Date": {
+      "type": "string"
+    },
+    "List": {
+      "items": {
+        "type": "number"
+      },
+      "type": "array"
+    },
+    "Max": {
+      "type": "string"
+    },
+    "Min": {
+      "type": "string"
+    },
+    "Time": {
+      "type": "integer"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "Date",
+    "List",
+    "Max",
+    "Min",
+    "Time",
+    "errcode",
+    "ttag"
+  ],
+  "title": "KPL-78 observed response",
+  "type": "object"
+}

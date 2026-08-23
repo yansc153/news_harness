@@ -7,7 +7,7 @@
       "method": "GET",
       "path": "/w1/api/index.php",
       "query_template": {
-        "DeviceID": "f16b7c0e28a9d03",
+        "DeviceID": "",
         "Index": "0",
         "Order": "1",
         "PhoneOSNew": "1",
@@ -31,7 +31,7 @@
       "method": "GET",
       "path": "/w1/api/index.php",
       "query_template": {
-        "DeviceID": "f16b7c0e28a9d03",
+        "DeviceID": "",
         "Index": "0",
         "Order": "1",
         "PhoneOSNew": "1",
@@ -53,7 +53,7 @@
       "path": "/w1/api/index.php",
       "query_template": {
         "Date": "",
-        "DeviceID": "f16b7c0e28a9d03",
+        "DeviceID": "",
         "Index": "0",
         "IsKZZType": "0",
         "IsZZ": "0",
@@ -100,7 +100,7 @@
       "method": "GET",
       "path": "/w1/api/index.php",
       "query_template": {
-        "DeviceID": "f16b7c0e28a9d03",
+        "DeviceID": "",
         "Index": "0",
         "Order": "0",
         "PhoneOSNew": "1",
@@ -122,7 +122,7 @@
       "method": "GET",
       "path": "/w1/api/index.php",
       "query_template": {
-        "DeviceID": "f16b7c0e28a9d03",
+        "DeviceID": "",
         "Index": "0",
         "Order": "0",
         "PhoneOSNew": "1",
@@ -144,7 +144,7 @@
       "method": "GET",
       "path": "/w1/api/index.php",
       "query_template": {
-        "DeviceID": "f16b7c0e28a9d03",
+        "DeviceID": "",
         "Index": "0",
         "Order": "0",
         "PhoneOSNew": "1",
@@ -166,7 +166,7 @@
       "method": "GET",
       "path": "/w1/api/index.php",
       "query_template": {
-        "DeviceID": "f16b7c0e28a9d03",
+        "DeviceID": "",
         "Index": "0",
         "Order": "0",
         "PhoneOSNew": "1",
@@ -188,7 +188,7 @@
       "method": "GET",
       "path": "/w1/api/index.php",
       "query_template": {
-        "DeviceID": "f16b7c0e28a9d03",
+        "DeviceID": "",
         "Index": "0",
         "Order": "0",
         "PhoneOSNew": "1",
@@ -211,7 +211,7 @@
       "path": "/w1/api/index.php",
       "query_template": {
         "Date": "",
-        "DeviceID": "f16b7c0e28a9d03",
+        "DeviceID": "",
         "PhoneOSNew": "1",
         "PlateID": "801062",
         "VerSion": "5.20.0.2",
@@ -229,7 +229,7 @@
       "method": "GET",
       "path": "/w1/api/index.php",
       "query_template": {
-        "DeviceID": "f16b7c0e28a9d03",
+        "DeviceID": "",
         "PhoneOSNew": "1",
         "Token": "",
         "UserID": "",
@@ -248,7 +248,7 @@
       "method": "GET",
       "path": "/w1/api/index.php",
       "query_template": {
-        "DeviceID": "f16b7c0e28a9d03",
+        "DeviceID": "",
         "Index": "0",
         "IsLB": "0",
         "IsZT": "0",
@@ -276,7 +276,7 @@
       "method": "GET",
       "path": "/w1/api/index.php",
       "query_template": {
-        "DeviceID": "f16b7c0e28a9d03",
+        "DeviceID": "",
         "PhoneOSNew": "1",
         "StockID": "002931",
         "Token": "",

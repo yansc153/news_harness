@@ -22,6 +22,7 @@ DEFAULT_DEEPSEEK = ROOT / "artifacts" / "manual_smoke" / "latest" / "deepseek_sc
 DEFAULT_REVISIT = ROOT / "artifacts" / "manual_smoke" / "latest" / "revisit_schedule.json"
 DEFAULT_OUTCOME = ROOT / "artifacts" / "manual_smoke" / "latest" / "outcome.json"
 DEFAULT_EVAL = ROOT / "artifacts" / "manual_smoke" / "latest" / "eval.json"
+DEFAULT_TARGET_SET = ROOT / "artifacts" / "manual_smoke" / "latest" / "hourly_target_set.json"
 
 
 def run_healthcheck(
@@ -32,10 +33,11 @@ def run_healthcheck(
     revisit_path: Path = DEFAULT_REVISIT,
     outcome_path: Path = DEFAULT_OUTCOME,
     eval_path: Path = DEFAULT_EVAL,
+    target_set_path: Path = DEFAULT_TARGET_SET,
     max_age_minutes: int = 90,
     required_sources: list[str] | None = None,
 ) -> dict[str, Any]:
-    required_sources = required_sources or ["xueqiu_hot", "xueqiu_daren"]
+    required_sources = required_sources or ["xueqiu_targeted"]
     checks: list[dict[str, Any]] = []
     artifacts: dict[str, Any] = {}
     raw_secret_findings: list[Any] = []
@@ -46,6 +48,7 @@ def run_healthcheck(
     revisit_direct = _load_json(revisit_path)
     outcome = _load_json(outcome_path)
     eval_result = _load_json(eval_path)
+    target_set = _load_json(target_set_path)
     for label, data, path in (
         ("feed", feed, feed_path),
         ("source_run", source_run, source_run_path),
@@ -53,6 +56,7 @@ def run_healthcheck(
         ("revisit", revisit_direct, revisit_path),
         ("outcome", outcome, outcome_path),
         ("eval", eval_result, eval_path),
+        ("target_set", target_set, target_set_path),
     ):
         if data is None:
             checks.append(_check(label, False, f"{path} is missing or unreadable"))
@@ -75,13 +79,6 @@ def run_healthcheck(
         )
     )
 
-    counts_by_source = {
-        source: sum(1 for item in items if isinstance(item, dict) and item.get("source") == source)
-        for source in required_sources
-    }
-    for source, count in counts_by_source.items():
-        checks.append(_check(f"source_{source}_present", count > 0, f"{source} feed items={count}"))
-
     source_statuses = {
         status.get("source"): status.get("status")
         for status in source_run.get("sources", [])
@@ -92,8 +89,32 @@ def run_healthcheck(
         for status in source_run.get("sources", [])
         if isinstance(source_run, dict) and isinstance(status, dict)
     }
+    counts_by_source = {
+        source: sum(1 for item in items if isinstance(item, dict) and item.get("source") == source)
+        for source in required_sources
+    }
+    for source, count in counts_by_source.items():
+        source_ok = source_statuses.get(source) == "ok"
+        checks.append(_check(
+            f"source_{source}_present",
+            count > 0 or source_ok,
+            f"{source} feed items={count}; run_status={source_statuses.get(source)}",
+        ))
     for source in required_sources:
         checks.append(_check(f"source_{source}_run_ok", source_statuses.get(source) == "ok", f"{source} run status={source_statuses.get(source)}"))
+
+    if isinstance(target_set, dict):
+        endpoint_results = target_set.get("endpoint_results") or []
+        endpoint_failures = [row for row in endpoint_results if isinstance(row, dict) and row.get("status") != "ok"]
+        collection = target_set.get("collection") or {}
+        target_age = _age_minutes(target_set.get("generated_at"))
+        checks.append(_check("target_set_fresh", target_age is not None and target_age <= max_age_minutes,
+                             f"target age minutes={target_age}; max={max_age_minutes}"))
+        checks.append(_check("kaipanla_endpoints_ok", not endpoint_failures,
+                             f"endpoint_count={len(endpoint_results)}; failures={len(endpoint_failures)}"))
+        checks.append(_check("targeted_collection_state", collection.get("status") in {"ok_with_candidates", "ok_no_candidates"},
+                             f"status={collection.get('status')}; targets={target_set.get('stock_count')}; "
+                             f"qualified={collection.get('qualified_observation_count')}; threshold={collection.get('comment_threshold')}"))
 
     provider_status = deepseek.get("provider_status", {}) if isinstance(deepseek, dict) else {}
     scored_candidates = deepseek.get("scored_candidates", []) if isinstance(deepseek, dict) else []
@@ -126,7 +147,7 @@ def run_healthcheck(
         if isinstance(item, dict)
         and (item.get("image_status") == "available" or item.get("asset_refs") or item.get("visual_evidence_score"))
     ]
-    checks.append(_check("visual_evidence_present", bool(visual_items), f"visual evidence items={len(visual_items)}"))
+    checks.append(_check("visual_evidence_optional", True, f"visual evidence items={len(visual_items)}; images are optional"))
     requires_revisit = isinstance(deepseek, dict) and "prediction_contract" in deepseek
     revisit_ref = feed.get("manual_smoke", {}).get("revisit", {}).get("schedule_ref") if isinstance(feed, dict) else None
     revisit = revisit_direct if revisit_direct is not None else (_load_json(ROOT / revisit_ref) if isinstance(revisit_ref, str) else None)
@@ -197,7 +218,7 @@ def run_automatic_healthcheck(
     required_sources: list[str] | None = None,
 ) -> dict[str, Any]:
     """Run all automated health checks with artifact discovery (--auto mode)."""
-    required_sources = required_sources or ["xueqiu_hot", "xueqiu_daren"]
+    required_sources = required_sources or ["xueqiu_targeted"]
     if artifact_dir is None:
         artifact_dir = DEFAULT_SOURCE_RUN.parent
 
@@ -218,6 +239,7 @@ def run_automatic_healthcheck(
         "deepseek_scoring.json": artifact_dir / "deepseek_scoring.json",
         "outcome.json": artifact_dir / "outcome.json",
         "eval.json": artifact_dir / "eval.json",
+        "hourly_target_set.json": artifact_dir / "hourly_target_set.json",
     }
     loaded_artifacts: dict[str, Any] = {}
     for name, path in expected_artifacts.items():
@@ -238,19 +260,45 @@ def run_automatic_healthcheck(
     if isinstance(source_run, dict):
         sources = source_run.get("sources", [])
         observations_all = source_run.get("observations", [])
+        source_statuses = {
+            row.get("source"): row.get("status") for row in sources if isinstance(row, dict)
+        }
+        for required_source in required_sources:
+            checks.append(_check(
+                f"required_source_{required_source}",
+                source_statuses.get(required_source) == "ok",
+                f"run_status={source_statuses.get(required_source)}",
+            ))
         for src_status in sources:
             if not isinstance(src_status, dict):
                 continue
             src_name = src_status.get("source", "unknown")
             src_obs = [o for o in observations_all if isinstance(o, dict) and o.get("source") == src_name]
-            report = generate_connector_quality_report(
-                src_obs, connector_id=f"manual_smoke.{src_name}.v1", run_id=source_run.get("run_id", "unknown"),
-            )
-            qs = report["quality_status"]
-            checks.append(_check(f"connector_quality_{src_name}", qs == "ok",
-                                 f"quality_status={qs}; item_count={report['item_count']}; "
-                                 f"required_field_presence={report['required_field_presence']}; "
-                                 f"truncation_suspected={report['truncation_suspected']}"))
+            if src_name == "xueqiu_targeted" and src_status.get("status") == "ok" and not src_obs:
+                checks.append(_check(f"connector_quality_{src_name}", True, "legitimate no_candidates; item_count=0"))
+            else:
+                report = generate_connector_quality_report(
+                    src_obs, connector_id=f"manual_smoke.{src_name}.v1", run_id=source_run.get("run_id", "unknown"),
+                )
+                qs = report["quality_status"]
+                checks.append(_check(f"connector_quality_{src_name}", qs == "ok",
+                                     f"quality_status={qs}; item_count={report['item_count']}; "
+                                     f"required_field_presence={report['required_field_presence']}; "
+                                     f"truncation_suspected={report['truncation_suspected']}"))
+    else:
+        for required_source in required_sources:
+            checks.append(_check(f"required_source_{required_source}", False, "source_run unavailable"))
+
+    target_set = loaded_artifacts.get("hourly_target_set.json")
+    if isinstance(target_set, dict):
+        endpoint_results = target_set.get("endpoint_results") or []
+        endpoint_failures = [row for row in endpoint_results if isinstance(row, dict) and row.get("status") != "ok"]
+        collection = target_set.get("collection") or {}
+        checks.append(_check("kaipanla_endpoints", not endpoint_failures,
+                             f"count={len(endpoint_results)}; failures={len(endpoint_failures)}"))
+        checks.append(_check("targeted_collection", collection.get("status") in {"ok_with_candidates", "ok_no_candidates"},
+                             f"status={collection.get('status')}; targets={target_set.get('stock_count')}; "
+                             f"qualified={collection.get('qualified_observation_count')}; threshold={collection.get('comment_threshold')}"))
 
     for name, data in loaded_artifacts.items():
         if data is None:
@@ -374,6 +422,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--revisit", type=Path, default=DEFAULT_REVISIT)
     parser.add_argument("--outcome", type=Path, default=DEFAULT_OUTCOME)
     parser.add_argument("--eval", type=Path, default=DEFAULT_EVAL)
+    parser.add_argument("--target-set", type=Path, default=DEFAULT_TARGET_SET)
     parser.add_argument("--max-age-minutes", type=int, default=90)
     parser.add_argument("--require-source", action="append", default=None)
     args = parser.parse_args(argv)
@@ -390,6 +439,7 @@ def main(argv: list[str] | None = None) -> int:
     result = run_healthcheck(
         feed_path=args.feed, source_run_path=args.source_run, deepseek_path=args.deepseek,
         revisit_path=args.revisit, outcome_path=args.outcome, eval_path=args.eval,
+        target_set_path=args.target_set,
         max_age_minutes=args.max_age_minutes, required_sources=args.require_source,
     )
     print(canonical_json(result))

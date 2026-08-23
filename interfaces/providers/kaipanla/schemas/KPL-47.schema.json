@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "List": {
+      "items": {},
+      "type": "array"
+    },
+    "StockID": {
+      "type": "string"
+    },
+    "Time": {
+      "type": "integer"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "List",
+    "StockID",
+    "Time",
+    "errcode",
+    "ttag"
+  ],
+  "title": "KPL-47 observed response",
+  "type": "object"
+}

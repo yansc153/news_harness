@@ -1,0 +1,152 @@
+{
+  "info": {
+    "title": "Kaipanla upstream contract: flash-api.xuangubao.com.cn",
+    "version": "2026-08-20"
+  },
+  "openapi": "3.1.2",
+  "paths": {
+    "/api/market_indicator/line": {
+      "get": {
+        "operationId": "kaipanla_flash_api_xuangubao_com_cn_api_market_indicator_line_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fields",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed upstream response; capability-specific schema is validated by cases"
+          }
+        },
+        "summary": "Kaipanla physical GET operation on flash-api.xuangubao.com.cn",
+        "x-huajiao-capability-ids": [
+          "KPL-34",
+          "KPL-35",
+          "KPL-36",
+          "KPL-37",
+          "KPL-38"
+        ]
+      }
+    },
+    "/api/pool/detail": {
+      "get": {
+        "operationId": "kaipanla_flash_api_xuangubao_com_cn_api_pool_detail_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pool_name",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed upstream response; capability-specific schema is validated by cases"
+          }
+        },
+        "summary": "Kaipanla physical GET operation on flash-api.xuangubao.com.cn",
+        "x-huajiao-capability-ids": [
+          "KPL-10",
+          "KPL-11",
+          "KPL-12",
+          "KPL-25",
+          "KPL-26",
+          "KPL-27",
+          "KPL-28"
+        ]
+      }
+    },
+    "/api/surge_stock/plates": {
+      "get": {
+        "operationId": "kaipanla_flash_api_xuangubao_com_cn_api_surge_stock_plates_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed upstream response; capability-specific schema is validated by cases"
+          }
+        },
+        "summary": "Kaipanla physical GET operation on flash-api.xuangubao.com.cn",
+        "x-huajiao-capability-ids": [
+          "KPL-40"
+        ]
+      }
+    },
+    "/api/surge_stock/stocks": {
+      "get": {
+        "operationId": "kaipanla_flash_api_xuangubao_com_cn_api_surge_stock_stocks_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "normal",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "uplimit",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed upstream response; capability-specific schema is validated by cases"
+          }
+        },
+        "summary": "Kaipanla physical GET operation on flash-api.xuangubao.com.cn",
+        "x-huajiao-capability-ids": [
+          "KPL-39"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://flash-api.xuangubao.com.cn"
+    }
+  ]
+}

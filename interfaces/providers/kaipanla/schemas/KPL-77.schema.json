@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "List": {
+      "items": {
+        "items": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "type": "array"
+      },
+      "type": "array"
+    },
+    "Time": {
+      "type": "integer"
+    },
+    "date": {
+      "type": "string"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "List",
+    "Time",
+    "date",
+    "errcode",
+    "ttag"
+  ],
+  "title": "KPL-77 observed response",
+  "type": "object"
+}

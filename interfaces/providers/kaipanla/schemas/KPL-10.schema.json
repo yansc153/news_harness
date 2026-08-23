@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "type": "integer"
+    },
+    "data": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "break_limit_down_times": {
+            "type": "integer"
+          },
+          "break_limit_up_times": {
+            "type": "integer"
+          },
+          "buy_lock_volume_ratio": {
+            "type": "number"
+          },
+          "change_percent": {
+            "type": "number"
+          },
+          "first_break_limit_down": {
+            "type": "integer"
+          },
+          "first_break_limit_up": {
+            "type": "integer"
+          },
+          "first_limit_down": {
+            "type": "integer"
+          },
+          "first_limit_up": {
+            "type": "integer"
+          },
+          "is_new_stock": {
+            "type": "boolean"
+          },
+          "issue_price": {
+            "type": "number"
+          },
+          "last_break_limit_down": {
+            "type": "integer"
+          },
+          "last_break_limit_up": {
+            "type": "integer"
+          },
+          "last_limit_down": {
+            "type": "integer"
+          },
+          "last_limit_up": {
+            "type": "integer"
+          },
+          "limit_down_days": {
+            "type": "integer"
+          },
+          "limit_timeline": {
+            "additionalProperties": false,
+            "properties": {
+              "items": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "status": {
+                      "type": "integer"
+                    },
+                    "timestamp": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "timestamp"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          },
+          "limit_up_days": {
+            "type": "integer"
+          },
+          "listed_date": {
+            "type": "integer"
+          },
+          "m_days_n_boards_boards": {
+            "type": "integer"
+          },
+          "m_days_n_boards_days": {
+            "type": "integer"
+          },
+          "mtm": {
+            "type": "number"
+          },
+          "nearly_new_acc_pcp": {
+            "type": "integer"
+          },
+          "nearly_new_break_days": {
+            "type": "integer"
+          },
+          "new_stock_acc_pcp": {
+            "type": "number"
+          },
+          "new_stock_break_limit_up": {
+            "type": "integer"
+          },
+          "new_stock_limit_up_days": {
+            "type": "integer"
+          },
+          "new_stock_limit_up_price_before_broken": {
+            "type": "integer"
+          },
+          "non_restricted_capital": {
+            "type": "number"
+          },
+          "price": {
+            "type": "number"
+          },
+          "sell_lock_volume_ratio": {
+            "type": "integer"
+          },
+          "stock_chi_name": {
+            "type": "string"
+          },
+          "stock_type": {
+            "type": "integer"
+          },
+          "surge_reason": {
+            "additionalProperties": false,
+            "properties": {
+              "related_plates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "plate_id": {
+                      "type": "integer"
+                    },
+                    "plate_name": {
+                      "type": "string"
+                    },
+                    "plate_reason": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "plate_id",
+                    "plate_name"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "stock_reason": {
+                "type": "string"
+              },
+              "symbol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "related_plates",
+              "stock_reason",
+              "symbol"
+            ],
+            "type": "object"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "total_capital": {
+            "type": "number"
+          },
+          "turnover_ratio": {
+            "type": "number"
+          },
+          "volume_bias_ratio": {
+            "type": "number"
+          },
+          "yesterday_break_limit_up_times": {
+            "type": "integer"
+          },
+          "yesterday_first_limit_up": {
+            "type": "integer"
+          },
+          "yesterday_last_limit_up": {
+            "type": "integer"
+          },
+          "yesterday_limit_down_days": {
+            "type": "integer"
+          },
+          "yesterday_limit_up_days": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "break_limit_down_times",
+          "break_limit_up_times",
+          "buy_lock_volume_ratio",
+          "change_percent",
+          "first_break_limit_down",
+          "first_break_limit_up",
+          "first_limit_down",
+          "first_limit_up",
+          "is_new_stock",
+          "issue_price",
+          "last_break_limit_down",
+          "last_break_limit_up",
+          "last_limit_down",
+          "last_limit_up",
+          "limit_down_days",
+          "limit_timeline",
+          "limit_up_days",
+          "listed_date",
+          "m_days_n_boards_boards",
+          "m_days_n_boards_days",
+          "mtm",
+          "nearly_new_acc_pcp",
+          "nearly_new_break_days",
+          "new_stock_acc_pcp",
+          "new_stock_break_limit_up",
+          "new_stock_limit_up_days",
+          "new_stock_limit_up_price_before_broken",
+          "non_restricted_capital",
+          "price",
+          "sell_lock_volume_ratio",
+          "stock_chi_name",
+          "stock_type",
+          "surge_reason",
+          "symbol",
+          "total_capital",
+          "turnover_ratio",
+          "volume_bias_ratio",
+          "yesterday_break_limit_up_times",
+          "yesterday_first_limit_up",
+          "yesterday_last_limit_up",
+          "yesterday_limit_down_days",
+          "yesterday_limit_up_days"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "message": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "code",
+    "data",
+    "message"
+  ],
+  "title": "KPL-10 observed response",
+  "type": "object"
+}

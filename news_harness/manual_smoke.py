@@ -557,11 +557,18 @@ def load_manual_timeline_items() -> tuple[list[dict[str, Any]], dict[str, Any]]:
         image_refs = observation.get("image_refs", [])
         image_refs = image_refs if isinstance(image_refs, list) else []
         first_image = _manual_first_image_ref(image_refs)
+        stable_item_ref = (
+            observation.get("xueqiu_status_id")
+            or observation.get("observation_id")
+            or observation.get("content_hash", "")[:16]
+            or f"row_{index + 1:03d}"
+        )
+        stable_item_ref = re.sub(r"[^A-Za-z0-9_-]+", "_", str(stable_item_ref))
         items.append(
             {
                 "object_type": "RadarTimelineItem",
                 "item_version": "radar.timeline.item.v1",
-                "id": f"manual_smoke_{index + 1:03d}_{observation.get('content_hash', '')[:12]}",
+                "id": f"manual_smoke_{stable_item_ref}",
                 "source": observation.get("source"),
                 "source_label": observation.get("source_label"),
                 "source_group": _manual_source_group(observation.get("source"), observation.get("source_label")),

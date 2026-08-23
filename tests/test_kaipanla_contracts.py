@@ -48,11 +48,24 @@ class TestKaipanlaContracts(unittest.TestCase):
         raw = CONTRACTS_PATH.read_text(encoding="utf-8")
         self.assertNotIn("{env:", raw, "Env placeholder not resolved")
 
+    def test_identity_values_are_not_committed(self):
+        for eid, contract in sorted(self.contracts.items()):
+            query = contract.get("query_template", {})
+            with self.subTest(endpoint=eid):
+                self.assertEqual(query.get("DeviceID", ""), "")
+                self.assertEqual(query.get("Token", ""), "")
+                self.assertEqual(query.get("UserID", ""), "")
+
     def test_query_template_has_action_parameter(self):
         for eid, c in sorted(self.contracts.items()):
             q = c.get("query_template", {})
             with self.subTest(endpoint=eid):
                 self.assertIn("a", q, f"{eid}: missing action param 'a'")
+
+    def test_every_required_endpoint_has_response_schema(self):
+        schema_dir = CONTRACTS_PATH.parent / "schemas"
+        missing = [eid for eid in REQUIRED_ENDPOINTS if not (schema_dir / f"{eid}.schema.json").exists()]
+        self.assertEqual(missing, [], f"Missing response schemas for: {missing}")
 
 
 if __name__ == "__main__":

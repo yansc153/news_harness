@@ -1,13 +1,12 @@
 [Unit]
-Description=Run News Harness rolling cycle every 30 minutes
+Description=Run News Harness rolling cycle every hour
 
 [Timer]
 OnBootSec=2min
-OnUnitActiveSec=30min
+OnUnitActiveSec=1h
 AccuracySec=30s
 Persistent=true
 Unit=news-harness-cycle.service
 
 [Install]
 WantedBy=timers.target
-

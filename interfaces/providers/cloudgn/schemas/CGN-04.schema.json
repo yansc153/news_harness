@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "type": "integer"
+    },
+    "msg": {
+      "type": "string"
+    },
+    "result": {
+      "additionalProperties": false,
+      "properties": {
+        "salt": {
+          "type": "string"
+        },
+        "ttl": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "salt",
+        "ttl"
+      ],
+      "type": "object"
+    },
+    "time": {
+      "type": "integer"
+    },
+    "version": {
+      "type": "null"
+    }
+  },
+  "required": [
+    "code",
+    "msg",
+    "result",
+    "time",
+    "version"
+  ],
+  "title": "CGN-04 observed response",
+  "type": "object"
+}

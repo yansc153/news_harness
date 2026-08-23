@@ -81,7 +81,24 @@ def map_discussion_row_to_observation(
         if url and str(url).startswith("http"):
             image_urls.append(str(url))
 
-    canonical_url = f"https://xueqiu.com/{user_id}/{status_id}" if user_id and status_id else ""
+    for img in (row.get("images") or []):
+        url = img.get("url") if isinstance(img, dict) else img
+        if url and str(url).startswith("http"):
+            image_urls.append(str(url))
+
+    image_urls = list(dict.fromkeys(image_urls))
+
+    row_url = str(row.get("url") or "").strip()
+    canonical_url = f"https://xueqiu.com/{user_id}/{status_id}" if user_id and status_id else row_url
+    full_text_status = str(row.get("full_text_status") or row.get("detail_fetch_status") or "")
+    if not status_id:
+        raise ValueError("missing Xueqiu status ID")
+    if not text:
+        raise ValueError(f"status {status_id} has empty text")
+    if not canonical_url.startswith("https://xueqiu.com/") or canonical_url.endswith(f"/S/{symbol}"):
+        raise ValueError(f"status {status_id} has no canonical post URL")
+    if full_text_status not in {"full_text_observed", "api_full_text_observed"}:
+        raise ValueError(f"status {status_id} full text is not confirmed")
     content_hash = hashlib.sha256(f"{canonical_url}:{text}".encode()).hexdigest()
     observation_id = f"obs_xq_targeted_{content_hash[:16]}"
 
@@ -92,10 +109,11 @@ def map_discussion_row_to_observation(
         "observation_id": observation_id,
         "source": "xueqiu_targeted",
         "source_label": f"雪球定向:{stock_name}",
-        "source_url": canonical_url or f"https://xueqiu.com/S/{symbol}",
+        "source_url": canonical_url,
         "canonical_url": canonical_url,
         "author": screen_name or "unknown",
-        "published_at": published_at or _utc_now(),
+        "published_at": published_at,
+        "published_at_status": "observed" if published_at else "missing_or_invalid",
         "fetched_at": _utc_now(),
         "copy_text": text,
         "topic_or_hook": f"{stock_name} 讨论",
@@ -115,9 +133,43 @@ def map_discussion_row_to_observation(
         "fetch_status": "manual_smoke_success",
         "structured_error": None,
         "target_symbol": symbol,
+        "target_symbols": [symbol],
         "target_stock_name": stock_name,
         "target_theme_refs": themes or [],
+        "source_status_id": status_id or None,
+        "xueqiu_status_id": status_id,
+        "full_text_status": full_text_status,
     }
+
+
+def deduplicate_observations(observations: list[dict]) -> list[dict]:
+    """Deduplicate posts globally while preserving every matched target reference."""
+    merged: dict[str, dict] = {}
+    order: list[str] = []
+    for observation in observations:
+        key = str(
+            observation.get("source_status_id")
+            or observation.get("canonical_url")
+            or observation.get("source_url")
+            or observation.get("content_hash")
+            or observation.get("observation_id")
+        )
+        if key not in merged:
+            merged[key] = observation
+            order.append(key)
+            continue
+        current = merged[key]
+        symbols = list(dict.fromkeys([
+            *(current.get("target_symbols") or [current.get("target_symbol")]),
+            *(observation.get("target_symbols") or [observation.get("target_symbol")]),
+        ]))
+        current["target_symbols"] = [symbol for symbol in symbols if symbol]
+        themes = list(dict.fromkeys([
+            *(current.get("target_theme_refs") or []),
+            *(observation.get("target_theme_refs") or []),
+        ]))
+        current["target_theme_refs"] = themes
+    return [merged[key] for key in order]
 
 
 def fetch_stock_discussions(
@@ -126,31 +178,98 @@ def fetch_stock_discussions(
     min_comments: int = 10,
     per_stock_limit: int = 20,
 ) -> tuple[list[dict], list[dict]]:
-    """Main entrypoint: fetch discussions for all target stocks via opencli."""
+    """Compatibility entrypoint returning observations and structured errors."""
+    result = collect_stock_discussions(
+        stocks,
+        min_comments=min_comments,
+        per_stock_limit=per_stock_limit,
+    )
+    return result["observations"], result["structured_errors"]
+
+
+def collect_stock_discussions(
+    stocks: list[dict],
+    *,
+    min_comments: int = 10,
+    per_stock_limit: int = 20,
+) -> dict[str, Any]:
+    """Fetch all targets and return observations plus auditable collection counts."""
     all_obs: list[dict] = []
     all_errors: list[dict] = []
+    attempt_warnings: list[dict] = []
+    symbol_results: list[dict] = []
+    raw_row_count = 0
+    threshold_pass_count = 0
 
     for stock in stocks:
         symbol = stock.get("symbol", "")
         stock_name = stock.get("stock_name", symbol)
         themes = stock.get("theme_ids", [])
         if not symbol:
+            all_errors.append({"error_code": "target_symbol_missing", "message": "Target stock has no normalized symbol"})
+            symbol_results.append({"symbol": None, "status": "failed", "error_code": "target_symbol_missing"})
             continue
+        symbol_error_start = len(all_errors)
 
-        rows, errors = _fetch_via_opencli(symbol, per_stock_limit)
+        prefer_headless = os.environ.get("NEWS_HARNESS_XUEQIU_HEADLESS") == "1"
+        if prefer_headless:
+            rows, errors = _fetch_via_headless(symbol, per_stock_limit, min_comments)
+        else:
+            rows, errors = _fetch_via_opencli(symbol, per_stock_limit)
         if not rows and errors:
-            # OpenCLI failed; try headless fallback before giving up.
-            rows, headless_errors = _fetch_via_headless(symbol, per_stock_limit)
-            errors = errors + [dict(e, backend="headless") for e in headless_errors] if not rows else headless_errors
+            primary_errors = list(errors)
+            if prefer_headless:
+                rows, fallback_errors = _fetch_via_opencli(symbol, per_stock_limit)
+                backend = "opencli"
+            else:
+                rows, fallback_errors = _fetch_via_headless(symbol, per_stock_limit, min_comments)
+                backend = "headless"
+            if rows:
+                attempt_warnings.extend([
+                    {**error, "symbol": symbol, "severity": "warning", "fallback_used": backend}
+                    for error in primary_errors
+                ])
+                errors = fallback_errors
+            else:
+                errors = primary_errors + [dict(e, backend=backend) for e in fallback_errors]
         all_errors.extend([dict(e, symbol=symbol) for e in errors])
 
+        collection_meta = next((row.get("__collection_meta__") for row in rows if isinstance(row, dict) and row.get("__collection_meta__")), None)
+        rows = [row for row in rows if not (isinstance(row, dict) and row.get("__collection_meta__"))]
+        raw_row_count += int(collection_meta.get("raw_row_count", len(rows))) if isinstance(collection_meta, dict) else len(rows)
         filtered = apply_comment_filter(rows, min_comments=min_comments)
+        threshold_pass_count += int(collection_meta.get("threshold_pass_count", len(filtered))) if isinstance(collection_meta, dict) else len(filtered)
+        before_symbol = len(all_obs)
         for row in filtered:
-            obs = map_discussion_row_to_observation(row, symbol=symbol, stock_name=stock_name, themes=themes)
+            try:
+                obs = map_discussion_row_to_observation(row, symbol=symbol, stock_name=stock_name, themes=themes)
+            except ValueError as exc:
+                all_errors.append({"error_code": "xueqiu_row_incomplete", "message": str(exc), "symbol": symbol})
+                continue
             all_obs.append(obs)
+        symbol_results.append({
+            "symbol": symbol,
+            "status": "ok" if len(all_errors) == symbol_error_start else "failed",
+            "raw_row_count": int(collection_meta.get("raw_row_count", len(rows))) if isinstance(collection_meta, dict) else len(rows),
+            "threshold_pass_count": len(filtered),
+            "observation_count": len(all_obs) - before_symbol,
+            "error_count": len(all_errors) - symbol_error_start,
+        })
         time.sleep(0.5)
 
-    return all_obs, all_errors
+    valid_observation_count = len(all_obs)
+    observations = deduplicate_observations(all_obs)
+    return {
+        "observations": observations,
+        "structured_errors": all_errors,
+        "raw_row_count": raw_row_count,
+        "threshold_pass_count": threshold_pass_count,
+        "deduplicated_count": len(observations),
+        "rejected_incomplete_count": max(0, threshold_pass_count - valid_observation_count),
+        "duplicate_count": valid_observation_count - len(observations),
+        "symbol_results": symbol_results,
+        "attempt_warnings": attempt_warnings,
+    }
 
 
 def _fetch_via_opencli(symbol: str, limit: int) -> tuple[list[dict], list[dict]]:
@@ -181,7 +300,7 @@ def _fetch_via_opencli(symbol: str, limit: int) -> tuple[list[dict], list[dict]]
     elif isinstance(parsed, dict) and "data" in parsed and isinstance(parsed["data"], list):
         rows = parsed["data"]
     else:
-        rows = []
+        return [], [{"error_code": "opencli_contract_drift", "message": "Expected list, rows, or data array in OpenCLI JSON"}]
 
     normalized = []
     for r in rows:
@@ -197,8 +316,23 @@ def _fetch_via_opencli(symbol: str, limit: int) -> tuple[list[dict], list[dict]]
             "retweet_count": r.get("retweets") or 0,
             "author": r.get("author") or "",
             "url": r.get("url") or "",
+            "images": r.get("images") or r.get("image_refs") or [],
+            "detail_fetch_status": r.get("detail_fetch_status") or "",
+            "full_text_status": r.get("full_text_status") or "",
         })
-    return normalized, []
+    confirmed = [
+        row for row in normalized
+        if row.get("id") and row.get("url") and row.get("text")
+        and row.get("full_text_status") in {"full_text_observed", "api_full_text_observed"}
+    ]
+    dropped = len(normalized) - len(confirmed)
+    errors = ([{
+        "error_code": "opencli_detail_unconfirmed",
+        "message": f"{dropped} OpenCLI rows lacked confirmed full text or canonical URL",
+    }] if dropped else [])
+    if confirmed:
+        confirmed.append({"__collection_meta__": {"raw_row_count": len(normalized)}})
+    return confirmed, errors
 
 
 def merge_stock_results(results: list[tuple[list, list]]) -> tuple[list, list]:
@@ -211,7 +345,7 @@ def merge_stock_results(results: list[tuple[list, list]]) -> tuple[list, list]:
     return merged_obs, merged_errs
 
 
-def _fetch_via_headless(symbol: str, limit: int) -> tuple[list[dict], list[dict]]:
+def _fetch_via_headless(symbol: str, limit: int, min_comments: int = 10) -> tuple[list[dict], list[dict]]:
     """Fetch stock discussions via the Playwright headless fallback script."""
     import json
     from .fixtures import ROOT
@@ -230,9 +364,18 @@ def _fetch_via_headless(symbol: str, limit: int) -> tuple[list[dict], list[dict]
     if not node:
         return [], [{"error_code": "node_not_found", "message": "Node.js is required for headless fallback"}]
 
-    args = [node, str(script), "--symbol", symbol, "--limit", str(limit), "--out", str(out_path)]
+    args = [
+        node, str(script), "--symbol", symbol, "--limit", str(limit),
+        "--min-comments", str(min_comments), "--out", str(out_path),
+    ]
     storage_state = os.environ.get("NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE")
     if storage_state:
+        storage_path = Path(storage_state).resolve()
+        root = Path(__file__).resolve().parent.parent
+        if storage_path == root or root in storage_path.parents:
+            return [], [{"error_code": "storage_state_inside_repo", "message": "Xueqiu storage state must stay outside the repository"}]
+        if not storage_path.is_file():
+            return [], [{"error_code": "storage_state_unreadable", "message": str(storage_path)}]
         args.extend(["--storage-state", storage_state])
 
     try:
@@ -259,4 +402,6 @@ def _fetch_via_headless(symbol: str, limit: int) -> tuple[list[dict], list[dict]
         return [], [{"error_code": "headless_parse_failed", "message": f"Cannot read {out_path}"}]
 
     raw_rows = export.get("rows") or []
+    if isinstance(export.get("collection"), dict):
+        raw_rows.append({"__collection_meta__": export["collection"]})
     return raw_rows, []

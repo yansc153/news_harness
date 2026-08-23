@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "day": {
+      "type": "string"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "info": {
+      "items": {
+        "items": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "type": "array"
+      },
+      "type": "array"
+    },
+    "status": {
+      "type": "integer"
+    },
+    "time": {
+      "type": "integer"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "day",
+    "errcode",
+    "info",
+    "status",
+    "time",
+    "ttag"
+  ],
+  "title": "KPL-115 observed response",
+  "type": "object"
+}

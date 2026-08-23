@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "CCJE": {
+      "type": "integer"
+    },
+    "Date": {
+      "type": "string"
+    },
+    "DateList": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "IndexName": {
+      "type": "string"
+    },
+    "List": {
+      "items": {
+        "anyOf": [
+          {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {}
+        ]
+      },
+      "type": "array"
+    },
+    "State": {
+      "type": "integer"
+    },
+    "ZCJE": {
+      "type": "integer"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "CCJE",
+    "Date",
+    "DateList",
+    "IndexName",
+    "List",
+    "State",
+    "ZCJE",
+    "errcode",
+    "ttag"
+  ],
+  "title": "KPL-85 observed response",
+  "type": "object"
+}

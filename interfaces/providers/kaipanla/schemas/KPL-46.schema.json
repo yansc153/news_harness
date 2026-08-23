@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "Count": {
+      "type": "integer"
+    },
+    "Day": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "Max": {
+      "type": "string"
+    },
+    "Min": {
+      "type": "string"
+    },
+    "MinDay": {
+      "type": "string"
+    },
+    "State": {
+      "type": "integer"
+    },
+    "Stocks": {
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {}
+        ]
+      },
+      "type": "array"
+    },
+    "TSZBBQ": {
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {}
+        ]
+      },
+      "type": "array"
+    },
+    "TSZBTitle": {
+      "items": {},
+      "type": "array"
+    },
+    "TSZBlist": {
+      "items": {},
+      "type": "array"
+    },
+    "Time": {
+      "type": "integer"
+    },
+    "ZB": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "kzzlist": {
+      "items": {},
+      "type": "array"
+    },
+    "list": {
+      "items": {
+        "anyOf": [
+          {
+            "items": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "type": "array"
+          },
+          {}
+        ]
+      },
+      "type": "array"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "Count",
+    "Day",
+    "Max",
+    "Min",
+    "MinDay",
+    "State",
+    "Stocks",
+    "TSZBBQ",
+    "TSZBTitle",
+    "TSZBlist",
+    "Time",
+    "ZB",
+    "errcode",
+    "kzzlist",
+    "list",
+    "ttag"
+  ],
+  "title": "KPL-46 observed response",
+  "type": "object"
+}

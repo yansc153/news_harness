@@ -1,7 +1,7 @@
 {
   "object_type": "HourlyTargetingConfig",
   "config_version": "hourly_targeting.v1",
-  "enabled_endpoints": ["KPL-41", "KPL-47", "KPL-49", "KPL-50", "KPL-51", "KPL-52", "KPL-53", "KPL-79", "KPL-80"],
+  "enabled_endpoints": ["KPL-41", "KPL-47", "KPL-49", "KPL-50", "KPL-51", "KPL-52", "KPL-53", "KPL-78", "KPL-94", "KPL-115"],
   "max_themes": 5,
   "max_stocks_per_theme": 3,
   "max_stocks_total": 12,

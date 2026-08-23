@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "bid": {
+      "items": {
+        "items": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "type": "array"
+      },
+      "type": "array"
+    },
+    "code": {
+      "type": "string"
+    },
+    "day": {
+      "type": "integer"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "flag": {
+      "type": "integer"
+    },
+    "hprice": {
+      "type": "number"
+    },
+    "lprice": {
+      "type": "number"
+    },
+    "openpx": {
+      "type": "number"
+    },
+    "preclose_px": {
+      "type": "number"
+    },
+    "time": {
+      "type": "integer"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "bid",
+    "code",
+    "day",
+    "errcode",
+    "flag",
+    "hprice",
+    "lprice",
+    "openpx",
+    "preclose_px",
+    "time",
+    "ttag"
+  ],
+  "title": "KPL-31 observed response",
+  "type": "object"
+}

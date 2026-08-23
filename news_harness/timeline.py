@@ -439,8 +439,16 @@ def generate_timeline_feed(fixtures_dir: Path, out_path: Path, schema_path: Path
             feed["manual_smoke"]["compacted_failed_item_count"] = len(compacted_failed_items)
             write_manual_timeline_store(feed["items"], feed["manual_smoke"], compacted_failed_items)
         else:
-            feed["items"] = []
+            prior_items = [
+                *_load_timeline_feed_items(TIMELINE_FEED_ARTIFACT),
+                *_load_timeline_feed_items(out_path),
+            ]
+            feed["items"] = merge_manual_timeline_items([], prior_items)
             feed["manual_smoke"]["fixture_items_hidden_from_product_feed"] = fixture_item_count
+            feed["manual_smoke"]["current_cycle_item_count"] = 0
+            feed["manual_smoke"]["retained_prior_item_count"] = len(feed["items"])
+            feed["manual_smoke"]["timeline_max_items"] = _manual_timeline_max_items()
+            write_manual_timeline_store(feed["items"], feed["manual_smoke"], [])
         feed["rolling_runtime"]["runtime_stage"] = "manual_smoke_live_feed"
         feed["rolling_runtime"]["active_item_count"] = len(feed["items"])
         feed["rolling_runtime"]["current_cycle_item_count"] = len(manual_items)

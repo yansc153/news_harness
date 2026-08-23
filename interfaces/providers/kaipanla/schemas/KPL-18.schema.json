@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "errcode": {
+      "type": "string"
+    },
+    "list": {
+      "additionalProperties": false,
+      "properties": {
+        "DTJS": {
+          "type": "integer"
+        },
+        "SZJS": {
+          "type": "integer"
+        },
+        "XDJS": {
+          "type": "integer"
+        },
+        "ZTJS": {
+          "type": "integer"
+        },
+        "bl": {
+          "type": "number"
+        },
+        "color": {
+          "type": "integer"
+        },
+        "q_zrcs": {
+          "type": "integer"
+        },
+        "qscln": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "DTJS",
+        "SZJS",
+        "XDJS",
+        "ZTJS",
+        "bl",
+        "color",
+        "q_zrcs",
+        "qscln"
+      ],
+      "type": "object"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "errcode",
+    "list",
+    "ttag"
+  ],
+  "title": "KPL-18 observed response",
+  "type": "object"
+}

@@ -53,8 +53,8 @@ class McpExportTests(unittest.TestCase):
         self.assertEqual(item["object_type"], "McpExportItem")
         self.assertEqual("full source text", item["copy_text"])
         self.assertEqual("2026-06-18T00:00:00Z", item["published_at"])
-        self.assertEqual("2026-06-18T00:01:00Z", item["fetched_at"])
-        self.assertEqual("raw", item["processing_status"])
+        self.assertNotIn("fetched_at", item)
+        self.assertNotIn("processing_status", item)
         self.assertEqual([{"original_image_ref": "https://example.com/image.png"}], item["image_refs"])
         self.assertEqual([], artifact_api.validate_mcp_export(item))
         for key in artifact_api.FORBIDDEN_MCP_KEYS:

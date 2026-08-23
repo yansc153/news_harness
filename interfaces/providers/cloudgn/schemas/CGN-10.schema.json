@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "type": "integer"
+    },
+    "data": {
+      "additionalProperties": false,
+      "properties": {
+        "list": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "hotMoneyId": {
+                "type": "string"
+              },
+              "hotMoneyName": {
+                "type": "string"
+              },
+              "stockList": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "buyValue": {
+                      "type": "number"
+                    },
+                    "change": {
+                      "type": "number"
+                    },
+                    "companycode": {
+                      "type": "null"
+                    },
+                    "conceptsList": {
+                      "items": {
+                        "anyOf": [
+                          {
+                            "additionalProperties": false,
+                            "properties": {
+                              "code": {
+                                "type": "string"
+                              },
+                              "marketId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "marketId",
+                              "name"
+                            ],
+                            "type": "object"
+                          },
+                          {}
+                        ]
+                      },
+                      "type": "array"
+                    },
+                    "createTime": {
+                      "type": "null"
+                    },
+                    "fengDanAmount": {
+                      "type": "null"
+                    },
+                    "highDaysName": {
+                      "type": "null"
+                    },
+                    "hotMoneyItemList": {
+                      "type": "null"
+                    },
+                    "hotMoneyNetValue": {
+                      "type": "null"
+                    },
+                    "hotRank": {
+                      "type": "null"
+                    },
+                    "id": {
+                      "type": "null"
+                    },
+                    "limitReason": {
+                      "type": "null"
+                    },
+                    "marketId": {
+                      "type": "null"
+                    },
+                    "module": {
+                      "type": "null"
+                    },
+                    "netRate": {
+                      "type": "number"
+                    },
+                    "netValue": {
+                      "type": "number"
+                    },
+                    "orgBuyNum": {
+                      "type": "null"
+                    },
+                    "orgNetValue": {
+                      "type": "null"
+                    },
+                    "orgSellNum": {
+                      "type": "null"
+                    },
+                    "rangeDays": {
+                      "type": "null"
+                    },
+                    "secCode": {
+                      "type": "string"
+                    },
+                    "sellValue": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "status": {
+                      "type": "null"
+                    },
+                    "stockCode": {
+                      "type": "string"
+                    },
+                    "stockName": {
+                      "type": "string"
+                    },
+                    "tagList": {
+                      "anyOf": [
+                        {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "color": {
+                                "type": "string"
+                              },
+                              "id": {
+                                "type": "null"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "color",
+                              "id",
+                              "name",
+                              "type"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "tradeDate": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "buyValue",
+                    "change",
+                    "companycode",
+                    "conceptsList",
+                    "createTime",
+                    "fengDanAmount",
+                    "highDaysName",
+                    "hotMoneyItemList",
+                    "hotMoneyNetValue",
+                    "hotRank",
+                    "id",
+                    "limitReason",
+                    "marketId",
+                    "module",
+                    "netRate",
+                    "netValue",
+                    "orgBuyNum",
+                    "orgNetValue",
+                    "orgSellNum",
+                    "rangeDays",
+                    "secCode",
+                    "sellValue",
+                    "status",
+                    "stockCode",
+                    "stockName",
+                    "tagList",
+                    "tradeDate"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "hotMoneyId",
+              "hotMoneyName",
+              "stockList"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "pageCount": {
+          "type": "integer"
+        },
+        "stockCount": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "list",
+        "pageCount",
+        "stockCount",
+        "total"
+      ],
+      "type": "object"
+    },
+    "msg": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "code",
+    "data",
+    "msg"
+  ],
+  "title": "CGN-10 observed response",
+  "type": "object"
+}

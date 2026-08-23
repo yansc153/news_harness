@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +34,10 @@ from .manual_smoke import (
 from .rolling_store import DEFAULT_STORE_PATH, load as load_rolling_store, register_candidates, save as save_rolling_store
 from .runtime_gates import write_liveness_artifact
 from .timeline import generate_timeline_feed
+
+
+CYCLE_LOCK_STALE_SECONDS = int(os.environ.get("NEWS_HARNESS_CYCLE_LOCK_STALE_SECONDS", "1800"))
+CYCLE_LOCK_MALFORMED_GRACE_SECONDS = 5
 
 
 DEFAULT_ALL_SOURCE_CONFIG = ROOT / "configs" / "all_source_runner.example.json"
@@ -210,6 +216,7 @@ def run_cycle(
                 artifact_dir,
                 last_cycle_completed=completed_at,
                 last_success=completed_at,
+                clear_last_error=True,
             )
         else:
             write_liveness_artifact(
@@ -219,11 +226,14 @@ def run_cycle(
             )
         return result
     except Exception as exc:
-        write_liveness_artifact(
-            artifact_dir,
-            last_cycle_completed=_utc_now(),
-            last_error=canonical_json({"status": "failed", "code": type(exc).__name__, "message": str(exc)}),
-        )
+        try:
+            write_liveness_artifact(
+                artifact_dir,
+                last_cycle_completed=_utc_now(),
+                last_error=canonical_json({"status": "failed", "code": type(exc).__name__, "message": str(exc)}),
+            )
+        except Exception as telemetry_exc:
+            exc.add_note(f"Secondary liveness write failed: {type(telemetry_exc).__name__}: {telemetry_exc}")
         raise
     finally:
         _release_cycle_lock(lock_fd, lock_path)
@@ -250,7 +260,7 @@ def _run_cycle_inner(
     errors: list[dict[str, Any]] = []
 
     if source_result.get("status") == "ok":
-        if selected_mode == "manual-smoke" and not source_result.get("observation_count"):
+        if selected_mode == "manual-smoke":
             failed_sources = [
                 source
                 for source, status in (source_result.get("source_statuses") or {}).items()
@@ -258,14 +268,19 @@ def _run_cycle_inner(
             ]
             if failed_sources:
                 errors.append({"phase": "sources", "status": "failed", "code": "source_failed", "sources": failed_sources})
-            # else: legitimate zero-candidate hour; not an error
 
     can_score = source_result.get("status") == "ok" and (
         selected_mode != "manual-smoke" or bool(source_result.get("observation_count"))
     )
+    zero_candidates = (
+        selected_mode == "manual-smoke"
+        and source_result.get("status") == "ok"
+        and not source_result.get("observation_count")
+        and not errors
+    )
     if can_score:
         score_result = score(score_config, dry_run=dry_run, mode=selected_mode)
-    else:
+    elif not zero_candidates:
         if not errors:
             errors.append({"phase": "sources", "status": source_result.get("status"), "code": source_result.get("error_code")})
 
@@ -364,14 +379,55 @@ def _prepare_rolling_cycle(store_path: Path) -> dict[str, Any]:
 
 def _acquire_cycle_lock(lock_path: Path, started_at: str) -> int | None:
     lock_path.parent.mkdir(parents=True, exist_ok=True)
+    for _attempt in range(2):
+        try:
+            fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            if not _cycle_lock_is_stale(lock_path):
+                return None
+            try:
+                lock_path.unlink()
+            except FileNotFoundError:
+                pass
+            continue
+        try:
+            payload = canonical_json({"pid": os.getpid(), "started_at": started_at}) + "\n"
+            os.write(fd, payload.encode("utf-8"))
+            os.fsync(fd)
+            return fd
+        except BaseException:
+            os.close(fd)
+            try:
+                lock_path.unlink()
+            except FileNotFoundError:
+                pass
+            raise
+    return None
+
+
+def _cycle_lock_is_stale(lock_path: Path) -> bool:
     try:
-        fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError:
-        return None
-    payload = canonical_json({"pid": os.getpid(), "started_at": started_at}) + "\n"
-    os.write(fd, payload.encode("utf-8"))
-    os.fsync(fd)
-    return fd
+        payload = json.loads(lock_path.read_text(encoding="utf-8"))
+        pid = int(payload["pid"])
+        started = datetime.fromisoformat(str(payload["started_at"]).replace("Z", "+00:00"))
+        if started.tzinfo is None:
+            started = started.replace(tzinfo=timezone.utc)
+    except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError):
+        try:
+            age_seconds = datetime.now(timezone.utc).timestamp() - lock_path.stat().st_mtime
+        except OSError:
+            return False
+        return age_seconds > CYCLE_LOCK_MALFORMED_GRACE_SECONDS
+    age_seconds = (datetime.now(timezone.utc) - started.astimezone(timezone.utc)).total_seconds()
+    if age_seconds > CYCLE_LOCK_STALE_SECONDS:
+        return True
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return True
+    except PermissionError:
+        return False
+    return False
 
 
 def _release_cycle_lock(lock_fd: int, lock_path: Path) -> None:
