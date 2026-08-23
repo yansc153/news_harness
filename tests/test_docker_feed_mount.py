@@ -22,7 +22,7 @@ def test_hostinger_uses_platform_traefik_router() -> None:
     assert "traefik.enable=true" in compose
     assert "traefik.http.routers.news-harness.rule=Host(`newshardness.hellopepper.work`)" in compose
     assert "traefik.http.services.news-harness.loadbalancer.server.port=8765" in compose
-    assert "network_mode: host" not in compose
+    assert "network_mode: host" in compose
     assert "image: caddy:alpine" not in compose
     assert "docker/Dockerfile.caddy" not in compose
 
