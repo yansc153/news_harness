@@ -8,11 +8,15 @@ produce SourceObservation-compatible dicts.
 from __future__ import annotations
 
 import hashlib
+import os
 import re
+import shutil
 import subprocess
 import time
 from datetime import datetime, timezone
 from typing import Any
+
+from pathlib import Path
 
 
 OPENCLI_TIMEOUT_SECONDS = 60
@@ -134,6 +138,10 @@ def fetch_stock_discussions(
             continue
 
         rows, errors = _fetch_via_opencli(symbol, per_stock_limit)
+        if not rows and errors:
+            # OpenCLI failed; try headless fallback before giving up.
+            rows, headless_errors = _fetch_via_headless(symbol, per_stock_limit)
+            errors = errors + [dict(e, backend="headless") for e in headless_errors] if not rows else headless_errors
         all_errors.extend([dict(e, symbol=symbol) for e in errors])
 
         filtered = apply_comment_filter(rows, min_comments=min_comments)
@@ -201,3 +209,54 @@ def merge_stock_results(results: list[tuple[list, list]]) -> tuple[list, list]:
         merged_obs.extend(obs_list)
         merged_errs.extend(err_list)
     return merged_obs, merged_errs
+
+
+def _fetch_via_headless(symbol: str, limit: int) -> tuple[list[dict], list[dict]]:
+    """Fetch stock discussions via the Playwright headless fallback script."""
+    import json
+    from .fixtures import ROOT
+    script = ROOT / "scripts" / "xueqiu_targeted_export.mjs"
+    if not script.exists():
+        return [], [{"error_code": "headless_script_missing", "message": str(script)}]
+
+    export_dir = Path(os.environ.get("NEWS_HARNESS_XUEQIU_EXPORT_DIR", "/tmp/news-harness-secrets"))
+    try:
+        export_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return [], [{"error_code": "headless_export_dir_unwritable", "message": str(export_dir)}]
+
+    out_path = export_dir / f"xueqiu_targeted_{symbol}.json"
+    node = shutil.which("node")
+    if not node:
+        return [], [{"error_code": "node_not_found", "message": "Node.js is required for headless fallback"}]
+
+    args = [node, str(script), "--symbol", symbol, "--limit", str(limit), "--out", str(out_path)]
+    storage_state = os.environ.get("NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE")
+    if storage_state:
+        args.extend(["--storage-state", storage_state])
+
+    try:
+        result = subprocess.run(args, capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        return [], [{"error_code": "headless_timeout", "message": "Timed out after 120s"}]
+
+    if result.returncode != 0:
+        stdout = result.stdout.strip()
+        error_code = "headless_error"
+        message = result.stderr[:300] or stdout[:300]
+        try:
+            parsed = json.loads(stdout)
+            if isinstance(parsed, dict) and parsed.get("code"):
+                error_code = parsed["code"]
+                message = parsed.get("message", "")
+        except (json.JSONDecodeError, ValueError):
+            pass
+        return [], [{"error_code": error_code, "message": message}]
+
+    try:
+        export = json.loads(out_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return [], [{"error_code": "headless_parse_failed", "message": f"Cannot read {out_path}"}]
+
+    raw_rows = export.get("rows") or []
+    return raw_rows, []

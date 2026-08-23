@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import time
 import urllib.parse
 import urllib.request
@@ -17,6 +18,13 @@ from typing import Any
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "configs" / "hourly_targeting.v1.json"
 DEFAULT_CONTRACTS_PATH = Path(__file__).resolve().parent.parent / "interfaces" / "providers" / "kaipanla" / "news-harness-cases.v1.json"
+
+# Environment variable overrides for KPL identity fields. When set, they
+# replace the placeholder values in the contract file. This keeps real
+# device/user identifiers outside the repo.
+KPL_DEVICE_ID_ENV = "NEWS_HARNESS_KPL_DEVICE_ID"
+KPL_TOKEN_ENV = "NEWS_HARNESS_KPL_TOKEN"
+KPL_USER_ID_ENV = "NEWS_HARNESS_KPL_USER_ID"
 
 
 def load_config(path: Path | None = None) -> dict[str, Any]:
@@ -171,7 +179,19 @@ def _fetch_endpoint(contract: dict) -> dict:
     """Make a single GET call to a KPL endpoint using its contract."""
     server = contract["server"]
     path = contract["path"]
-    params = {k: str(v) for k, v in contract.get("query_template", {}).items()}
+    env_overrides = {
+        "DeviceID": os.environ.get(KPL_DEVICE_ID_ENV),
+        "Token": os.environ.get(KPL_TOKEN_ENV),
+        "UserID": os.environ.get(KPL_USER_ID_ENV),
+    }
+    params = {}
+    for k, v in contract.get("query_template", {}).items():
+        val = str(v)
+        for env_key, env_val in env_overrides.items():
+            if k == env_key and env_val is not None:
+                val = env_val
+                break
+        params[k] = val
     qs = urllib.parse.urlencode(params)
     url = f"{server}{path}?{qs}"
     headers = contract.get("headers", {})
