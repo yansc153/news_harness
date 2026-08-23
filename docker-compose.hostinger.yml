@@ -43,6 +43,7 @@ services:
       start_period: 10m
     labels:
       - traefik.enable=true
+      - traefik.docker.network=traefik-proxy
       - traefik.http.routers.news-harness.rule=Host(`newshardness.hellopepper.work`)
       - traefik.http.routers.news-harness.entrypoints=websecure
       - traefik.http.routers.news-harness.tls=true
