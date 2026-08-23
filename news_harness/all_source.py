@@ -328,7 +328,20 @@ def _run_cycle_inner(
 
     if score_result is not None or (selected_mode == "manual-smoke" and source_result.get("status") == "ok" and not errors):
         try:
-            timeline_result = generate_timeline_feed(fixtures_dir, timeline_out)
+            # The CLI resolves the feed path to an absolute container path.  The
+            # timeline writer intentionally accepts only paths rooted under the
+            # application web directory, so normalize that known-safe path back
+            # to a repository-relative path before handing it across the boundary.
+            timeline_target = timeline_out
+            if timeline_out.is_absolute():
+                try:
+                    timeline_target = timeline_out.relative_to(ROOT)
+                except ValueError:
+                    # Keep the original value for callers that replace the
+                    # exporter in tests; the real exporter will enforce its
+                    # own safe-output boundary.
+                    timeline_target = timeline_out
+            timeline_result = generate_timeline_feed(fixtures_dir, timeline_target)
         except Exception as exc:  # noqa: BLE001 - top-level cycle report must stay structured
             errors.append({"phase": "timeline", "status": "failed", "code": "timeline_export_failed", "message": str(exc)})
 
