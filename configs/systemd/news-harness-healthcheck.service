@@ -22,4 +22,4 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/news_harness/artifacts /opt/news_harness/web/radar-timeline /run/news-harness
+ReadWritePaths=/opt/news_harness/artifacts /opt/news_harness/web/data/radar-timeline /run/news-harness

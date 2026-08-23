@@ -16,16 +16,16 @@
 | D-04 | 平台发现机制（Discovery 聚合层） | **已撤销** —— 被 D-06 取代（金融聚焦，去掉泛流量聚合） | 2026-07-22 第二轮 |
 | D-05 | 平台最终清单（泛流量版） | **已撤销** —— 被 D-06 金融版取代 | 2026-07-22 第二轮 |
 | D-06 | 范围聚焦 | **聚焦金融板块，去掉泛流量平台与 Discovery 聚合层**；connectors 只放金融源 | 用户确认 2026-07-22 第二轮 |
-| D-07 | 雪球抓取目标 | **保留 30min 节奏（已是 1800s），把目标从「热门」改为「最新」**；需新接 `xueqiu_latest` / 改 headless 目标 | 用户确认 2026-07-22 第二轮 |
+| D-07 | 雪球抓取目标 | **当前主线：定向题材线**（`xueqiu_targeted`，每小时一轮，KPL 发现题材股 → 雪球定向搜股）。旧「热门→最新 tab」路线保留为备选 | 用户改判 2026-08-23 |
 | D-08 | Reddit 线 | **不变**：crawl → translate（机翻）→ LLM（结构化/重写），作为 repack 处理链 | 用户确认 2026-07-22 第二轮 |
 | D-09 | 核心增值 | **新增 Processing 层（translate + LLM）**，取代旧 predictor，是 v2 的 repack 价值所在 | 2026-07-22 第二轮 |
 | D-10 | 雪球摄入筛选闸门 | **两道闸门**：(A) **账号级排除**——财经新闻类媒体号（如 财联社/新华社/券商中国/证券时报/「XX财经新闻」）直接不扒，走可配 `configs/xueqiu_blocklist.json` 账号块列表；(B) 互动门槛——`likes >= X AND comments >= Y`，复用 `_engagement_from_row` 已有数据；X/Y 可配常量 | 用户确认 2026-07-22 |
 | D-11 | 「最新」vs「高赞」矛盾化解 | **摄入源=雪球「最新」tab；加 recency 窗口**：仅保留近 `XUEQIU_FRESH_WINDOW_HOURS` 内发布且越过互动门槛的帖；不引入回访循环（保持去 harness） | 用户确认 2026-07-22 |
-| D-12 | Gate B 硬性门槛升级（D-10 细化） | **四道硬门槛**：① `char_count >= XUEQIU_MIN_CHARS(500)`；② `likes >= XUEQIU_MIN_LIKES(50)`；③ `comments >= XUEQIU_MIN_COMMENTS(10)`；④ `len(image_refs) >= 1`（有配图）。**个人账号优先**：机构/媒体号走 Gate A 块列表剔除，personal 账号为收录主体 | 用户确认 2026-07-22 |
+| D-12 | Gate B 硬性门槛升级（D-10 细化） | **硬门槛**：① `char_count >= XUEQIU_MIN_CHARS(500)`；② `likes >= XUEQIU_MIN_LIKES(50)`；③ `comments >= XUEQIU_MIN_COMMENTS(10)`；④ 配图可选（有图保留原始引用，无图 `image_refs=[]`，不因无图丢弃）。**个人账号优先**：机构/媒体号走 Gate A 块列表剔除，personal 账号为收录主体 | 用户确认 2026-07-22 |
 | D-13 | 历史筛选澄清 | **旧版雪球无专属筛选**：500字来自 `REDDIT_MIN_ANALYSIS_CHARS`(Reddit 阈值)、点赞≥50/评论≥15/配图是 `manual_smoke` 全平台「软信号」(喂 DeepSeek 打分)，均非雪球硬门槛；雪球唯一硬删选是 `<28字` 通用规则 | 代码核实 2026-07-22 |
-| D-14 | 雪球批次与保底 | **30 条/30min → 20 条/30min，且每批保底 ≥5 条通过闸门**：`batch_limit = 20`（原 `configs/all_source_runner.json` 为 30，v2 重新定）。拉 20 条过 Gate A/B/C 后**至少 5 条入库**；不足 5 条触发阈值渐进放宽兜底（见 D-16） | 用户确认 2026-07-22 |
+| D-14 | 抓取节奏 | **定向题材线（当前生效）**：`configs/all_source_runner.json` → `xueqiu_targeted`，`refresh_interval_seconds = 3600`（每小时一轮，用户要求 2026-08-23），KPL 题材发现 → 雪球定向搜股。`batch_limit = 20`；批次产出量不设保底——门槛固定，不足就少收，绝不放宽门槛（用户红线 2026-08-23，覆盖旧「每批 ≥5 条」设计）。旧「雪球最新 tab / 30min 批」方案保留为备选路线 | 用户确认 2026-08-23 |
 | D-15 | 「最新」tab 刷新机制约束 | **雪球「最新」feed 不能靠网页刷新加载，必须手动点击「最新」tab 才会刷新内容**。headless 抓取不能只 load 默认页/刷新页面，必须**显式定位并点击「最新」tab 元素**（或命中其底层接口/URL）才能拿到最新流；这是对 S4 实现的关键约束（待与 OpenCLI/headless 桥实测验证） | 用户确认 2026-07-22 |
-| D-16 | 批次保底兜底 | **每批须保底 ≥5 条通过 Gate B**；若 <5 条，按序渐进放宽：① 降评论地板 `MIN_COMMENTS`(10→5)；② 降点赞地板 `MIN_LIKES`(50→25→10)；③ 放宽配图要求(`REQUIRE_IMAGE` 临时 false)；④ 仍不足则回退摄入源到「热门 + recency 窗口」(D-11)。记录实际生效的放宽档位供下游排序降权。避免「最新+24h+高赞」叠加导致 0 条 | 用户确认 2026-07-22 |
+| D-16 | 批次保底兜底（放宽阶梯已废弃） | **门槛不可变**：字数/点赞/评论阈值固定，不足就少收，绝不放宽（用户红线 2026-08-23）。旧「每批保底 ≥5 条 + 阶梯放宽」设计已从实现移除；`filter_batch` 的 `floor`/`relax` 参数仅为接口兼容保留且被忽略。产量波动由小时级多轮抓取自然摊平 | 用户改判 2026-08-23 |
 
 **明确删除（harness 遗产）**：`evaluator.py` / `baseline.py` / `rulebook.py` / `loop_driver.py`、以及 `manual_smoke.py` 的预测/打分/回访链路；**泛流量平台（微博/B站/小红书/抖音）与 Discovery 聚合层（tophub）从范围移除**。
 **明确保留（用户指定不变）**：credential 层（`config.py` + `direct_cli_backend.py` 的 auth/session）、Reddit 线、雪球线、artifact_api 的投影分层思路、MCP 只读契约、证据保留（原始 source_url / 图片引用不下载替换）。
@@ -108,11 +108,11 @@
 
 ### 4.3 Registry
 - 配置驱动自动发现：`connectors/source/<name>.py`、`connectors/processing/<name>.py`，按 `configs/platforms.v2.json` 启用。
-- 雪球 `refresh_interval_seconds = 1800`（保持，见 preflight/validator 现有断言）。
+- 雪球 `refresh_interval_seconds`：定向题材线为 **3600（每小时）**（用户红线 2026-08-23）；旧「最新」备选线保留 1800。
 
 ### 4.4 雪球摄入筛选（D-10 / D-11）
 
-雪球「最新」批**不是**拉到就全收，过两道闸门后才进素材池。**批次与节奏（D-14 / D-16）**：`batch_limit = 20`、`refresh_interval_seconds = 1800`（**30 分钟 20 条**）。注意：现有 `configs/all_source_runner.json` + `tests/test_xueqiu_headless_limit.py` 仍断言 `batch_limit = 30`，v2 重新定为 20；S4 实现时需同步更新该配置与测试断言。拉 20 条过 Gate A/B/C 后**保底至少 5 条入库**（D-16）——既保证「精选」质量，又避免高门槛叠加导致空批。
+雪球「最新」批**不是**拉到就全收，过两道闸门后才进素材池。**批次与节奏（D-14 / D-16）**：定向题材线 `refresh_interval_seconds = 3600`（每小时）、`batch_limit = 20`。过 Gate A/B/C 后**不设保底**——门槛固定，不足就少收，绝不放宽（D-16 已废弃放宽阶梯；用户红线 2026-08-23）。
 
 **Gate A — 账号级排除（硬剔除，确定性，主闸门）**：财经新闻类媒体号直接不扒。
 - 维护**账号块列表** `configs/xueqiu_blocklist.json`（可配，种子含 财联社 / 新华社 / 券商中国 / 证券时报 / 各类「XX财经新闻」机构号），按作者 `user.id` / `screen_name` / `handle` 命中即跳过该帖，**不进入素材池、不消耗处理配额**。
@@ -124,9 +124,9 @@
 - ① **字数**：`char_count >= XUEQIU_MIN_CHARS`（默认 **500**）——与 `REDDIT_MIN_ANALYSIS_CHARS = 500`（`direct_cli_backend.py:58`）对齐语义，保证「有料可搬」；`char_count` 新抽自 `len(copy_text.strip())`。
 - ② **点赞**：`likes >= XUEQIU_MIN_LIKES`（默认 **50**）——沿用旧版全平台「爆款信号」阈值（manual_smoke.py:321），作为雪球硬地板。
 - ③ **评论**：`comments >= XUEQIU_MIN_COMMENTS`（默认 **10**）——讨论度下限（旧版软信号是 15，硬门槛取更宽松的 10 以保 yield）。
-- ④ **配图**：`len(image_refs) >= 1`——用户明确要求「有配图」，无图帖直接跳过（图表/截图也算 image_ref）。
+- ④ **配图（可选，非门槛）**：图片是加分项而非硬性门槛。有图则保留原始引用，无图则 `image_refs=[]`，不因此丢弃。原始图片一律保留 `original_image_ref`/`originUrl`，不做下载/裁切/去水印。
 - raw 数据来源：`_engagement_from_row`（`direct_cli_backend.py:1354`）已抽 `likes/like_count/retweets/reply_count/comments/num_comments/views`，**无需新抓**；`image_refs` 已由 `_image_refs_from_row` 解析。
-- 新增常量（默认建议，config 可调）：`XUEQIU_MIN_CHARS = 500`、`XUEQIU_MIN_LIKES = 50`、`XUEQIU_MIN_COMMENTS = 10`、`XUEQIU_REQUIRE_IMAGE = true`。
+- 新增常量（默认建议，config 可调）：`XUEQIU_MIN_CHARS = 500`、`XUEQIU_MIN_LIKES = 50`、`XUEQIU_MIN_COMMENTS = 10`、`XUEQIU_REQUIRE_IMAGE = false`（默认关，图片可选）。
 
 **Gate C — 个人账号优先（D-12，正信号）**：
 - Gate A 已剔除机构/媒体号；v2 进一步把**个人账号（personal）作为收录主体**。
@@ -146,7 +146,7 @@
 | 平台 | 层 | 批次 | 抓取难度 | 内容形态 | 备注 |
 |------|----|------|---------|---------|------|
 | **Reddit（金融 sub）** | Source+Processing | 核心 | ★★ 中 | 图文 | crawl→translate→LLM；credential 不变 |
-| **雪球（最新）** | Source | 核心 | ★★★ browser-assisted | 图文+图表 | 30min/20条批·保底5条（D-07/D-14/D-16）；热门→最新；须显式点击「最新」tab 而非网页刷新（D-15）；Gate A 账号块列表剔财经新闻号 + Gate B 四道硬门槛(≥500字/≥50赞/≥10评/有配图) + Gate C 个人账号优先（D-10/D-11/D-12） |
+| **雪球（定向题材）** | Source | 核心 | ★★★ browser-assisted | 图文+图表 | 每小时/20条批（D-14），KPL 题材发现→定向搜股；门槛固定无保底（D-16）；Gate A 账号块列表剔财经新闻号 + Gate B 硬门槛(≥500字/≥50赞/≥10评，配图可选) + Gate C 个人账号优先（D-10/D-12） |
 | 东方财富股吧 | Source | 二批（待确认） | ★★ 中 | 图文 | 纯金融讨论 |
 | 金十数据 | Source | 二批（待确认） | ★ 易 | 快讯 | 金融快讯 |
 | 财联社 | Source | 二批（待确认） | ★ 易 | 快讯 | 金融快讯 |
@@ -295,7 +295,7 @@ python3 -m news_harness healthcheck --auto
 | S1 | 骨架 + 接口（connectors/base、models.py、registry） | — |
 | S2 | store 层（db/media/cache/janitor）+ 配额参数 | S1 |
 | S3 | Reddit connector 迁移到新框架 + Processing(translate/llm) 链 | S1 |
-| S4 | **雪球 connector**：保留 30min（1800s），`batch_limit=20` + 每批保底≥5条通过闸门（D-14/D-16）；改「最新」目标——**须显式点击「最新」tab 而非网页刷新**（D-15，先验证 headless 桥可达性）；接 Gate A/B/C 三道闸门 | S2, S3 |
+| S4 | **雪球定向 connector**：每小时（3600s），`batch_limit=20`，门槛固定无保底（D-14/D-16 已废弃放宽）；KPL 题材发现 → 雪球定向搜股（`xueqiu_targeted` 已实现）；接 Gate A/B/C 三道闸门 | S2, S3 |
 | S5 | mcp_v2 导出（图文优先，带 translated_text/llm_summary） | S1, S2 |
 | S6 | 删预测内核（evaluator/baseline/rulebook/loop_driver + manual_smoke 链路）+ 移除泛流量/Discovery 代码 | S4, S5 |
 | S7 | 二批金融源（东方财富股吧/金十/财联社，待确认）+ 视频 seam | S4 |
@@ -308,9 +308,9 @@ TDD：每切片先红后绿，沿用现有 `tests/` 框架（零新依赖）。
 
 1. **雪球「最新」实现（D-15）**：OpenCLI 是否有 `xueqiu latest` 子命令？没有则需改 headless 目标到「最新」tab。关键约束：雪球「最新」feed **靠手动点击「最新」tab 才会刷新**，仅网页刷新/load 默认页拿不到最新流——需验证 headless 桥能否**显式点击 tab 元素**或命中其底层接口（如 timeline 带 sort/最新参数的 URL）。这是 S4 必须先落地的可达性验证。
 2. **Gate A 块列表种子（无样本先行）**：用户暂无真实导出样本，账号标识（`user.id` / `screen_name`）待爬时校准；**采用「空种子 + 运行时增量补全」策略**——首次抓取自动把命中 institutional 模式的账号写入 `xueqiu_blocklist.candidates.json`，人工复核后转正，不阻塞落地。当前代码完全无账号/内容过滤（D-13）。
-3. **Gate B 阈值与保底（D-14/D-16）**：`XUEQIU_MIN_CHARS=500` / `XUEQIU_MIN_LIKES=50` / `XUEQIU_MIN_COMMENTS=10` / `XUEQIU_REQUIRE_IMAGE=true` 为建议默认，需按雪球「最新」批（20/30min，D-14）实测 yield 调参；`XUEQIU_FRESH_WINDOW_HOURS=24` 同理。点赞地板可能偏高（最新+24h 窗口下新帖赞少），需实测后下调。**保底机制（D-16）**：每批须 ≥5 条通过，否则按序渐进放宽（评论 10→5 → 点赞 50→25→10 → 放开配图 → 回退热门+窗口），记录生效档位；这正好化解「最新+24h+高赞」三重叠加可能 0 条的旧风险。
+3. **Gate B 阈值（D-12/D-16）**：`XUEQIU_MIN_CHARS=500` / `XUEQIU_MIN_LIKES=50` / `XUEQIU_MIN_COMMENTS=10`（**固定，绝不放宽**——用户红线 2026-08-23）/ `XUEQIU_REQUIRE_IMAGE=false`（配图可选）。调参需用户明确批准并同步本文档。批次产出不足时接受低产，由小时级多轮抓取自然摊平，不做任何阶梯放宽（D-16 已废弃）。
 4. **速率 / 风控**：雪球 30min 批之外的并发/退避；Reddit 多 sub 节奏与账号隔离。
-5. **搬运合规**：转码 / 水印 / 署名 / `rights_status` 过滤的执行点（建议 janitor + publish 双闸）。
+5. **搬运合规**：保留原始图片引用（`original_image_ref`/`originUrl`），禁止下载/缓存/转码/去水印；`rights_status` 过滤与署名保留执行点（建议 janitor + publish 双闸）。
 6. **LLM 处理策略**：translate 与 llm 是否串联固定管线，还是按平台可配置（Reddit 需翻译，雪球中文可直接 LLM）。
 7. **视频阶段 schema 升级时机**：`video_refs` 在 S7 还是独立阶段引入。
 8. **看板 UI**：是否按新方向用 DESIGN.md 规范重做（独立流程）。

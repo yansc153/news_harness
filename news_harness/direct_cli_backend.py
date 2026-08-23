@@ -134,11 +134,17 @@ def run_direct_cli_sources(config_path: Path) -> dict[str, Any]:
 
         observations.extend(source_observations)
         structured_errors.extend({**error, "source": error.get("source", source)} for error in errors)
+        if errors and source_observations:
+            source_status = "partial"
+        elif not errors:
+            source_status = "ok"
+        else:
+            source_status = "failed"
         source_results.append(
             {
                 "source": source,
                 "backend": "direct-cli",
-                "status": "ok" if not errors and (source_observations or source == "xueqiu_targeted") else "failed",
+                "status": source_status,
                 "item_count": len(source_observations),
                 "requested_item_count": _requested_item_count(source_config),
                 "refresh_interval_seconds": source_config.get("refresh_interval_seconds"),
@@ -248,7 +254,10 @@ def _fetch_xueqiu_targeted(source_config: dict[str, Any]) -> tuple[list[dict[str
         }
         for error in xueqiu_errors
     ]
-    errors = discovery_errors + (collection_errors if not observations else [])
+    # Fail-fast: never hide partial stock fetcher failures. Even when some
+    # observations were collected, any structured error from the Xueqiu
+    # collection step must be surfaced so the health check can see it.
+    errors = discovery_errors + collection_errors
     target_set["collection"] = {
         "comment_threshold": int(targeting_config["min_comments"]),
         "raw_row_count": collection_result["raw_row_count"],

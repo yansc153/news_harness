@@ -2,7 +2,7 @@
 
 全部为纯函数 + 数据驱动，便于单测与 offline 运行：
 - Gate A：账号级排除（硬剔除，确定性）—— 块列表命中即跳过，不进素材池。
-- Gate B：硬性门槛（字数/点赞/评论/配图）—— 四道全过才进素材池。
+- Gate B：硬性门槛（字数/点赞/评论），配图默认可选；开启 require_image 时丢无图帖。
 - Gate C：个人账号优先 —— 推导 author_type（personal / institutional / unknown）。
 - `filter_batch`：拉 batch_limit 条，过 A→B，保底 floor 条（不足则按阶梯放宽，D-16）。
 """

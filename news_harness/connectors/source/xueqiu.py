@@ -87,7 +87,7 @@ def xueqiu_observation_to_content_item(obs: dict) -> ContentItem:
         image_refs=image_refs,
         video_refs=[],
         evidence_status="observed",
-        rights_status="ok",
+        rights_status="unknown",
         processing_status="raw",
     )
 

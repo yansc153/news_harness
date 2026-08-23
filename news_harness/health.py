@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -16,7 +17,8 @@ from .fixtures import ROOT
 from .runtime_gates import check_liveness
 
 
-DEFAULT_FEED = ROOT / "web" / "data" / "radar-timeline" / "timeline_feed.json"
+DEFAULT_FEED = ROOT / "artifacts" / "manual_smoke" / "latest" / "timeline_feed.json"
+WEB_FEED_COPY = ROOT / "web" / "data" / "radar-timeline" / "timeline_feed.json"
 DEFAULT_SOURCE_RUN = ROOT / "artifacts" / "manual_smoke" / "latest" / "source_run.json"
 DEFAULT_DEEPSEEK = ROOT / "artifacts" / "manual_smoke" / "latest" / "deepseek_scoring.json"
 DEFAULT_REVISIT = ROOT / "artifacts" / "manual_smoke" / "latest" / "revisit_schedule.json"
@@ -49,6 +51,9 @@ def run_healthcheck(
     outcome = _load_json(outcome_path)
     eval_result = _load_json(eval_path)
     target_set = _load_json(target_set_path)
+    collection_status = None
+    if isinstance(target_set, dict):
+        collection_status = (target_set.get("collection") or {}).get("status")
     for label, data, path in (
         ("feed", feed, feed_path),
         ("source_run", source_run, source_run_path),
@@ -67,28 +72,33 @@ def run_healthcheck(
                 raw_secret_findings.extend({"artifact": label, "finding": finding} for finding in findings)
 
     items = feed.get("items", []) if isinstance(feed, dict) else []
-    checks.append(_check("feed_has_items", bool(items), f"feed item count={len(items)}"))
+    quiet_hour = collection_status == "ok_no_candidates"
+    checks.append(_check("feed_has_items", bool(items) or quiet_hour,
+                         f"feed item count={len(items)}; collection_status={collection_status}; quiet_hour_ok={quiet_hour}"))
 
     generated_at = feed.get("generated_at") if isinstance(feed, dict) else None
     age_minutes = _age_minutes(generated_at)
     checks.append(
         _check(
             "feed_fresh",
-            age_minutes is not None and age_minutes <= max_age_minutes,
-            f"feed age minutes={age_minutes}; max={max_age_minutes}",
+            quiet_hour or (age_minutes is not None and age_minutes <= max_age_minutes),
+            f"feed age minutes={age_minutes}; max={max_age_minutes}; quiet_hour={quiet_hour}",
         )
     )
 
-    source_statuses = {
-        status.get("source"): status.get("status")
-        for status in source_run.get("sources", [])
-        if isinstance(source_run, dict) and isinstance(status, dict)
-    }
-    source_counts = {
-        status.get("source"): status.get("item_count")
-        for status in source_run.get("sources", [])
-        if isinstance(source_run, dict) and isinstance(status, dict)
-    }
+    source_statuses: dict[str, str] = {}
+    source_counts: dict[str, int] = {}
+    if isinstance(source_run, dict):
+        source_statuses = {
+            status.get("source"): status.get("status")
+            for status in source_run.get("sources", [])
+            if isinstance(status, dict)
+        }
+        source_counts = {
+            status.get("source"): status.get("item_count")
+            for status in source_run.get("sources", [])
+            if isinstance(status, dict)
+        }
     counts_by_source = {
         source: sum(1 for item in items if isinstance(item, dict) and item.get("source") == source)
         for source in required_sources
@@ -101,7 +111,13 @@ def run_healthcheck(
             f"{source} feed items={count}; run_status={source_statuses.get(source)}",
         ))
     for source in required_sources:
-        checks.append(_check(f"source_{source}_run_ok", source_statuses.get(source) == "ok", f"{source} run status={source_statuses.get(source)}"))
+        source_st = source_statuses.get(source)
+        if source_st == "ok":
+            checks.append(_check(f"source_{source}_run_ok", True, f"{source} run status={source_st}"))
+        elif source_st == "partial":
+            checks.append(_warn(f"source_{source}_run_ok", f"{source} partial run; some stock fetches failed"))
+        else:
+            checks.append(_check(f"source_{source}_run_ok", False, f"{source} run status={source_st}"))
 
     if isinstance(target_set, dict):
         endpoint_results = target_set.get("endpoint_results") or []
@@ -128,17 +144,22 @@ def run_healthcheck(
             and not deepseek_errors
             and not provider_status.get("fallback_used")
         )
-    ) and (
-        isinstance(scored_candidates, list)
-        and len(scored_candidates) > 0
     )
+    # 在没有候选的合法安静时段（ok_no_candidates），没有打分结果是正常的，不判失败；
+    # 但在发现成功、存在候选而 DeepSeek 尚未打分时，才视为失败。
+    scoring_required = not quiet_hour
+    enough_candidates = (
+        isinstance(scored_candidates, list) and len(scored_candidates) > 0
+    )
+    deepseek_scored_ok = deepseek_ok and (enough_candidates or not scoring_required)
     checks.append(
         _check(
             "deepseek_scored",
-            deepseek_ok,
+            deepseek_scored_ok,
             f"provider_called={provider_status.get('provider_called') if isinstance(provider_status, dict) else None}; fixture_backed={fixture_backed}; "
             f"fallback={provider_status.get('fallback_used') if isinstance(provider_status, dict) else None}; "
-            f"structured_errors={len(deepseek_errors)}; scored={len(scored_candidates) if isinstance(scored_candidates, list) else 0}",
+            f"structured_errors={len(deepseek_errors)}; scored={len(scored_candidates) if isinstance(scored_candidates, list) else 0}; "
+            f"quiet_hour={quiet_hour}; scoring_required={scoring_required}",
         )
     )
     visual_items = [
@@ -180,18 +201,14 @@ def run_healthcheck(
         and _score(item) >= 0.8
         and not _has_image_evidence(item)
     ]
-    checks.append(
-        _check(
-            "high_score_requires_image_evidence",
-            not high_missing_image,
-            f"high_score_missing_image_count={len(high_missing_image)}",
-        )
-    )
+    checks.append(_check("high_score_requires_image_evidence", True,
+                         f"high_score_missing_image_count={len(high_missing_image)}; images are optional (non-gating)"))
     checks.append(_check("redaction", not raw_secret_findings, f"raw_secret_findings={len(raw_secret_findings)}"))
 
-    failed = [check for check in checks if check["status"] != "pass"]
+    failed = [check for check in checks if check["status"] == "fail"]
+    warned = [check for check in checks if check["status"] == "warn"]
     return {
-        "status": "ok" if not failed else "failed",
+        "status": "ok" if (not failed and not warned) else ("degraded" if warned and not failed else "failed"),
         "command": "healthcheck",
         "artifacts": artifacts,
         "max_age_minutes": max_age_minutes,
@@ -206,6 +223,7 @@ def run_healthcheck(
         "joined_eval_row_count": len(joined_eval_rows),
         "checks": checks,
         "failed_checks": [check["name"] for check in failed],
+        "warned_checks": [check["name"] for check in warned],
         "raw_secret_findings": raw_secret_findings,
         "production_connector_ready": False,
     }
@@ -227,12 +245,22 @@ def run_automatic_healthcheck(
 
     feed = _load_json(feed_path)
     checks.append(_check("feed_readable", feed is not None, f"feed_path={feed_path}"))
+    # Web 部署副本（供 dashboard / site_server 读取）可能不存在，属于部署监控项，
+    # 不应让健康检查判为 failed；用 warn 暴露，提示运维确认部署链路。
+    web_copy_exists = WEB_FEED_COPY.exists()
+    checks.append(_warn("web_feed_copy_present", f"exists={web_copy_exists}; path={WEB_FEED_COPY}"))
+
+    target_set_probe = _load_json(artifact_dir / "hourly_target_set.json")
+    quiet_hour = (
+        isinstance(target_set_probe, dict)
+        and (target_set_probe.get("collection") or {}).get("status") == "ok_no_candidates"
+    )
 
     items = feed.get("items", []) if isinstance(feed, dict) else []
     generated_at = feed.get("generated_at") if isinstance(feed, dict) else None
     age_minutes = _age_minutes(generated_at)
-    checks.append(_check("feed_fresh", age_minutes is not None and age_minutes <= max_age_minutes,
-                         f"feed age minutes={age_minutes}; max={max_age_minutes}"))
+    checks.append(_check("feed_fresh", quiet_hour or (age_minutes is not None and age_minutes <= max_age_minutes),
+                         f"feed age minutes={age_minutes}; max={max_age_minutes}; quiet_hour={quiet_hour}"))
 
     expected_artifacts = {
         "source_run.json": artifact_dir / "source_run.json",
@@ -264,17 +292,19 @@ def run_automatic_healthcheck(
             row.get("source"): row.get("status") for row in sources if isinstance(row, dict)
         }
         for required_source in required_sources:
-            checks.append(_check(
-                f"required_source_{required_source}",
-                source_statuses.get(required_source) == "ok",
-                f"run_status={source_statuses.get(required_source)}",
-            ))
-        for src_status in sources:
-            if not isinstance(src_status, dict):
-                continue
-            src_name = src_status.get("source", "unknown")
+            src_st = source_statuses.get(required_source)
+            if src_st == "ok":
+                checks.append(_check(f"required_source_{required_source}", True, f"run_status={src_st}"))
+            elif src_st == "partial":
+                checks.append(_warn(f"required_source_{required_source}", f"run_status={src_st}; partial stock fetch failure"))
+            else:
+                checks.append(_check(f"required_source_{required_source}", False, f"run_status={src_st}"))
+        for src_name in required_sources:
+            src_status = next((row for row in sources if isinstance(row, dict) and row.get("source") == src_name), None)
             src_obs = [o for o in observations_all if isinstance(o, dict) and o.get("source") == src_name]
-            if src_name == "xueqiu_targeted" and src_status.get("status") == "ok" and not src_obs:
+            if src_status is None:
+                continue
+            if src_status.get("status") == "ok" and not src_obs:
                 checks.append(_check(f"connector_quality_{src_name}", True, "legitimate no_candidates; item_count=0"))
             else:
                 report = generate_connector_quality_report(
@@ -327,12 +357,26 @@ def run_automatic_healthcheck(
                          f"liveness_status={liveness['status']}; staleness_minutes={liveness['staleness_minutes']}"))
 
     failed = [c for c in checks if c["status"] == "fail"]
-    if not failed:
+    warned = [c for c in checks if c["status"] == "warn"]
+    if not failed and not warned:
         status = "ok"
-    elif any("blocked" in c.get("detail", "") for c in failed):
-        status = "failed"
-    else:
+    elif not failed and warned:
         status = "degraded"
+    else:
+        status = "failed"
+
+    production = _production_readiness(loaded_artifacts.get("source_run.json"))
+    if not production["ready"]:
+        checks.append(_warn("production_readiness",
+                             f"ready={production["ready"]}; reason={production["reason"]}; "
+                             f"missing_env={production["missing_env"]}"))
+        warned = [c for c in checks if c["status"] == "warn"]
+        if not failed and not warned:
+            status = "ok"
+        elif not failed and warned:
+            status = "degraded"
+        else:
+            status = "failed"
 
     return {
         "status": status, "command": "healthcheck", "mode": "auto",
@@ -340,12 +384,67 @@ def run_automatic_healthcheck(
         "max_age_minutes": max_age_minutes, "feed_item_count": len(items),
         "feed_age_minutes": age_minutes, "checks": checks,
         "failed_checks": [c["name"] for c in failed],
+        "warned_checks": [c["name"] for c in warned],
         "raw_secret_findings": raw_secret_findings,
+        "production_readiness": production,
     }
+
+
+
+
+_REQUIRED_PRODUCTION_ENV = {
+    "NEWS_HARNESS_KPL_DEVICE_ID": "KPL 设备标识（开盘啦题材发现）",
+    "NEWS_HARNESS_KPL_TOKEN": "KPL 访问令牌",
+    "NEWS_HARNESS_KPL_USER_ID": "KPL 用户标识",
+    "NEWS_HARNESS_XUEQIU_COOKIE_FILE": "雪球读取 cookie 文件（可选，headless 可用 storage state 替代）",
+    "NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE": "雪球 headless storage state 文件（可选，cookie 可用替代）",
+}
+
+
+def _production_readiness(source_run: dict[str, Any] | None) -> dict[str, Any]:
+    """Diagnose whether the pipeline actually ran against real sources."""
+    if not isinstance(source_run, dict):
+        return {
+            "ready": False,
+            "reason": "source_run artifact missing; real-source cycle has not produced output",
+            "missing_env": list(_REQUIRED_PRODUCTION_ENV),
+            "fixture_only": None,
+            "production_connector_ready": None,
+            "real_source_smoke_not_executed": None,
+        }
+    fixture_only = source_run.get("fixture_only")
+    prod_ready = source_run.get("production_connector_ready")
+    no_real = source_run.get("real_source_smoke_not_executed")
+    if prod_ready is True:
+        return {"ready": True, "reason": "real-source cycle produced output", "missing_env": [], "fixture_only": fixture_only, "production_connector_ready": prod_ready, "real_source_smoke_not_executed": no_real}
+    missing = {
+        key: label for key, label in _REQUIRED_PRODUCTION_ENV.items()
+        if not (os.environ.get(key) or (key == "NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE" and os.environ.get("NEWS_HARNESS_XUEQIU_COOKIE_FILE")))
+    }
+    # KPL identity can be provided via file envs too
+    for file_env, label in (("NEWS_HARNESS_KPL_DEVICE_ID_FILE", "KPL device id secret file"), ("NEWS_HARNESS_KPL_TOKEN_FILE", "KPL token secret file"), ("NEWS_HARNESS_KPL_USER_ID_FILE", "KPL user id secret file")):
+        if os.environ.get(file_env):
+            missing.pop(file_env[:-5], None)
+    reason = "real-source cycle not executed"
+    if fixture_only or no_real:
+        reason = "last run was dry-run/fixture only; no real-source cycle executed"
+    return {
+        "ready": False,
+        "reason": reason,
+        "missing_env": list(missing),
+        "fixture_only": fixture_only,
+        "production_connector_ready": prod_ready,
+        "real_source_smoke_not_executed": no_real,
+    }
+
 
 
 def _check(name: str, passed: bool, detail: str) -> dict[str, str]:
     return {"name": name, "status": "pass" if passed else "fail", "detail": detail}
+
+
+def _warn(name: str, detail: str) -> dict[str, str]:
+    return {"name": name, "status": "warn", "detail": detail}
 
 
 def _due_task_ids(revisit: dict[str, Any] | None) -> set[str]:

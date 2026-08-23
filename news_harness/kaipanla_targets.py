@@ -97,13 +97,16 @@ def normalize_kpl_response(endpoint_id: str, raw: dict) -> list[dict]:
         items = raw.get("List") or []
         stocks = []
         for item in items:
-            if not isinstance(item, dict):
+            if item is None:
+                # 开盘拉分笔接口可能返回 [null] 表示该股票当前无涨停数据。
                 continue
+            if not isinstance(item, dict):
+                raise ValueError(f"KPL-47 schema drift at $List[*]: expected object, got {type(item).__name__}")
             code = str(item.get("StockID", "")).strip()
             name = str(item.get("StockName", "")).strip()
             reason = str(item.get("Reason", "")).strip()
             if not code:
-                continue
+                raise ValueError("KPL-47 schema drift at $List[*].StockID: required field missing")
             stocks.append({"symbol": normalize_symbol(code), "stock_code": code, "stock_name": name, "reason": reason})
         return stocks
 
@@ -473,11 +476,13 @@ def build_target_set(config: dict) -> dict:
                 validate_kpl_response("KPL-47", raw)
                 reasons = normalize_kpl_response("KPL-47", raw)
                 matching = next((row for row in reasons if row.get("stock_code") == stock["stock_code"]), None)
-                if matching and matching.get("reason"):
+                reason_found = bool(matching and matching.get("reason"))
+                if reason_found:
                     stock["limit_up_reason"] = matching["reason"]
                     stock["selection_reasons"] = list(dict.fromkeys([*stock.get("selection_reasons", []), "limit_up_reason_confirmed"]))
                 endpoint_results.append({
                     "endpoint_id": "KPL-47", "status": "ok", "symbol": stock["symbol"], "row_count": len(reasons),
+                    "reason_found": reason_found,
                     "duration_seconds": round(time.monotonic() - started, 3),
                     "response_hash": hashlib.sha256(json.dumps(raw, sort_keys=True).encode()).hexdigest(),
                 })

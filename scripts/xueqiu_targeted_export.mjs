@@ -194,7 +194,7 @@ try {
       const imageInfoList = full.image_info_list || item.image_info_list;
       if (Array.isArray(imageInfoList)) {
         for (const img of imageInfoList) {
-          const url = img?.url || img?.originUrl;
+          const url = img?.originUrl || img?.url;
           if (url && url.startsWith("http")) images.push(url);
         }
       }

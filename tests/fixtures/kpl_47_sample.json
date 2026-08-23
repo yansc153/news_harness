@@ -1,8 +1,10 @@
 {
   "errcode": "0",
+  "StockID": "600000",
+  "ttag": 0.000399,
+  "Time": 1724302800,
   "List": [
     {"StockID": "600000", "StockName": "浦发银行", "Reason": "银行板块异动"},
     {"StockID": "300750", "StockName": "宁德时代", "Reason": "固态电池"}
-  ],
-  "Time": 1724302800
+  ]
 }

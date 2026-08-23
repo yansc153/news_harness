@@ -75,14 +75,14 @@ def map_discussion_row_to_observation(
     for img in (row.get("image_info_list") or []):
         url = None
         if isinstance(img, dict):
-            url = img.get("url") or img.get("originUrl")
+            url = img.get("originUrl") or img.get("url")
         elif isinstance(img, str):
             url = img
         if url and str(url).startswith("http"):
             image_urls.append(str(url))
 
     for img in (row.get("images") or []):
-        url = img.get("url") if isinstance(img, dict) else img
+        url = (img.get("originUrl") or img.get("url")) if isinstance(img, dict) else img
         if url and str(url).startswith("http"):
             image_urls.append(str(url))
 

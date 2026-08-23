@@ -393,17 +393,22 @@ cards should show only source, copy, and image status/preview; scoring,
 guardrails, and outcomes can remain internal fields used for filtering and
 ranking.
 
-`Image Asset Pipeline + MCP Export Contract` remains important, but it is now
-behind the timeline contract. MCP export needs copy plus image assets, not only
-source image URLs, and must add a separate asset layer without replacing raw
-evidence:
+**Current policy: images are reference-only.** The harness does not download,
+cache, re-host, crop, or remove watermarks from any crawled image. Every imported
+image keeps its original network URL (`originUrl`/`original_image_ref`) as an
+image reference; if no image is present the item keeps `image_refs=[]`. Images
+are optional and never gate content ingestion.
+
+`Image Asset Pipeline + MCP Export Contract` is a roadmap item, not the current
+behavior. MCP export keeps copy plus original image references, and must not add
+a proxy/cache/re-host layer or replace raw evidence:
 
 - Raw evidence keeps original image URL/reference, page context, author/source,
   and access status for audit and replay.
-- Asset layer may download allowed images into controlled storage, record hash,
-  mime type, size, dimensions, source ref, download status, and rights/risk
-  status.
-- MCP export returns copy plus asset references only when export policy allows
-  it; otherwise it returns text-only or a blocked status.
+- Asset layer, if ever added, must stay read-only over original references and
+  only record hash, mime type, size, dimensions, source ref, and rights/risk
+  status; it must not download, re-host, or strip watermarks.
+- MCP export returns copy plus original image references only when export policy
+  allows it; otherwise it returns text-only or a blocked status.
 - Auth-gated, private, signed, oversized, unsupported, or rights-blocked images
   must produce structured blocked/failure states.
