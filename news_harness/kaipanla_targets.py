@@ -224,14 +224,26 @@ def build_target_set(config: dict) -> dict:
         except Exception as exc:
             errors.append({"source": eid, "error": str(exc)[:300]})
 
-    theme_blocks: list[dict] = []
-    for theme in all_themes[:max_themes]:
-        block = {"theme_id": theme["theme_id"], "stocks": []}
-        combined = []
-        for stocks in all_stock_sources.values():
-            combined.extend(stocks[:max_per_theme])
-        block["stocks"] = combined[:max_per_theme]
-        theme_blocks.append(block)
+    # Build a flat stock pool from direct sources, preserving upstream order.
+    flat_pool: list[dict] = []
+    seen_in_pool: set[str] = set()
+    for eid in enabled:
+        for stock in all_stock_sources.get(eid, []):
+            sym = stock.get("symbol", "")
+            if not sym or sym in seen_in_pool:
+                continue
+            seen_in_pool.add(sym)
+            entry = {**stock}
+            if all_themes:
+                entry["theme_ids"] = [t["theme_id"] for t in all_themes[:max_themes]]
+            flat_pool.append(entry)
+
+    if all_themes:
+        theme_blocks = [{"theme_id": "_discovered", "stocks": flat_pool}]
+    elif flat_pool:
+        theme_blocks = [{"theme_id": "_direct", "stocks": flat_pool}]
+    else:
+        theme_blocks = []
 
     if not theme_blocks and all_stock_sources:
         flat = []

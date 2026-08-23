@@ -28,17 +28,6 @@
       "js_render_required": true,
       "targeting_config_ref": "configs/hourly_targeting.v1.json"
     },
-    {
-      "source": "xueqiu_daren",
-      "source_label": "雪球达人（保留备用）",
-      "source_entry_url": "https://xueqiu.com/",
-      "refresh_interval_seconds": 3600,
-      "batch_limit": 20,
-      "secret_ref": "secret_ref:xueqiu_reader_cookie_v1",
-      "session_ref": "session_ref:xueqiu_small_account_v1",
-      "two_level_crawl": true,
-      "js_render_required": true
-    }
   ],
   "forbidden_actions": [
     "login",

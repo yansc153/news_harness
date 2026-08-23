@@ -303,7 +303,7 @@ def _run_cycle_inner(
         if closed_loop_result and closed_loop_result.get("status") != "ok":
             errors.append({"phase": "closed_loop", "status": closed_loop_result.get("status")})
 
-    if score_result is not None:
+    if score_result is not None or (selected_mode == "manual-smoke" and source_result.get("status") == "ok" and not errors):
         try:
             timeline_result = generate_timeline_feed(fixtures_dir, timeline_out)
         except Exception as exc:  # noqa: BLE001 - top-level cycle report must stay structured
