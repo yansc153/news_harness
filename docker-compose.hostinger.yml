@@ -9,10 +9,7 @@ services:
     # Hostinger provisions /run/news-harness/secrets as root:root 0600.
     user: "0:0"
     restart: unless-stopped
-    ports:
-      - "8765:8765"
-    networks:
-      - traefik-proxy
+    network_mode: host
     expose:
       - "8765"
     volumes:
@@ -43,7 +40,6 @@ services:
       start_period: 10m
     labels:
       - traefik.enable=true
-      - traefik.docker.network=traefik-proxy
       - traefik.http.routers.news-harness.rule=Host(`newshardness.hellopepper.work`)
       - traefik.http.routers.news-harness.entrypoints=websecure
       - traefik.http.routers.news-harness.tls=true
@@ -53,7 +49,3 @@ services:
 volumes:
   news_harness_artifacts:
   news_harness_feed:
-
-networks:
-  traefik-proxy:
-    external: true
