@@ -121,7 +121,7 @@ def map_discussion_row_to_observation(
         "object_type": "SourceObservation",
         "observation_id": observation_id,
         "source": "xueqiu_targeted",
-        "source_label": f"雪球定向:{stock_name}",
+        "source_label": f"雪球分析:{stock_name}",
         "source_url": canonical_url,
         "canonical_url": canonical_url,
         "author": screen_name or "unknown",
@@ -129,7 +129,7 @@ def map_discussion_row_to_observation(
         "published_at_status": "observed" if published_at else "missing_or_invalid",
         "fetched_at": _utc_now(),
         "copy_text": text,
-        "topic_or_hook": f"{stock_name} 讨论",
+        "topic_or_hook": f"{stock_name} 分析",
         "image_refs": [{"url": u, "original_image_ref": u, "evidence_eligible": True} for u in image_urls],
         "image_status": "available" if image_urls else "no_image",
         "engagement_snapshot": {
