@@ -35,6 +35,18 @@ Use this path on the VPS after repo-external source credentials/session state
 are configured. It performs one real manual-smoke source -> score -> timeline
 cycle, then checks freshness and required sources.
 
+## V2 Kaipanla-Guided Mode (current)
+
+The production source is now `xueqiu_targeted`: Kaipanla discovers active themes and stocks, then Xueqiu is crawled per-stock with a fixed comment threshold (default 10). The cycle runs hourly.
+
+```bash
+python3 -m news_harness run-cycle \
+  --source-config configs/all_source_runner.json \
+  --score-config configs/deepseek_provider.json \
+  --mode manual-smoke \
+  --backend direct-cli
+```
+
 ```bash
 python3 -m news_harness run-cycle \
   --source-config configs/all_source_runner.json \
