@@ -1353,7 +1353,7 @@ def _validate_all_source_deepseek_runner(fixtures_dir: Path, fixtures: dict[str,
     else:
         text = SECRETS_ENV_EXAMPLE.read_text(encoding="utf-8")
         lowered = text.lower()
-        if "secret_ref:" not in text or "deepseek_api_key_v1" not in text:
+        if "secret_ref:kpl_device_id_v1" not in text:
             issues.append(_issue("fixture_ref_missing", SECRETS_ENV_EXAMPLE, "secrets example must contain only placeholder refs"))
         if any(marker in lowered for marker in ("auth_token=", "ct0=", "twid=", "cookie:", "set-cookie:", "authorization: bearer")):
             issues.append(_issue("raw_secret_material_present", SECRETS_ENV_EXAMPLE, "secrets example must not contain raw cookie/token markers"))
