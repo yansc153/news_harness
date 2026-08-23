@@ -96,18 +96,25 @@ def normalize_kpl_response(endpoint_id: str, raw: dict) -> list[dict]:
     elif endpoint_id == "KPL-47":
         items = raw.get("List") or []
         stocks = []
+        top_level_code = str(raw.get("StockID", "")).strip()
+        top_level_symbol = normalize_symbol(top_level_code) if top_level_code else ""
         for item in items:
             if item is None:
                 # 开盘拉分笔接口可能返回 [null] 表示该股票当前无涨停数据。
                 continue
             if not isinstance(item, dict):
                 raise ValueError(f"KPL-47 schema drift at $List[*]: expected object, got {type(item).__name__}")
-            code = str(item.get("StockID", "")).strip()
-            name = str(item.get("StockName", "")).strip()
+            # The documented fixture puts StockID/StockName in each item;
+            # the live endpoint puts StockID at the response root and returns
+            # event rows (Date/Reason) in List. Support both shapes.
+            code = str(item.get("StockID", "")).strip() or top_level_code
+            name = str(item.get("StockName", "")).strip() or str(raw.get("StockName", "")).strip()
             reason = str(item.get("Reason", "")).strip()
             if not code:
-                raise ValueError("KPL-47 schema drift at $List[*].StockID: required field missing")
-            stocks.append({"symbol": normalize_symbol(code), "stock_code": code, "stock_name": name, "reason": reason})
+                # A malformed row must still fail loudly; an empty List is a
+                # valid no-event response and returns no rows below.
+                raise ValueError("KPL-47 schema drift at $.StockID/$List[*].StockID: required field missing")
+            stocks.append({"symbol": normalize_symbol(code) or top_level_symbol, "stock_code": code, "stock_name": name, "reason": reason})
         return stocks
 
     elif endpoint_id in ("KPL-49", "KPL-50", "KPL-51", "KPL-52", "KPL-53"):
