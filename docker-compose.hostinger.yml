@@ -11,6 +11,8 @@ services:
     restart: unless-stopped
     ports:
       - "8765:8765"
+    networks:
+      - traefik-proxy
     expose:
       - "8765"
     volumes:
@@ -50,3 +52,7 @@ services:
 volumes:
   news_harness_artifacts:
   news_harness_feed:
+
+networks:
+  traefik-proxy:
+    external: true
