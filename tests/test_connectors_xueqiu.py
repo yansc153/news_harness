@@ -200,8 +200,8 @@ class TestFilterBatch(unittest.TestCase):
         self.assertEqual(stats["gate_a_dropped"], 1)
         self.assertEqual(sum(stats["gate_b_dropped"].values()), 4)
 
-    def test_relaxation_recovers_below_floor(self):
-        # 仅 3 合格，但需要 5 → 放宽阶梯救回部分
+    def test_relaxation_disabled_below_floor(self):
+        # 仅 3 合格，floor=5 → 不放宽，仍返回 3 条
         obs = [_sample_obs(f"ok_{i}") for i in range(3)]
         obs += [_sample_obs("lowlike", likes=5) for _ in range(4)]
         obs += [_sample_obs("noimg", image_refs=[]) for _ in range(4)]
@@ -209,9 +209,9 @@ class TestFilterBatch(unittest.TestCase):
             obs, load_blocklist(self.path), XUEQIU_THRESHOLDS,
             batch_limit=20, floor=5, relax=True,
         )
-        # 放宽后 lowlike(仅赞不足) 在去掉赞门槛后入选；总数应≥5
-        self.assertGreaterEqual(len(passed), 5)
-        self.assertTrue(stats["relaxation_level"] >= 1)
+        # Threshold is immutable; relaxation disabled
+        self.assertEqual(len(passed), 3)
+        self.assertNotIn("relaxation_level", stats)
 
     def test_batch_limit_caps_input(self):
         obs = [_sample_obs(f"ok_{i}") for i in range(50)]

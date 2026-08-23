@@ -28,10 +28,10 @@ from news_harness.models import (
 )
 
 XUEQIU_DEFAULT_THRESHOLDS = {
-    "min_chars": 500,
-    "min_likes": 50,
+    "min_chars": 0,
+    "min_likes": 0,
     "min_comments": 10,
-    "require_image": True,
+    "require_image": False,
 }
 
 FetchFn = Callable[[dict, dict], tuple[list[dict], list[dict]]]
@@ -133,7 +133,7 @@ class XueqiuSourceConnector(SourceConnector):
             self.thresholds,
             batch_limit=self.batch_limit,
             floor=self.floor,
-            relax=True,
+            relax=False,
         )
         self.last_stats = stats
         return items

@@ -67,10 +67,10 @@ def apply_gate_a(obs: dict, blocklist: list[dict]) -> tuple[bool, str]:
 
 def apply_gate_b(item: ContentItem, thresholds: dict) -> tuple[bool, str]:
     """Gate B：硬性门槛。返回 (通过, 未通过原因)。"""
-    min_chars = int(thresholds.get("min_chars", 500))
-    min_likes = int(thresholds.get("min_likes", 50))
+    min_chars = int(thresholds.get("min_chars", 0))
+    min_likes = int(thresholds.get("min_likes", 0))
     min_comments = int(thresholds.get("min_comments", 10))
-    require_image = bool(thresholds.get("require_image", True))
+    require_image = bool(thresholds.get("require_image", False))
 
     if item.char_count < min_chars:
         return False, "dropped_short"
@@ -96,34 +96,17 @@ def derive_author_type(obs: dict, blocklist: list[dict]) -> str:
     return "personal"
 
 
-# filter_batch 放宽阶梯：从 level 1 起逐档去掉最严门槛
-_RELAX_LEVELS = [
-    {},                                            # level 0: 全门槛
-    {"min_comments": 0},                           # level 1: 去掉评论门槛
-    {"min_comments": 0, "min_likes": 0},           # level 2: 再去点赞门槛
-    {"min_comments": 0, "min_likes": 0, "require_image": False},  # level 3: 再去配图
-    {"min_comments": 0, "min_likes": 0, "require_image": False, "min_chars": 0},  # level 4: 去字数
-]
-
-
-def _relaxed_thresholds(base: dict, level: int) -> dict:
-    return {**base, **_RELAX_LEVELS[level]}
-
-
 def filter_batch(
     observations: list[dict],
     blocklist: list[dict],
     thresholds: dict,
     *,
     batch_limit: int = 20,
-    floor: int = 5,
-    relax: bool = True,
+    floor: int = 0,
+    relax: bool = False,
     mapper=None,
 ) -> tuple[list[ContentItem], dict]:
-    """摄入编排：拉 batch_limit 条 → Gate A → 映射 → Gate B（不足 floor 则阶梯放宽）。
-
-    返回 (passed_items, stats)。stats 含各闸门丢弃计数与 relaxation_level / floor_met。
-    """
+    """Fixed-threshold batch filter. No relaxation. floor kept for interface compatibility but ignored."""
     from news_harness.connectors.source.xueqiu import xueqiu_observation_to_content_item
 
     _mapper = mapper or xueqiu_observation_to_content_item
@@ -132,13 +115,13 @@ def filter_batch(
         "gate_a_dropped": 0,
         "gate_b_dropped": {},
         "passed": 0,
-        "relaxation_level": 0,
         "floor": floor,
-        "floor_met": False,
     }
 
     window = observations[:batch_limit]
-    survivors: list[tuple[dict, ContentItem]] = []
+    passed_items: list[ContentItem] = []
+    dropped: dict[str, int] = {}
+
     for obs in window:
         ok, _ = apply_gate_a(obs, blocklist)
         if not ok:
@@ -146,28 +129,12 @@ def filter_batch(
             continue
         item = _mapper(obs)
         item.author_type = derive_author_type(obs, blocklist)
-        survivors.append((obs, item))
+        ok_b, reason = apply_gate_b(item, thresholds)
+        if ok_b:
+            passed_items.append(item)
+        else:
+            dropped[reason] = dropped.get(reason, 0) + 1
 
-    def evaluate(level: int) -> list[ContentItem]:
-        th = _relaxed_thresholds(thresholds, level)
-        passed: list[ContentItem] = []
-        dropped = {}
-        for _, item in survivors:
-            ok, reason = apply_gate_b(item, th)
-            if ok:
-                passed.append(item)
-            else:
-                dropped[reason] = dropped.get(reason, 0) + 1
-        stats["gate_b_dropped"] = dropped
-        return passed
-
-    passed = evaluate(0)
-    level = 0
-    while relax and len(passed) < floor and level < len(_RELAX_LEVELS) - 1:
-        level += 1
-        stats["relaxation_level"] = level
-        passed = evaluate(level)
-
-    stats["passed"] = len(passed)
-    stats["floor_met"] = len(passed) >= floor
-    return passed, stats
+    stats["gate_b_dropped"] = dropped
+    stats["passed"] = len(passed_items)
+    return passed_items, stats
