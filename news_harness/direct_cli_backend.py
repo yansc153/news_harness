@@ -74,7 +74,13 @@ def run_direct_cli_sources(config_path: Path) -> dict[str, Any]:
     started = time.monotonic()
     config = load_json(config_path)
     run_id = _run_id("direct_cli_source")
-    env_check = _check_manual_env()
+    configured_sources = config.get("sources", []) if isinstance(config, dict) else []
+    xueqiu_only = bool(configured_sources) and all(
+        str(row.get("source")) == "xueqiu_targeted"
+        for row in configured_sources
+        if isinstance(row, dict)
+    )
+    env_check = _check_manual_env(xueqiu_only=xueqiu_only)
     if env_check["status"] != "ok":
         artifact = _source_artifact(
             run_id=run_id,

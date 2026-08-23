@@ -1,5 +1,17 @@
 # News Harness Fixture-First MVP
 
+## Current runtime contract (2026-08)
+
+The production path is **Xueqiu-only**: Kaipanla discovers active themes and
+stocks, the connector searches Xueqiu for those stocks, and the timeline keeps
+posts that meet the fixed `comments >= 10` gate. The cycle runs hourly.
+
+DeepSeek scoring, prediction, revisit/evaluation, Reddit, Twitter/X, and other
+source pools are not part of the current runtime. They remain legacy
+compatibility code/artifacts only. Images are reference-only: keep the crawled
+`originUrl`/`original_image_ref`, use `image_refs=[]` when absent, and never
+download, cache, crop, re-host, or remove watermarks.
+
 This repository exposes a local harness loop. The default validation/replay path
 is fixture-first, while explicit `manual-smoke` commands can attempt small
 read-only real processing with repo-external secrets and redacted artifacts.

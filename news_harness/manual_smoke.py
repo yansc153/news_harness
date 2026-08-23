@@ -480,6 +480,17 @@ def load_manual_timeline_items() -> tuple[list[dict[str, Any]], dict[str, Any]]:
     revisit_schedule = _load_optional_json(REVISIT_SCHEDULE_ARTIFACT, {})
     outcomes = _load_optional_json(OUTCOME_ARTIFACT, {})
     eval_run = _load_optional_json(EVAL_ARTIFACT, {})
+    source_rows = source_run.get("sources", []) if isinstance(source_run, dict) else []
+    xueqiu_only = bool(source_rows) and all(
+        isinstance(row, dict) and row.get("source") == "xueqiu_targeted"
+        for row in source_rows
+    )
+    if xueqiu_only:
+        # Do not let stale legacy DeepSeek/revisit artifacts alter a single-source feed.
+        scoring = {}
+        revisit_schedule = {}
+        outcomes = {}
+        eval_run = {}
     if not isinstance(source_run, dict) or not source_run.get("observations"):
         if isinstance(source_run, dict) and source_run.get("sources"):
             metadata = {
@@ -1944,11 +1955,15 @@ def _source_summary(artifact: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _check_manual_env() -> dict[str, Any]:
+def _check_manual_env(*, xueqiu_only: bool = False) -> dict[str, Any]:
     _load_env_file_if_present(MANUAL_ENV_FILE)
     missing = []
     invalid = []
-    for key, expected in REQUIRED_MANUAL_ENV.items():
+    required = dict(REQUIRED_MANUAL_ENV)
+    if xueqiu_only:
+        # The single-source pipeline has no model/provider dependency.
+        required.pop("NEWS_HARNESS_DEEPSEEK_SMOKE", None)
+    for key, expected in required.items():
         value = os.environ.get(key)
         if not value:
             missing.append(key)

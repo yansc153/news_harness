@@ -262,11 +262,10 @@ def run_automatic_healthcheck(
     checks.append(_check("feed_fresh", quiet_hour or (age_minutes is not None and age_minutes <= max_age_minutes),
                          f"feed age minutes={age_minutes}; max={max_age_minutes}; quiet_hour={quiet_hour}"))
 
+    # Single-source contract: legacy model/revisit/eval artifacts are not
+    # required and must not make the healthcheck fail.
     expected_artifacts = {
         "source_run.json": artifact_dir / "source_run.json",
-        "deepseek_scoring.json": artifact_dir / "deepseek_scoring.json",
-        "outcome.json": artifact_dir / "outcome.json",
-        "eval.json": artifact_dir / "eval.json",
         "hourly_target_set.json": artifact_dir / "hourly_target_set.json",
     }
     loaded_artifacts: dict[str, Any] = {}
@@ -338,19 +337,8 @@ def run_automatic_healthcheck(
             raw_secret_findings.extend({"artifact": name, "finding": f} for f in findings)
     checks.append(_check("raw_secret_leakage", not raw_secret_findings, f"findings={len(raw_secret_findings)}"))
 
-    outcome = loaded_artifacts.get("outcome.json")
-    revisit_path = artifact_dir / "revisit_schedule.json"
-    revisit = _load_json(revisit_path)
-    due_task_ids = _due_task_ids(revisit)
-    outcome_rows = (
-        outcome.get("outcomes", [])
-        if isinstance(outcome, dict) and isinstance(outcome.get("outcomes"), list)
-        else []
-    )
-    outcome_task_ids = {row.get("task_id") for row in outcome_rows if isinstance(row, dict)}
-    missing_due_outcomes = sorted(t for t in due_task_ids if t not in outcome_task_ids)
-    checks.append(_check("due_outcomes_present", not missing_due_outcomes,
-                         f"due_tasks={len(due_task_ids)}; outcomes={len(outcome_rows)}; missing={len(missing_due_outcomes)}"))
+    # No prediction/revisit/evaluation loop exists in the single-source mode.
+    checks.append(_check("legacy_scoring_disabled", True, "DeepSeek, revisit and evaluation are disabled by contract"))
 
     liveness = check_liveness(artifact_dir, max_staleness_minutes=max_age_minutes)
     checks.append(_check("liveness", liveness["status"] == "ok",

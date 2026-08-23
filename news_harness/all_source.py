@@ -255,6 +255,12 @@ def _run_cycle_inner(
 
     selected_mode = _selected_mode(dry_run, mode)
     source_result = run_sources(source_config, dry_run=dry_run, mode=selected_mode, backend=backend)
+    configured = load_json(source_config) if source_config.exists() else {}
+    configured_sources = configured.get("sources", []) if isinstance(configured, dict) else []
+    xueqiu_only = bool(configured_sources) and all(
+        isinstance(row, dict) and row.get("source") == "xueqiu_targeted"
+        for row in configured_sources
+    )
     score_result: dict[str, Any] | None = None
     timeline_result: dict[str, Any] | None = None
     errors: list[dict[str, Any]] = []
@@ -278,19 +284,21 @@ def _run_cycle_inner(
         and not source_result.get("observation_count")
         and not errors
     )
-    if can_score:
+    if can_score and not xueqiu_only:
         score_result = score(score_config, dry_run=dry_run, mode=selected_mode)
+    elif can_score and xueqiu_only:
+        score_result = {"status": "disabled", "command": "score", "reason": "xueqiu_only_pipeline"}
     elif not zero_candidates:
         if not errors:
             errors.append({"phase": "sources", "status": source_result.get("status"), "code": source_result.get("error_code")})
 
-    if score_result is not None and score_result.get("status") != "ok":
+    if score_result is not None and score_result.get("status") not in {"ok", "disabled"}:
         errors.append({"phase": "score", "status": score_result.get("status"), "code": score_result.get("error_code")})
     if selected_mode == "manual-smoke" and score_result is not None and score_result.get("structured_error_count"):
         errors.append({"phase": "score", "status": "failed", "code": "deepseek_structured_errors", "count": score_result.get("structured_error_count")})
 
     closed_loop_result: dict[str, Any] | None = None
-    should_run_closed_loop = score_result is not None and score_result.get("status") == "ok"
+    should_run_closed_loop = (not xueqiu_only) and score_result is not None and score_result.get("status") == "ok"
     if should_run_closed_loop:
         if selected_mode == "dry-run":
             closed_loop_result = materialize_fixture_cycle_artifacts(fixtures_dir)
@@ -335,7 +343,7 @@ def _run_cycle_inner(
         "mode": selected_mode or "blocked",
         "backend": backend,
         "source_status": source_result.get("status"),
-        "score_status": score_result.get("status") if score_result else "skipped",
+        "score_status": "disabled" if xueqiu_only else (score_result.get("status") if score_result else "skipped"),
         "timeline_status": timeline_result.get("status") if timeline_result else "skipped",
         "closed_loop_status": closed_loop_result.get("status") if closed_loop_result else "skipped",
         "closed_loop": closed_loop_result,

@@ -63,7 +63,7 @@ PY
     done
 fi
 
-# Run cycle once immediately, then every 30 minutes in background
+# Run the single-source Xueqiu cycle once immediately, then every hour.
 (
     echo "  cycle runner: waiting 10s for site server to start..."
     sleep 10
@@ -71,7 +71,6 @@ fi
         echo "  [cycle] $(date -Iseconds) starting mode=$CYCLE_MODE backend=$CYCLE_BACKEND..."
         timeout "$CYCLE_TIMEOUT_SECONDS" python3 -m news_harness run-cycle \
             --source-config configs/all_source_runner.json \
-            --score-config configs/deepseek_provider.json \
             --fixtures fixtures \
             --out "$FEED_PATH" \
             --mode "$CYCLE_MODE" \
