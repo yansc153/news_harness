@@ -6,6 +6,8 @@ services:
   app:
     # Hostinger Docker Manager pulls this prebuilt VPS-local image.
     image: news_harness-app:latest
+    # Hostinger provisions /run/news-harness/secrets as root:root 0600.
+    user: "0:0"
     restart: unless-stopped
     expose:
       - "8765"
