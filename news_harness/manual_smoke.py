@@ -590,6 +590,7 @@ def load_manual_timeline_items() -> tuple[list[dict[str, Any]], dict[str, Any]]:
                 "handle": observation.get("handle"),
                 "avatar_url": observation.get("avatar_url"),
                 "published_at": observation.get("published_at") or observation.get("fetched_at"),
+                "fetched_at": observation.get("fetched_at") or observation.get("published_at"),
                 "copy_text": observation.get("copy_text", ""),
                 "topic_or_hook": score.get("topic_or_hook") or observation.get("topic_or_hook"),
                 "engagement_snapshot": observation.get("engagement_snapshot", {}),
