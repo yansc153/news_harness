@@ -86,7 +86,7 @@ def _image_refs(item: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 ALLOWED_MCP_KEYS: set[str] = {
-    "object_type", "id", "source", "published_at", "copy_text", "source_url", "image_refs",
+    "object_type", "id", "source", "published_at", "observed_at", "copy_text", "source_url", "image_refs",
 }
 
 ALLOWED_MCP_IMAGE_REF_KEYS: set[str] = {
@@ -160,6 +160,7 @@ def project_item_export(item: dict[str, Any]) -> dict[str, Any]:
         "id": item.get("id"),
         "source": item.get("source"),
         "published_at": item.get("published_at"),
+        "observed_at": item.get("fetched_at") or item.get("observed_at"),
         "copy_text": item.get("copy_text") or "",
         "source_url": source_url,
         "image_refs": _mcp_image_refs(item),

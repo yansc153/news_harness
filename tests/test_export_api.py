@@ -97,7 +97,7 @@ class ExportApiTests(unittest.TestCase):
         self.assertEqual(
             {
                 "object_type", "id", "source", "published_at",
-                "copy_text", "source_url", "image_refs",
+                "observed_at", "copy_text", "source_url", "image_refs",
             },
             set(public_item),
         )
