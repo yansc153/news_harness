@@ -30,6 +30,7 @@ function fail(code, message) {
 const symbol = arg("--symbol", "");
 const limit = Math.min(100, Math.max(1, Number(arg("--limit", "20"))));
 const minComments = Math.max(0, Number(arg("--min-comments", "10")));
+const maxAgeHours = Math.max(0, Number(arg("--max-age-hours", "48")));
 const out = arg("--out");
 const storageStatePath = arg("--storage-state") || process.env.NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE;
 
@@ -148,6 +149,9 @@ try {
       if (rows.length >= limit) break;
       const replyCount = Number(item.reply_count || 0);
       if (replyCount < minComments) continue;
+      const createdAtRaw = Number(item.created_at || item.createdAt || 0);
+      const createdAtMs = createdAtRaw > 1e12 ? createdAtRaw : createdAtRaw * 1000;
+      if (maxAgeHours > 0 && createdAtMs > 0 && Date.now() - createdAtMs > maxAgeHours * 3600 * 1000) continue;
       thresholdPassCount += 1;
 
       const detailResponse = await page.evaluate(async (statusId) => {
@@ -199,16 +203,24 @@ try {
               document.querySelector(".article__bd__detail"),
               document.querySelector(".article__bd"),
               document.querySelector(".status-content"),
-              document.querySelector("[class*=detail]"),
-              document.querySelector("[class*=content]"),
             ].filter(Boolean);
-            const texts = candidates.map(el => el.innerText || "");
-            const imageText = [...document.querySelectorAll(".article__bd img, .status-content img, img")]
-              .map(img => img.getAttribute("alt") || img.getAttribute("title") || "")
-              .filter(Boolean);
+            const pick = (el) => (el ? el.innerText || "" : "");
+            const texts = candidates.map(pick);
+            const imageText = candidates.flatMap((el) =>
+              [...el.querySelectorAll("img")]
+                .map((img) => img.getAttribute("alt") || img.getAttribute("title") || "")
+                .filter((t) => t && !/^\[[^\]]{1,10}\]$/.test(t.trim())),
+            );
             return [...texts, ...imageText].join("\n").trim();
           });
-          const cleaned = String(articleText || "").replace(/\s+/g, " ").trim();
+          const cleaned = String(articleText || "")
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => !/^(分享到微信|微信分享|微信|朋友圈|雪球|descrption fold|展开全文|查看全文|阅读全文)$/.test(line))
+            .join("\n")
+            .replace(/\[[^\]]{1,10}\]/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
           if (cleaned.length > fullText.length) {
             fullText = cleaned;
             detailStatus = "page_full_text_observed";
@@ -262,6 +274,7 @@ try {
       raw_row_count: rawRowCount,
       threshold_pass_count: thresholdPassCount,
       comment_threshold: minComments,
+      max_age_hours: maxAgeHours,
     },
     rows,
   }, null, 2));

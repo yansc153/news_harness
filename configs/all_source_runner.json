@@ -12,7 +12,7 @@
   "batch_policy": {
     "batch_processing_required": true,
     "per_item_full_serial_pipeline_allowed": false,
-    "max_items_per_source_per_run": 20,
+    "max_items_per_source_per_run": 30,
     "continue_on_source_error": true
   },
   "sources": [
@@ -20,8 +20,8 @@
       "source": "xueqiu_targeted",
       "source_label": "雪球定向题材抓取",
       "source_entry_url": "https://xueqiu.com/",
-      "refresh_interval_seconds": 3600,
-      "batch_limit": 20,
+      "refresh_interval_seconds": 1800,
+      "batch_limit": 30,
       "secret_ref": "secret_ref:xueqiu_reader_cookie_v1",
       "session_ref": "session_ref:xueqiu_small_account_v1",
       "two_level_crawl": true,

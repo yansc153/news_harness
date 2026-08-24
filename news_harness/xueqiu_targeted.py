@@ -191,6 +191,7 @@ def fetch_stock_discussions(
     min_comments: int = 10,
     min_text_chars: int = 100,
     per_stock_limit: int = 20,
+    max_age_hours: int = 48,
 ) -> tuple[list[dict], list[dict]]:
     """Compatibility entrypoint returning observations and structured errors."""
     result = collect_stock_discussions(
@@ -198,6 +199,7 @@ def fetch_stock_discussions(
         min_comments=min_comments,
         min_text_chars=min_text_chars,
         per_stock_limit=per_stock_limit,
+        max_age_hours=max_age_hours,
     )
     return result["observations"], result["structured_errors"]
 
@@ -208,6 +210,7 @@ def collect_stock_discussions(
     min_comments: int = 10,
     min_text_chars: int = 100,
     per_stock_limit: int = 20,
+    max_age_hours: int = 48,
 ) -> dict[str, Any]:
     """Fetch all targets and return observations plus auditable collection counts."""
     all_obs: list[dict] = []
@@ -229,7 +232,7 @@ def collect_stock_discussions(
 
         prefer_headless = os.environ.get("NEWS_HARNESS_XUEQIU_HEADLESS") == "1"
         if prefer_headless:
-            rows, errors = _fetch_via_headless(symbol, per_stock_limit, min_comments)
+            rows, errors = _fetch_via_headless(symbol, per_stock_limit, min_comments, max_age_hours)
         else:
             rows, errors = _fetch_via_opencli(symbol, per_stock_limit)
         if not rows and errors:
@@ -238,7 +241,7 @@ def collect_stock_discussions(
                 rows, fallback_errors = _fetch_via_opencli(symbol, per_stock_limit)
                 backend = "opencli"
             else:
-                rows, fallback_errors = _fetch_via_headless(symbol, per_stock_limit, min_comments)
+                rows, fallback_errors = _fetch_via_headless(symbol, per_stock_limit, min_comments, max_age_hours)
                 backend = "headless"
             if rows:
                 attempt_warnings.extend([
@@ -364,7 +367,7 @@ def merge_stock_results(results: list[tuple[list, list]]) -> tuple[list, list]:
     return merged_obs, merged_errs
 
 
-def _fetch_via_headless(symbol: str, limit: int, min_comments: int = 10) -> tuple[list[dict], list[dict]]:
+def _fetch_via_headless(symbol: str, limit: int, min_comments: int = 10, max_age_hours: int = 48) -> tuple[list[dict], list[dict]]:
     """Fetch stock discussions via the Playwright headless fallback script."""
     import json
     from .fixtures import ROOT
@@ -385,7 +388,7 @@ def _fetch_via_headless(symbol: str, limit: int, min_comments: int = 10) -> tupl
 
     args = [
         node, str(script), "--symbol", symbol, "--limit", str(limit),
-        "--min-comments", str(min_comments), "--out", str(out_path),
+        "--min-comments", str(min_comments), "--max-age-hours", str(max_age_hours), "--out", str(out_path),
     ]
     storage_state = os.environ.get("NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE")
     if storage_state:
