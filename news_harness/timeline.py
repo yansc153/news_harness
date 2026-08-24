@@ -109,11 +109,11 @@ def _xueqiu_item_not_full_text(item: dict[str, Any]) -> bool:
     full_text_status = str(item.get("full_text_status") or "").strip()
     detail_fetch_status = str(item.get("detail_fetch_status") or "").strip()
     source_quality = str(item.get("source_quality") or "").strip()
-    if full_text_status and full_text_status != "full_text_observed":
+    if full_text_status and full_text_status not in {"full_text_observed", "page_full_text_observed"}:
         return True
     if source_quality in {"summary_or_list_excerpt_only", "detail_attempt_incomplete"}:
         return True
-    if detail_fetch_status and detail_fetch_status not in {"full_text_observed", "api_full_text_observed"}:
+    if detail_fetch_status and detail_fetch_status not in {"full_text_observed", "api_full_text_observed", "page_full_text_observed"}:
         return True
     text = " ".join(str(item.get(field) or "") for field in ("copy_text", "topic_or_hook", "title"))
     return bool(re.search(r"(\.{3,}|…|展开全文|阅读全文|查看全文)\s*$", text.strip()))

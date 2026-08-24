@@ -110,7 +110,7 @@ def map_discussion_row_to_observation(
         raise ValueError(f"status {status_id} has empty text")
     if not canonical_url.startswith("https://xueqiu.com/") or canonical_url.endswith(f"/S/{symbol}"):
         raise ValueError(f"status {status_id} has no canonical post URL")
-    if full_text_status not in {"full_text_observed", "api_full_text_observed"}:
+    if full_text_status not in {"full_text_observed", "api_full_text_observed", "page_full_text_observed"}:
         raise ValueError(f"status {status_id} full text is not confirmed")
     content_hash = hashlib.sha256(f"{canonical_url}:{text}".encode()).hexdigest()
     observation_id = f"obs_xq_targeted_{content_hash[:16]}"
@@ -342,7 +342,7 @@ def _fetch_via_opencli(symbol: str, limit: int) -> tuple[list[dict], list[dict]]
     confirmed = [
         row for row in normalized
         if row.get("id") and row.get("url") and row.get("text")
-        and row.get("full_text_status") in {"full_text_observed", "api_full_text_observed"}
+        and row.get("full_text_status") in {"full_text_observed", "api_full_text_observed", "page_full_text_observed"}
     ]
     dropped = len(normalized) - len(confirmed)
     errors = ([{

@@ -181,7 +181,35 @@ try {
       }
 
       const full = detail?.status || detail?.data || detail || item;
-      const fullText = String(full.description || full.text || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      let fullText = String(full.description || full.text || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      let detailStatus = "api_full_text_observed";
+      // Long posts are truncated by the list/show APIs (they end with an
+      // ellipsis). Open the canonical post page in the same logged-in context
+      // and read the rendered article body so the export keeps the full text.
+      if (/\.{3,}|…$/.test(fullText) || Number(full.target_url) || full.target_url) {
+        const postUrl = user.id && item.id ? `https://xueqiu.com/${user.id}/${item.id}` : "";
+        if (postUrl) {
+          await page.goto(postUrl, { waitUntil: "domcontentloaded", timeout: 20000 });
+          await page.waitForTimeout(800 + Math.floor(Math.random() * 700));
+          const articleText = await page.evaluate(() => {
+            const candidates = [
+              document.querySelector(".article__bd__detail"),
+              document.querySelector(".article__bd"),
+              document.querySelector(".status-content"),
+              document.querySelector("[class*=detail]"),
+              document.querySelector("[class*=content]") ,
+            ].filter(Boolean);
+            return candidates.map(el => el.innerText || "").join("\n").trim();
+          });
+          const cleaned = String(articleText || "").replace(/\s+/g, " ").trim();
+          if (cleaned.length > fullText.length) {
+            fullText = cleaned;
+            detailStatus = "page_full_text_observed";
+          }
+          await page.goBack({ waitUntil: "domcontentloaded", timeout: 15000 }).catch(() => {});
+          await page.waitForTimeout(600);
+        }
+      }
       if (!fullText) fail("detail_text_missing", `Detail API returned no full text for status ${item.id}`);
       const user = full.user || item.user || {};
       const images = [];
@@ -209,8 +237,8 @@ try {
         author: String(user.screen_name || ""),
         url: user.id && item.id ? `https://xueqiu.com/${user.id}/${item.id}` : "",
         images,
-        detail_fetch_status: "api_full_text_observed",
-        full_text_status: "full_text_observed",
+        detail_fetch_status: detailStatus,
+        full_text_status: detailStatus === "page_full_text_observed" ? "page_full_text_observed" : "full_text_observed",
       });
     }
 
