@@ -184,10 +184,12 @@ try {
       let fullText = String(full.description || full.text || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
       let detailStatus = "api_full_text_observed";
       // Long posts are truncated by the list/show APIs (they end with an
-      // ellipsis). Open the canonical post page in the same logged-in context
-      // and read the rendered article body so the export keeps the full text.
+      // ellipsis, or just stop mid-sentence). Open the canonical post page in
+      // the same logged-in context and read the rendered article body so the
+      // export keeps the full text.
       const user = full.user || item.user || {};
-      if (/\.{3,}|…$/.test(fullText)) {
+      const looksTruncated = /\.{3,}|…$|展开全文|阅读全文|查看全文/.test(fullText) || /[，,：:、]$/.test(fullText) || fullText.length < 220;
+      if (looksTruncated) {
         const postUrl = user.id && item.id ? `https://xueqiu.com/${user.id}/${item.id}` : "";
         if (postUrl) {
           await page.goto(postUrl, { waitUntil: "domcontentloaded", timeout: 20000 });
@@ -198,9 +200,13 @@ try {
               document.querySelector(".article__bd"),
               document.querySelector(".status-content"),
               document.querySelector("[class*=detail]"),
-              document.querySelector("[class*=content]") ,
+              document.querySelector("[class*=content]"),
             ].filter(Boolean);
-            return candidates.map(el => el.innerText || "").join("\n").trim();
+            const texts = candidates.map(el => el.innerText || "");
+            const imageText = [...document.querySelectorAll(".article__bd img, .status-content img, img")]
+              .map(img => img.getAttribute("alt") || img.getAttribute("title") || "")
+              .filter(Boolean);
+            return [...texts, ...imageText].join("\n").trim();
           });
           const cleaned = String(articleText || "").replace(/\s+/g, " ").trim();
           if (cleaned.length > fullText.length) {
