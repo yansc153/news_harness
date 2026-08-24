@@ -186,7 +186,8 @@ try {
       // Long posts are truncated by the list/show APIs (they end with an
       // ellipsis). Open the canonical post page in the same logged-in context
       // and read the rendered article body so the export keeps the full text.
-      if (/\.{3,}|…$/.test(fullText) || Number(full.target_url) || full.target_url) {
+      const user = full.user || item.user || {};
+      if (/\.{3,}|…$/.test(fullText)) {
         const postUrl = user.id && item.id ? `https://xueqiu.com/${user.id}/${item.id}` : "";
         if (postUrl) {
           await page.goto(postUrl, { waitUntil: "domcontentloaded", timeout: 20000 });
@@ -211,7 +212,6 @@ try {
         }
       }
       if (!fullText) fail("detail_text_missing", `Detail API returned no full text for status ${item.id}`);
-      const user = full.user || item.user || {};
       const images = [];
       for (const field of ["firstImg", "cover_pic"]) {
         const val = full[field] || item[field];
