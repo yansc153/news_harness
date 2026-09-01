@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "Count": {
+      "type": "integer"
+    },
+    "List": {
+      "items": {
+        "anyOf": [
+          {},
+          {
+            "items": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "type": "array"
+          }
+        ]
+      },
+      "type": "array"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "Count",
+    "List",
+    "errcode",
+    "ttag"
+  ],
+  "title": "KPL-82 observed response",
+  "type": "object"
+}

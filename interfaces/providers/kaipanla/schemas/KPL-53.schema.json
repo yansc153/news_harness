@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "errcode": {
+      "type": "string"
+    },
+    "info": {
+      "items": {
+        "anyOf": [
+          {
+            "items": {},
+            "type": "array"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "type": "array"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "errcode",
+    "info",
+    "ttag"
+  ],
+  "title": "KPL-53 observed response",
+  "type": "object"
+}

@@ -38,9 +38,9 @@ python3 -m news_harness healthcheck \
   --revisit artifacts/manual_smoke/latest/revisit_schedule.json \
   --outcome artifacts/manual_smoke/latest/outcome.json \
   --eval artifacts/manual_smoke/latest/eval.json \
+  --target-set artifacts/manual_smoke/latest/hourly_target_set.json \
   --max-age-minutes 90 \
-  --require-source xueqiu_hot \
-  --require-source xueqiu_daren
+  --require-source xueqiu_targeted
 ```
 
 Docker uses the same server endpoint for liveness:
@@ -226,7 +226,7 @@ sudo systemctl enable --now news-harness-cycle.timer
 sudo systemctl enable --now news-harness-site.service
 ```
 
-The cycle timer runs every 30 minutes. Healthcheck can be run after any cycle:
+The cycle timer runs every hour. Healthcheck can be run after any cycle:
 
 ```bash
 sudo systemctl start news-harness-healthcheck.service
@@ -300,10 +300,12 @@ Use repo-external files only. Do not store secret values in this repo.
 - `NEWS_HARNESS_XUEQIU_HEADLESS=1`
 - `NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE`
 - `NEWS_HARNESS_XUEQIU_EXPORT_DIR`
+- `NEWS_HARNESS_KPL_DEVICE_ID_FILE`
 
 Use `configs/all_source_runner.json` for the production-shaped candidate:
-Reddit, Xueqiu `热门`, and Xueqiu `达人`. Do not describe it as production ready
-until a real run and healthcheck verify all required source IDs.
+Kaipanla-guided Xueqiu targeted collection. Do not describe it as production ready
+until a real run and healthcheck verify `xueqiu_targeted`, the current Target Set,
+and every enabled Kaipanla endpoint.
 
 ## Promotion Rule
 

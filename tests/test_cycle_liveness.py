@@ -1,4 +1,6 @@
 import json
+import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 from news_harness import all_source
@@ -42,7 +44,10 @@ def test_run_cycle_blocks_overlap(tmp_path, monkeypatch) -> None:
     artifact_dir = tmp_path / "latest"
     monkeypatch.setattr(all_source, "SOURCE_RUN_ARTIFACT", artifact_dir / "source_run.json")
     artifact_dir.mkdir(parents=True)
-    (artifact_dir / "run_cycle.lock").write_text("active\n", encoding="utf-8")
+    (artifact_dir / "run_cycle.lock").write_text(json.dumps({
+        "pid": os.getpid(),
+        "started_at": datetime.now(timezone.utc).isoformat(),
+    }), encoding="utf-8")
 
     result = all_source.run_cycle(
         fixtures_dir=tmp_path / "fixtures",
@@ -53,3 +58,23 @@ def test_run_cycle_blocks_overlap(tmp_path, monkeypatch) -> None:
     assert result["status"] == "failed"
     assert result["errors"][0]["code"] == "cycle_overlap_blocked"
     assert (artifact_dir / "run_cycle.lock").exists()
+
+
+def test_run_cycle_recovers_malformed_stale_lock(tmp_path, monkeypatch) -> None:
+    artifact_dir = tmp_path / "latest"
+    monkeypatch.setattr(all_source, "SOURCE_RUN_ARTIFACT", artifact_dir / "source_run.json")
+    artifact_dir.mkdir(parents=True)
+    (artifact_dir / "run_cycle.lock").write_text("crash-leftover\n", encoding="utf-8")
+    old = datetime.now(timezone.utc).timestamp() - 60
+    os.utime(artifact_dir / "run_cycle.lock", (old, old))
+    monkeypatch.setattr(all_source, "run_sources", lambda *args, **kwargs: {"status": "failed"})
+
+    result = all_source.run_cycle(
+        fixtures_dir=tmp_path / "fixtures",
+        timeline_out=tmp_path / "timeline.json",
+        dry_run=True,
+    )
+
+    assert result["status"] == "failed"
+    assert result["errors"][0]["phase"] == "sources"
+    assert not (artifact_dir / "run_cycle.lock").exists()

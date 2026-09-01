@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "Count": {
+      "type": "integer"
+    },
+    "Day": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "Max": {
+      "type": "string"
+    },
+    "Min": {
+      "type": "string"
+    },
+    "Time": {
+      "type": "integer"
+    },
+    "Title": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "list": {
+      "items": {
+        "items": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "type": "array"
+      },
+      "type": "array"
+    },
+    "list_son": {
+      "items": {
+        "type": "integer"
+      },
+      "type": "array"
+    },
+    "list_soninfo": {
+      "items": {
+        "items": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "type": "array"
+      },
+      "type": "array"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "Count",
+    "Day",
+    "Max",
+    "Min",
+    "Time",
+    "Title",
+    "errcode",
+    "list",
+    "list_son",
+    "list_soninfo",
+    "ttag"
+  ],
+  "title": "KPL-41 observed response",
+  "type": "object"
+}

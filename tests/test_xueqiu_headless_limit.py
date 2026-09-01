@@ -3,8 +3,8 @@ import json
 
 
 def test_xueqiu_headless_export_allows_configured_20_item_batch() -> None:
-    script = Path("scripts/xueqiu_headless_export.mjs").read_text(encoding="utf-8")
-    assert "Math.min(20, Number(arg(\"--limit\", \"10\")))" in script
+    script = Path("scripts/xueqiu_targeted_export.mjs").read_text(encoding="utf-8")
+    assert "Math.min(100, Math.max(1, Number(arg(\"--limit\", \"20\"))))" in script
 
     config = json.loads(Path("configs/all_source_runner.json").read_text(encoding="utf-8"))
     xueqiu_limits = {
@@ -12,7 +12,7 @@ def test_xueqiu_headless_export_allows_configured_20_item_batch() -> None:
         for source in config["sources"]
         if str(source["source"]).startswith("xueqiu_")
     }
-    assert xueqiu_limits == {"xueqiu_hot": 20, "xueqiu_daren": 20}
+    assert xueqiu_limits == {"xueqiu_targeted": 20}
     assert config["batch_policy"]["max_items_per_source_per_run"] == 20
 
 

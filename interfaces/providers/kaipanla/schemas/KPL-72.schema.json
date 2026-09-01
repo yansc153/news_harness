@@ -1,0 +1,341 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "CYWWZS": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "cn": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "increase_amount": {
+            "type": "string"
+          },
+          "increase_rate": {
+            "type": "string"
+          },
+          "last_px": {
+            "type": "string"
+          },
+          "prod_name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "turnover": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cn",
+          "code",
+          "increase_amount",
+          "increase_rate",
+          "last_px",
+          "prod_name",
+          "state",
+          "turnover",
+          "type"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "HLZS": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "cn": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "increase_amount": {
+            "type": "string"
+          },
+          "increase_rate": {
+            "type": "string"
+          },
+          "last_px": {
+            "type": "string"
+          },
+          "prod_name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "turnover": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cn",
+          "code",
+          "increase_amount",
+          "increase_rate",
+          "last_px",
+          "prod_name",
+          "state",
+          "turnover",
+          "type"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "QQSP": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "cn": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "increase_amount": {
+            "type": "string"
+          },
+          "increase_rate": {
+            "type": "string"
+          },
+          "last_px": {
+            "type": "string"
+          },
+          "prod_name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "turnover": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cn",
+          "code",
+          "increase_amount",
+          "increase_rate",
+          "last_px",
+          "prod_name",
+          "state",
+          "turnover",
+          "type"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "RMGP": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "increase_rate": {
+            "type": "string"
+          },
+          "last_px": {
+            "type": "string"
+          },
+          "pidType": {
+            "type": "integer"
+          },
+          "prod_name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "turnover": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "increase_rate",
+          "last_px",
+          "pidType",
+          "prod_name",
+          "state",
+          "turnover"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "RMGZ": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "cn": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "increase_amount": {
+            "type": "string"
+          },
+          "increase_rate": {
+            "type": "string"
+          },
+          "last_px": {
+            "type": "string"
+          },
+          "prod_name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "turnover": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cn",
+          "code",
+          "increase_amount",
+          "increase_rate",
+          "last_px",
+          "prod_name",
+          "state",
+          "turnover",
+          "type"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "WWYD": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "YDTime": {
+            "type": "string"
+          },
+          "banKuai": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "cn": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "increase_rate": {
+                  "type": "string"
+                },
+                "prod_name": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cn",
+                "code",
+                "increase_rate",
+                "prod_name",
+                "state"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "cn": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "increase_amount": {
+            "type": "string"
+          },
+          "increase_rate": {
+            "type": "string"
+          },
+          "last_px": {
+            "type": "string"
+          },
+          "prod_name": {
+            "type": "string"
+          },
+          "state": {
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "turnover": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "YDTime",
+          "banKuai",
+          "cn",
+          "code",
+          "explanation",
+          "increase_amount",
+          "increase_rate",
+          "last_px",
+          "prod_name",
+          "state",
+          "turnover",
+          "type"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "CYWWZS",
+    "HLZS",
+    "QQSP",
+    "RMGP",
+    "RMGZ",
+    "WWYD",
+    "errcode",
+    "ttag"
+  ],
+  "title": "KPL-72 observed response",
+  "type": "object"
+}

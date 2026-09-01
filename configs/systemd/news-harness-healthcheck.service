@@ -13,13 +13,13 @@ ExecStart=/usr/bin/python3 -m news_harness healthcheck \
     --revisit artifacts/manual_smoke/latest/revisit_schedule.json \
     --outcome artifacts/manual_smoke/latest/outcome.json \
     --eval artifacts/manual_smoke/latest/eval.json \
+    --target-set artifacts/manual_smoke/latest/hourly_target_set.json \
     --max-age-minutes 90 \
-    --require-source xueqiu_hot \
-    --require-source xueqiu_daren
+    --require-source xueqiu_targeted
 User=news-harness
 Group=news-harness
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/news_harness/artifacts /opt/news_harness/web/radar-timeline /run/news-harness
+ReadWritePaths=/opt/news_harness/artifacts /opt/news_harness/web/data/radar-timeline /run/news-harness

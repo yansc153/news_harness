@@ -96,8 +96,8 @@ class ExportApiTests(unittest.TestCase):
         self.assertEqual([{"original_image_ref": "https://example.com/image.png"}], public_item["image_refs"])
         self.assertEqual(
             {
-                "object_type", "id", "source", "published_at", "fetched_at",
-                "copy_text", "source_url", "image_refs", "processing_status",
+                "object_type", "id", "source", "published_at",
+                "observed_at", "copy_text", "source_url", "image_refs",
             },
             set(public_item),
         )

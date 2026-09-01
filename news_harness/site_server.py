@@ -152,6 +152,12 @@ class NewsHarnessSiteHandler(SimpleHTTPRequestHandler):
 
 
 class NewsHarnessSiteServer(ThreadingHTTPServer):
+    # Long-running container service: request threads must never accumulate.
+    # daemon_threads=True lets the process reap finished handler threads;
+    # block_on_close=False avoids hanging shutdown on stuck connections.
+    daemon_threads = True
+    block_on_close = False
+
     def __init__(self, server_address: tuple[str, int], root_dir: Path, feed_path: Path, artifact_dir: Path):
         super().__init__(server_address, NewsHarnessSiteHandler)
         self.root_dir = root_dir.resolve()

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "errcode": {
+      "type": "string"
+    },
+    "info": {
+      "items": {
+        "items": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "type": "array"
+      },
+      "type": "array"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "errcode",
+    "info",
+    "ttag"
+  ],
+  "title": "KPL-16 observed response",
+  "type": "object"
+}

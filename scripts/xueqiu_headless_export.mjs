@@ -40,7 +40,7 @@ async function jsonRows(page, maxRows) {
       }
     }
     for (const image of Array.isArray(status.image_info_list) ? status.image_info_list : []) {
-      const url = image?.url || image?.originUrl || image?.thumbnailUrl;
+      const url = image?.originUrl || image?.url || image?.thumbnailUrl;
       if (url) images.push({ url, width: image?.width, height: image?.height });
     }
     const description = stripHtml(status.description || status.text || "");
@@ -237,7 +237,7 @@ async function detailRow(context, row) {
         }
       }
       for (const image of Array.isArray(status?.image_info_list) ? status.image_info_list : []) {
-        const url = image?.url || image?.originUrl || image?.thumbnailUrl;
+        const url = image?.originUrl || image?.url || image?.thumbnailUrl;
         if (url) images.push({ url, width: image?.width, height: image?.height });
       }
       const apiText = stripHtml(status?.text || status?.description || "");

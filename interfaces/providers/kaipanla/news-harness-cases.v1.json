@@ -1,0 +1,295 @@
+{
+  "$schema": "news_harness.kaipanla_contracts.v1",
+  "contracts": [
+    {
+      "endpoint_id": "KPL-115",
+      "server": "https://apphwhq.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "DeviceID": "",
+        "Index": "0",
+        "Order": "1",
+        "PhoneOSNew": "1",
+        "PidType": "0",
+        "Token": "",
+        "Type": "4",
+        "UserID": "",
+        "VerSion": "5.20.0.2",
+        "a": "MorningBiddingList",
+        "apiv": "w41",
+        "c": "HomeDingPan",
+        "st": "60"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    },
+    {
+      "endpoint_id": "KPL-41",
+      "server": "https://apphq.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "DeviceID": "",
+        "Index": "0",
+        "Order": "1",
+        "PhoneOSNew": "1",
+        "Type": "1",
+        "ZSType": "7",
+        "a": "RealRankingInfo",
+        "apiv": "w26",
+        "c": "ZhiShuRanking",
+        "st": "60"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    },
+    {
+      "endpoint_id": "KPL-46",
+      "server": "https://apphis.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "Date": "",
+        "DeviceID": "",
+        "Index": "0",
+        "IsKZZType": "0",
+        "IsZZ": "0",
+        "Order": "1",
+        "PhoneOSNew": "1",
+        "PlateID": "801057",
+        "REnd": "1500",
+        "RStart": "0925",
+        "TSZB": "0",
+        "TSZB_Type": "0",
+        "Token": "",
+        "Type": "1",
+        "UserID": "",
+        "VerSion": "5.20.0.2",
+        "a": "ZhiShuStockList_W8",
+        "apiv": "w41",
+        "c": "ZhiShuRanking",
+        "filterType": "0",
+        "old": "1",
+        "st": "1000"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    },
+    {
+      "endpoint_id": "KPL-47",
+      "server": "https://apphq.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "StockID": "000001",
+        "a": "GetKLineZhangTing",
+        "apiv": "w24",
+        "c": "StockLineData"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    },
+    {
+      "endpoint_id": "KPL-49",
+      "server": "https://apphwhq.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "DeviceID": "",
+        "Index": "0",
+        "Order": "0",
+        "PhoneOSNew": "1",
+        "PidType": "1",
+        "Type": "4",
+        "VerSion": "5.18.0.2",
+        "a": "DailyLimitPerformance",
+        "apiv": "w39",
+        "c": "HomeDingPan",
+        "st": "2000"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    },
+    {
+      "endpoint_id": "KPL-50",
+      "server": "https://apphwhq.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "DeviceID": "",
+        "Index": "0",
+        "Order": "0",
+        "PhoneOSNew": "1",
+        "PidType": "2",
+        "Type": "4",
+        "VerSion": "5.18.0.2",
+        "a": "DailyLimitPerformance",
+        "apiv": "w39",
+        "c": "HomeDingPan",
+        "st": "2000"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    },
+    {
+      "endpoint_id": "KPL-51",
+      "server": "https://apphwhq.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "DeviceID": "",
+        "Index": "0",
+        "Order": "0",
+        "PhoneOSNew": "1",
+        "PidType": "3",
+        "Type": "4",
+        "VerSion": "5.18.0.2",
+        "a": "DailyLimitPerformance",
+        "apiv": "w39",
+        "c": "HomeDingPan",
+        "st": "2000"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    },
+    {
+      "endpoint_id": "KPL-52",
+      "server": "https://apphwhq.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "DeviceID": "",
+        "Index": "0",
+        "Order": "0",
+        "PhoneOSNew": "1",
+        "PidType": "4",
+        "Type": "4",
+        "VerSion": "5.18.0.2",
+        "a": "DailyLimitPerformance",
+        "apiv": "w39",
+        "c": "HomeDingPan",
+        "st": "2000"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    },
+    {
+      "endpoint_id": "KPL-53",
+      "server": "https://apphwhq.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "DeviceID": "",
+        "Index": "0",
+        "Order": "0",
+        "PhoneOSNew": "1",
+        "PidType": "5",
+        "Type": "4",
+        "VerSion": "5.18.0.2",
+        "a": "DailyLimitPerformance",
+        "apiv": "w39",
+        "c": "HomeDingPan",
+        "st": "2000"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    },
+    {
+      "endpoint_id": "KPL-78",
+      "server": "https://apphwhq.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "Date": "",
+        "DeviceID": "",
+        "PhoneOSNew": "1",
+        "PlateID": "801062",
+        "VerSion": "5.20.0.2",
+        "a": "GetPlate_Info_QJ",
+        "apiv": "w41",
+        "c": "ZhiShuRanking"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    },
+    {
+      "endpoint_id": "KPL-79",
+      "server": "https://apphwhq.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "DeviceID": "",
+        "PhoneOSNew": "1",
+        "Token": "",
+        "UserID": "",
+        "VerSion": "5.20.0.8",
+        "a": "GetBKJJ_W36",
+        "apiv": "w41",
+        "c": "StockBidYiDong"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    },
+    {
+      "endpoint_id": "KPL-80",
+      "server": "https://apphwhq.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "DeviceID": "",
+        "Index": "0",
+        "IsLB": "0",
+        "IsZT": "0",
+        "Isst": "1",
+        "Order": "1",
+        "PhoneOSNew": "1",
+        "StockID": "801519",
+        "Token": "",
+        "Type": "1",
+        "UserID": "",
+        "VerSion": "5.20.0.8",
+        "a": "GetBKJJBL",
+        "apiv": "w41",
+        "c": "StockBidYiDong",
+        "filter": "1",
+        "st": "20"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    },
+    {
+      "endpoint_id": "KPL-94",
+      "server": "https://apphwshhq.longhuvip.com",
+      "method": "GET",
+      "path": "/w1/api/index.php",
+      "query_template": {
+        "DeviceID": "",
+        "PhoneOSNew": "1",
+        "StockID": "002931",
+        "Token": "",
+        "Type": "2",
+        "UserID": "",
+        "VerSion": "5.22.0.2",
+        "a": "GetStockIDPlate",
+        "apiv": "w43",
+        "c": "StockL2Data"
+      },
+      "headers": {
+        "User-Agent": "Dalvik/2.1.0 (Linux; Android; interface-readiness-probe)"
+      }
+    }
+  ]
+}

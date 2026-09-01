@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +34,10 @@ from .manual_smoke import (
 from .rolling_store import DEFAULT_STORE_PATH, load as load_rolling_store, register_candidates, save as save_rolling_store
 from .runtime_gates import write_liveness_artifact
 from .timeline import generate_timeline_feed
+
+
+CYCLE_LOCK_STALE_SECONDS = int(os.environ.get("NEWS_HARNESS_CYCLE_LOCK_STALE_SECONDS", "1800"))
+CYCLE_LOCK_MALFORMED_GRACE_SECONDS = 5
 
 
 DEFAULT_ALL_SOURCE_CONFIG = ROOT / "configs" / "all_source_runner.example.json"
@@ -210,6 +216,7 @@ def run_cycle(
                 artifact_dir,
                 last_cycle_completed=completed_at,
                 last_success=completed_at,
+                clear_last_error=True,
             )
         else:
             write_liveness_artifact(
@@ -219,11 +226,14 @@ def run_cycle(
             )
         return result
     except Exception as exc:
-        write_liveness_artifact(
-            artifact_dir,
-            last_cycle_completed=_utc_now(),
-            last_error=canonical_json({"status": "failed", "code": type(exc).__name__, "message": str(exc)}),
-        )
+        try:
+            write_liveness_artifact(
+                artifact_dir,
+                last_cycle_completed=_utc_now(),
+                last_error=canonical_json({"status": "failed", "code": type(exc).__name__, "message": str(exc)}),
+            )
+        except Exception as telemetry_exc:
+            exc.add_note(f"Secondary liveness write failed: {type(telemetry_exc).__name__}: {telemetry_exc}")
         raise
     finally:
         _release_cycle_lock(lock_fd, lock_path)
@@ -245,37 +255,50 @@ def _run_cycle_inner(
 
     selected_mode = _selected_mode(dry_run, mode)
     source_result = run_sources(source_config, dry_run=dry_run, mode=selected_mode, backend=backend)
+    configured = load_json(source_config) if source_config.exists() else {}
+    configured_sources = configured.get("sources", []) if isinstance(configured, dict) else []
+    xueqiu_only = bool(configured_sources) and all(
+        isinstance(row, dict) and row.get("source") == "xueqiu_targeted"
+        for row in configured_sources
+    )
     score_result: dict[str, Any] | None = None
     timeline_result: dict[str, Any] | None = None
     errors: list[dict[str, Any]] = []
 
     if source_result.get("status") == "ok":
-        if selected_mode == "manual-smoke" and not source_result.get("observation_count"):
-            errors.append({"phase": "sources", "status": "failed", "code": "no_manual_source_observations"})
-        failed_sources = [
-            source
-            for source, status in (source_result.get("source_statuses") or {}).items()
-            if status != "ok"
-        ]
-        if selected_mode == "manual-smoke" and failed_sources:
-            errors.append({"phase": "sources", "status": "failed", "code": "source_failed", "sources": failed_sources})
+        if selected_mode == "manual-smoke":
+            failed_sources = [
+                source
+                for source, status in (source_result.get("source_statuses") or {}).items()
+                if status != "ok"
+            ]
+            if failed_sources:
+                errors.append({"phase": "sources", "status": "failed", "code": "source_failed", "sources": failed_sources})
 
     can_score = source_result.get("status") == "ok" and (
         selected_mode != "manual-smoke" or bool(source_result.get("observation_count"))
     )
-    if can_score:
+    zero_candidates = (
+        selected_mode == "manual-smoke"
+        and source_result.get("status") == "ok"
+        and not source_result.get("observation_count")
+        and not errors
+    )
+    if can_score and not xueqiu_only:
         score_result = score(score_config, dry_run=dry_run, mode=selected_mode)
-    else:
+    elif can_score and xueqiu_only:
+        score_result = {"status": "disabled", "command": "score", "reason": "xueqiu_only_pipeline"}
+    elif not zero_candidates:
         if not errors:
             errors.append({"phase": "sources", "status": source_result.get("status"), "code": source_result.get("error_code")})
 
-    if score_result is not None and score_result.get("status") != "ok":
+    if score_result is not None and score_result.get("status") not in {"ok", "disabled"}:
         errors.append({"phase": "score", "status": score_result.get("status"), "code": score_result.get("error_code")})
     if selected_mode == "manual-smoke" and score_result is not None and score_result.get("structured_error_count"):
         errors.append({"phase": "score", "status": "failed", "code": "deepseek_structured_errors", "count": score_result.get("structured_error_count")})
 
     closed_loop_result: dict[str, Any] | None = None
-    should_run_closed_loop = score_result is not None and score_result.get("status") == "ok"
+    should_run_closed_loop = (not xueqiu_only) and score_result is not None and score_result.get("status") == "ok"
     if should_run_closed_loop:
         if selected_mode == "dry-run":
             closed_loop_result = materialize_fixture_cycle_artifacts(fixtures_dir)
@@ -303,9 +326,22 @@ def _run_cycle_inner(
         if closed_loop_result and closed_loop_result.get("status") != "ok":
             errors.append({"phase": "closed_loop", "status": closed_loop_result.get("status")})
 
-    if score_result is not None:
+    if score_result is not None or (selected_mode == "manual-smoke" and source_result.get("status") == "ok" and not errors):
         try:
-            timeline_result = generate_timeline_feed(fixtures_dir, timeline_out)
+            # The CLI resolves the feed path to an absolute container path.  The
+            # timeline writer intentionally accepts only paths rooted under the
+            # application web directory, so normalize that known-safe path back
+            # to a repository-relative path before handing it across the boundary.
+            timeline_target = timeline_out
+            if timeline_out.is_absolute():
+                try:
+                    timeline_target = timeline_out.relative_to(ROOT)
+                except ValueError:
+                    # Keep the original value for callers that replace the
+                    # exporter in tests; the real exporter will enforce its
+                    # own safe-output boundary.
+                    timeline_target = timeline_out
+            timeline_result = generate_timeline_feed(fixtures_dir, timeline_target)
         except Exception as exc:  # noqa: BLE001 - top-level cycle report must stay structured
             errors.append({"phase": "timeline", "status": "failed", "code": "timeline_export_failed", "message": str(exc)})
 
@@ -320,7 +356,7 @@ def _run_cycle_inner(
         "mode": selected_mode or "blocked",
         "backend": backend,
         "source_status": source_result.get("status"),
-        "score_status": score_result.get("status") if score_result else "skipped",
+        "score_status": "disabled" if xueqiu_only else (score_result.get("status") if score_result else "skipped"),
         "timeline_status": timeline_result.get("status") if timeline_result else "skipped",
         "closed_loop_status": closed_loop_result.get("status") if closed_loop_result else "skipped",
         "closed_loop": closed_loop_result,
@@ -364,14 +400,55 @@ def _prepare_rolling_cycle(store_path: Path) -> dict[str, Any]:
 
 def _acquire_cycle_lock(lock_path: Path, started_at: str) -> int | None:
     lock_path.parent.mkdir(parents=True, exist_ok=True)
+    for _attempt in range(2):
+        try:
+            fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            if not _cycle_lock_is_stale(lock_path):
+                return None
+            try:
+                lock_path.unlink()
+            except FileNotFoundError:
+                pass
+            continue
+        try:
+            payload = canonical_json({"pid": os.getpid(), "started_at": started_at}) + "\n"
+            os.write(fd, payload.encode("utf-8"))
+            os.fsync(fd)
+            return fd
+        except BaseException:
+            os.close(fd)
+            try:
+                lock_path.unlink()
+            except FileNotFoundError:
+                pass
+            raise
+    return None
+
+
+def _cycle_lock_is_stale(lock_path: Path) -> bool:
     try:
-        fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError:
-        return None
-    payload = canonical_json({"pid": os.getpid(), "started_at": started_at}) + "\n"
-    os.write(fd, payload.encode("utf-8"))
-    os.fsync(fd)
-    return fd
+        payload = json.loads(lock_path.read_text(encoding="utf-8"))
+        pid = int(payload["pid"])
+        started = datetime.fromisoformat(str(payload["started_at"]).replace("Z", "+00:00"))
+        if started.tzinfo is None:
+            started = started.replace(tzinfo=timezone.utc)
+    except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError):
+        try:
+            age_seconds = datetime.now(timezone.utc).timestamp() - lock_path.stat().st_mtime
+        except OSError:
+            return False
+        return age_seconds > CYCLE_LOCK_MALFORMED_GRACE_SECONDS
+    age_seconds = (datetime.now(timezone.utc) - started.astimezone(timezone.utc)).total_seconds()
+    if age_seconds > CYCLE_LOCK_STALE_SECONDS:
+        return True
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return True
+    except PermissionError:
+        return False
+    return False
 
 
 def _release_cycle_lock(lock_fd: int, lock_path: Path) -> None:

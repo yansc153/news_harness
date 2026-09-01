@@ -4,12 +4,14 @@
 
 services:
   app:
-    build:
-      context: https://github.com/yansc153/news_harness.git
-      dockerfile: Dockerfile
+    # Hostinger Docker Manager pulls this prebuilt VPS-local image.
+    image: news_harness-app:latest
+    # Hostinger provisions /run/news-harness/secrets as root:root 0600.
+    user: "0:0"
     restart: unless-stopped
-    expose:
-      - "8765"
+    init: true
+    ports:
+      - "8765:8765"
     volumes:
       - news_harness_artifacts:/app/artifacts
       - news_harness_feed:/app/web/data/radar-timeline
@@ -21,15 +23,14 @@ services:
       - NEWS_HARNESS_CYCLE_MODE=manual-smoke
       - NEWS_HARNESS_CYCLE_BACKEND=direct-cli
       - NEWS_HARNESS_CYCLE_TIMEOUT_SECONDS=1500
+      - NEWS_HARNESS_CYCLE_INTERVAL_SECONDS=3600
       - NEWS_HARNESS_MANUAL_SMOKE_ACK=1
       - NEWS_HARNESS_REAL_SOURCE_SMOKE=1
-      - NEWS_HARNESS_DEEPSEEK_SMOKE=1
       - NEWS_HARNESS_XUEQIU_HEADLESS=1
       - NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE=/run/news-harness/secrets/xueqiu-storage-state.json
       - NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MIN_MS=400
       - NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MAX_MS=1200
       - NEWS_HARNESS_EXPORT_TOKEN_FILE=/run/news-harness/secrets/export-token
-      - DEEPSEEK_API_KEY_FILE=/run/news-harness/secrets/deepseek-api-key
     healthcheck:
       test: ["CMD", "python3", "-c", "import json, sys, urllib.request; sys.exit(0 if json.load(urllib.request.urlopen('http://127.0.0.1:8765/api/health')).get('status') == 'ok' else 1)"]
       interval: 60s
@@ -37,12 +38,16 @@ services:
       retries: 3
       start_period: 10m
     labels:
-      - traefik.enable=true
-      - traefik.http.routers.news-harness.rule=Host(`${NEWS_HARNESS_DOMAIN:-newshardness.hellopepper.work}`)
-      - traefik.http.routers.news-harness.entrypoints=websecure
-      - traefik.http.routers.news-harness.tls=true
-      - traefik.http.routers.news-harness.tls.certresolver=letsencrypt
-      - traefik.http.services.news-harness.loadbalancer.server.port=8765
+      traefik.enable: "true"
+      traefik.http.routers.news-harness.rule: "Host(`newshardness.hellopepper.work`)"
+      traefik.http.routers.news-harness.entrypoints: websecure
+      traefik.http.routers.news-harness.tls: "true"
+      traefik.http.routers.news-harness.tls.certresolver: letsencrypt
+      traefik.http.services.news-harness.loadbalancer.server.port: "8765"
+
+networks:
+  default:
+    name: news_harness_default
 
 volumes:
   news_harness_artifacts:

@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "type": "integer"
+    },
+    "msg": {
+      "type": "string"
+    },
+    "result": {
+      "additionalProperties": false,
+      "properties": {
+        "down_count": {
+          "type": "integer"
+        },
+        "records": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "block_names": {
+                "type": "null"
+              },
+              "change": {
+                "type": "integer"
+              },
+              "change_rate": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "close_price": {
+                "type": "null"
+              },
+              "create_time": {
+                "type": "integer"
+              },
+              "days": {
+                "type": "null"
+              },
+              "entity_rate": {
+                "type": "integer"
+              },
+              "explode": {
+                "type": "null"
+              },
+              "industry_id": {
+                "type": "string"
+              },
+              "industry_name": {
+                "type": "string"
+              },
+              "is_melt": {
+                "type": "integer"
+              },
+              "is_select": {
+                "type": "integer"
+              },
+              "manual_flag": {
+                "type": "null"
+              },
+              "market_value": {
+                "type": "number"
+              },
+              "mode": {
+                "type": "null"
+              },
+              "open_price": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "open_rise": {
+                "type": "number"
+              },
+              "pre_close_price": {
+                "type": "null"
+              },
+              "price": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "profit": {
+                "type": "null"
+              },
+              "remark": {
+                "type": "string"
+              },
+              "select_price": {
+                "type": "null"
+              },
+              "select_time": {
+                "type": "integer"
+              },
+              "serial_id": {
+                "type": "integer"
+              },
+              "signals": {
+                "items": {},
+                "type": "array"
+              },
+              "star1": {
+                "type": "integer"
+              },
+              "star2": {
+                "type": "integer"
+              },
+              "star3": {
+                "type": "integer"
+              },
+              "star4": {
+                "type": "integer"
+              },
+              "star5": {
+                "type": "integer"
+              },
+              "start_num": {
+                "type": "integer"
+              },
+              "stock_block_list": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "block_code": {
+                      "type": "string"
+                    },
+                    "block_name": {
+                      "type": "string"
+                    },
+                    "change_rate": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "block_code",
+                    "block_name",
+                    "change_rate"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "stock_code": {
+                "type": "string"
+              },
+              "stock_name": {
+                "type": "string"
+              },
+              "t1_max_increase_rate": {
+                "type": "null"
+              },
+              "t2_max_increase_rate": {
+                "type": "null"
+              },
+              "total_score": {
+                "type": "null"
+              },
+              "trading_date": {
+                "type": "integer"
+              },
+              "update_time": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "block_names",
+              "change",
+              "change_rate",
+              "close_price",
+              "create_time",
+              "days",
+              "entity_rate",
+              "explode",
+              "industry_id",
+              "industry_name",
+              "is_melt",
+              "is_select",
+              "manual_flag",
+              "market_value",
+              "mode",
+              "open_price",
+              "open_rise",
+              "pre_close_price",
+              "price",
+              "profit",
+              "remark",
+              "select_price",
+              "select_time",
+              "serial_id",
+              "signals",
+              "star1",
+              "star2",
+              "star3",
+              "star4",
+              "star5",
+              "start_num",
+              "stock_block_list",
+              "stock_code",
+              "stock_name",
+              "t1_max_increase_rate",
+              "t2_max_increase_rate",
+              "total_score",
+              "trading_date",
+              "update_time"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "total_count": {
+          "type": "integer"
+        },
+        "up_count": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "down_count",
+        "records",
+        "total_count",
+        "up_count"
+      ],
+      "type": "object"
+    },
+    "time": {
+      "type": "integer"
+    },
+    "version": {
+      "type": "null"
+    }
+  },
+  "required": [
+    "code",
+    "msg",
+    "result",
+    "time",
+    "version"
+  ],
+  "title": "CGN-02 observed response",
+  "type": "object"
+}

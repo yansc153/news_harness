@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import signal
 import shutil
 import socket
 import subprocess
@@ -47,10 +48,13 @@ from .manual_smoke import (
     _write_manual_json,
 )
 from .paths import write_json_artifact
+from .kaipanla_targets import build_target_set, load_config as load_targeting_config, validate_hourly_target_set
+from .xueqiu_targeted import collect_stock_discussions
 
 
 DIRECT_CLI_DIR = ROOT / "artifacts" / "direct_cli" / "latest"
 DIRECT_CLI_PROCESSING_ARTIFACT = DIRECT_CLI_DIR / "processing.json"
+HOURLY_TARGET_ARTIFACT = ROOT / "artifacts" / "manual_smoke" / "latest" / "hourly_target_set.json"
 DIRECT_CLI_READ_TIMEOUT_SECONDS = 60
 REDDIT_JSON_TIMEOUT_SECONDS = 12
 REDDIT_SUBREDDIT_WORKERS = 1
@@ -71,7 +75,13 @@ def run_direct_cli_sources(config_path: Path) -> dict[str, Any]:
     started = time.monotonic()
     config = load_json(config_path)
     run_id = _run_id("direct_cli_source")
-    env_check = _check_manual_env()
+    configured_sources = config.get("sources", []) if isinstance(config, dict) else []
+    xueqiu_only = bool(configured_sources) and all(
+        str(row.get("source")) == "xueqiu_targeted"
+        for row in configured_sources
+        if isinstance(row, dict)
+    )
+    env_check = _check_manual_env(xueqiu_only=xueqiu_only)
     if env_check["status"] != "ok":
         artifact = _source_artifact(
             run_id=run_id,
@@ -101,6 +111,17 @@ def run_direct_cli_sources(config_path: Path) -> dict[str, Any]:
                 source_observations, errors = _fetch_x_list_with_twitter_cli(source_config, availability)
             elif source == "reddit":
                 source_observations, errors = _fetch_reddit_with_rdt_cli(source_config, availability)
+            elif source == "xueqiu_targeted":
+                source_observations, errors = _fetch_xueqiu_targeted(source_config)
+                for observation in source_observations:
+                    observation.setdefault(
+                        "connector_identity",
+                        {
+                            "connector_id": "direct_cli.xueqiu_targeted.manual_smoke.v1",
+                            "tool_id": "opencli.xueqiu.comments",
+                            "tool_version": "0.1.0",
+                        },
+                    )
             elif source.startswith("xueqiu_"):
                 source_observations, errors = _fetch_xueqiu_with_opencli(source_config, availability)
                 for observation in source_observations:
@@ -120,11 +141,17 @@ def run_direct_cli_sources(config_path: Path) -> dict[str, Any]:
 
         observations.extend(source_observations)
         structured_errors.extend({**error, "source": error.get("source", source)} for error in errors)
+        if errors and source_observations:
+            source_status = "partial"
+        elif not errors:
+            source_status = "ok"
+        else:
+            source_status = "failed"
         source_results.append(
             {
                 "source": source,
                 "backend": "direct-cli",
-                "status": "ok" if source_observations else "failed",
+                "status": source_status,
                 "item_count": len(source_observations),
                 "requested_item_count": _requested_item_count(source_config),
                 "refresh_interval_seconds": source_config.get("refresh_interval_seconds"),
@@ -184,6 +211,79 @@ def run_direct_cli_sources(config_path: Path) -> dict[str, Any]:
         "direct_cli_status": availability["status"],
         "direct_cli_artifact_ref": _rel(DIRECT_CLI_PROCESSING_ARTIFACT),
     }
+
+
+def _fetch_xueqiu_targeted(source_config: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Discover live KPL targets, persist the target set, then query Xueqiu."""
+    config_ref = str(source_config.get("targeting_config_ref") or "configs/hourly_targeting.v1.json")
+    config_path = ROOT / config_ref
+    targeting_config = load_targeting_config(config_path)
+    target_set = build_target_set(targeting_config)
+    validate_hourly_target_set(target_set, max_stocks=int(targeting_config["max_stocks_total"]))
+    _write_manual_json(HOURLY_TARGET_ARTIFACT, target_set)
+
+    discovery_errors = [
+        {
+            **_structured_error("kaipanla_discovery_failed", str(error.get("error") or "KPL endpoint failed")),
+            "endpoint_id": error.get("source"),
+        }
+        for error in target_set.get("structured_errors", [])
+    ]
+    stocks = target_set.get("target_stocks") or []
+    if not stocks:
+        target_set["collection"] = {
+            "comment_threshold": int(targeting_config["min_comments"]),
+            "raw_row_count": 0,
+            "threshold_pass_count": 0,
+            "qualified_observation_count": 0,
+            "duplicate_count": 0,
+            "rejected_incomplete_count": 0,
+            "status": "ok_no_candidates" if not discovery_errors else "source_failed",
+            "structured_error_count": len(discovery_errors),
+        }
+        target_set["output_hash"] = sha256_json({key: value for key, value in target_set.items() if key != "output_hash"})
+        validate_hourly_target_set(target_set, max_stocks=int(targeting_config["max_stocks_total"]))
+        _write_manual_json(HOURLY_TARGET_ARTIFACT, target_set)
+        # No targets with no endpoint errors is a legitimate quiet market state.
+        return [], discovery_errors
+
+    collection_result = collect_stock_discussions(
+        stocks,
+        min_comments=int(targeting_config["min_comments"]),
+        min_text_chars=int(targeting_config.get("min_text_chars", 100)),
+        per_stock_limit=int(source_config.get("batch_limit") or 20),
+        max_age_hours=int(targeting_config.get("max_age_hours", 48)),
+    )
+    observations = collection_result["observations"]
+    xueqiu_errors = collection_result["structured_errors"]
+    collection_errors = [
+        {
+            **_structured_error(str(error.get("error_code") or "xueqiu_targeted_fetch_failed"), str(error.get("message") or "Xueqiu fetch failed")),
+            "symbol": error.get("symbol"),
+        }
+        for error in xueqiu_errors
+    ]
+    # Fail-fast: never hide partial stock fetcher failures. Even when some
+    # observations were collected, any structured error from the Xueqiu
+    # collection step must be surfaced so the health check can see it.
+    errors = discovery_errors + collection_errors
+    target_set["collection"] = {
+        "comment_threshold": int(targeting_config["min_comments"]),
+        "raw_row_count": collection_result["raw_row_count"],
+        "threshold_pass_count": collection_result["threshold_pass_count"],
+        "qualified_observation_count": len(observations),
+        "duplicate_count": collection_result["duplicate_count"],
+        "rejected_incomplete_count": collection_result["rejected_incomplete_count"],
+        "symbol_results": collection_result["symbol_results"],
+        "attempt_warnings": collection_result["attempt_warnings"],
+        "status": "ok_with_candidates" if observations else ("source_failed" if xueqiu_errors else "ok_no_candidates"),
+        "structured_error_count": len(xueqiu_errors),
+        "structured_errors": collection_errors,
+    }
+    target_set["output_hash"] = sha256_json({key: value for key, value in target_set.items() if key != "output_hash"})
+    validate_hourly_target_set(target_set, max_stocks=int(targeting_config["max_stocks_total"]))
+    _write_manual_json(HOURLY_TARGET_ARTIFACT, target_set)
+    return observations, errors
 
 
 def _fetch_x_list_with_twitter_cli(source_config: dict[str, Any], availability: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -989,30 +1089,46 @@ def _run_command(args: list[str], *, timeout: int, env: dict[str, str] | None = 
     command_env = os.environ.copy()
     if env:
         command_env.update(env)
+    # Run export scripts in their own process group so a timeout can kill the
+    # whole tree (node script + chromium + crashpad). Killing only the direct
+    # child orphans browser processes; over days this exhausts the container's
+    # PID budget and every later cycle fails to fork (observed on the VPS).
+    process = subprocess.Popen(
+        args,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=command_env,
+        start_new_session=True,
+    )
     try:
-        completed = subprocess.run(args, text=True, capture_output=True, check=False, timeout=timeout, env=command_env)
-        status = "ok" if completed.returncode == 0 else "failed"
+        stdout, stderr = process.communicate(timeout=timeout)
+        returncode = process.returncode
+        status = "ok" if returncode == 0 else "failed"
         return {
             "status": status,
             "argv": _redacted_argv(args),
-            "returncode": completed.returncode,
-            "stdout": _redact_text(completed.stdout),
-            "stderr": _redact_text(completed.stderr)[-4000:],
+            "returncode": returncode,
+            "stdout": _redact_text(stdout),
+            "stderr": _redact_text(stderr)[-4000:],
             "duration_seconds": round(time.monotonic() - started, 3),
-            "message": "command completed" if status == "ok" else f"command returned {completed.returncode}",
+            "message": "command completed" if status == "ok" else f"command returned {returncode}",
         }
-    except subprocess.TimeoutExpired as exc:
+    except subprocess.TimeoutExpired:
+        _terminate_process_group(process)
+        stdout, stderr = process.communicate()
         return {
             "status": "failed",
             "argv": _redacted_argv(args),
             "returncode": None,
-            "stdout": _redact_text((exc.stdout or "") if isinstance(exc.stdout, str) else ""),
-            "stderr": _redact_text((exc.stderr or "") if isinstance(exc.stderr, str) else ""),
+            "stdout": _redact_text(stdout or ""),
+            "stderr": _redact_text(stderr or ""),
             "duration_seconds": round(time.monotonic() - started, 3),
             "message": f"command timed out after {timeout}s",
             "timeout": True,
         }
     except OSError as exc:
+        _terminate_process_group(process)
         return {
             "status": "failed",
             "argv": _redacted_argv(args),
@@ -1022,6 +1138,14 @@ def _run_command(args: list[str], *, timeout: int, env: dict[str, str] | None = 
             "duration_seconds": round(time.monotonic() - started, 3),
             "message": str(exc),
         }
+
+
+def _terminate_process_group(process: "subprocess.Popen[str]") -> None:
+    """SIGKILL the whole process group so chromium/crashpad never survive a timeout."""
+    try:
+        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+    except (ProcessLookupError, PermissionError, OSError):
+        process.kill()
 
 
 def _observations_from_cli_result(

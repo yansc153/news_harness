@@ -1,23 +1,25 @@
 # News Harness — Standing Facts
 
-V1: Outcome-first prediction harness. Fetch → Predict (1h/4h) → Revisit → Evaluate → Rulebook shadow → MCP export.
+V3: Xueqiu-only market-content harness. Kaipanla discovery → Xueqiu targeted fetch → fixed gates → timeline/MCP export.
 
 ## What this is
 
-选题 harness: crawls source content, predicts spread potential, revisits to verify, exports verified content (copy_text + image_refs) via MCP to downstream automation. Web dashboard is monitoring only.
+选题 harness: uses Kaipanla market themes to select stocks, reads Xueqiu discussions, applies fixed comment threshold, and exports source-grounded content (copy_text + image_refs). Web dashboard is monitoring only.
 
 ## What this is not
 
 Not a news aggregator, content farm, publishing system, or investment advice product.
 
-## Architecture (V1 outcome-first)
+## Architecture (V2 kaipanla-guided)
 
-- Windows: 1h early_momentum, 4h primary_outcome. 24h audit (sampled only).
-- Evaluator: deterministic (`evaluator.py`). `delta > 0` is NOT a win. Low-base protection, platform baselines, connector quality gates applied before learning.
-- Rulebook (V2): shadow-only. Consumes `OutcomeEvaluation`, never raw growth. Compute-and-log only; blocked from production scoring.
+- Discovery: Kaipanla API generates hourly TargetSet (max 12 stocks) from market signals (themes, limit-up, bidding anomalies).
+- Collection: Per-stock Xueqiu discussion crawl with fixed comment threshold >= 10. Never auto-relaxed.
+- Schedule: one cycle per hour.
+- Discovery: Kaipanla API produces an hourly TargetSet (max 12 stocks).
+- Collection: Xueqiu targeted discussion crawl with fixed `comments >= 10`; never auto-relaxed.
+- Selection: no DeepSeek, prediction, revisit, evaluation, Reddit, Twitter/X, or multi-source ranking.
 - MCP export: `McpExportItem` whitelist — copy_text, image_refs, source_url only. No scores, no labels, no rulebook internals.
-- Web dashboard: `WebProjection` — includes scores, sparklines, status. Separate from MCP.
-- Model: DeepSeek is predictor + structure assistant. Cannot self-evaluate, cannot promote rules.
+- Web dashboard: `WebProjection` — source text, engagement, images, source links, and fetch status only.
 - Evidence: preserve original source URL/image references. No download/cache/replace. Missing = explicit state.
 - Structured failures only — never empty success on error.
 - All artifact writes atomic. Secrets external to repo. Fetch GET-only.
@@ -26,10 +28,10 @@ Not a news aggregator, content farm, publishing system, or investment advice pro
 
 | Module | Role |
 |--------|------|
-| `manual_smoke.py` | Source fetch, scoring, revisit, eval (orchestrator) |
-| `evaluator.py` | Deterministic OutcomeEvaluation |
-| `baseline.py` | Platform baseline snapshots and validation |
-| `rulebook.py` | Rule discovery from evaluations, shadow calibration |
+| `direct_cli_backend.py` | Kaipanla → Xueqiu targeted source fetch |
+| `kaipanla_targets.py` | Theme/stock discovery and target-set validation |
+| `xueqiu_targeted.py` | Xueqiu discussion fetch and fixed comment gate |
+| `manual_smoke.py` | Legacy artifact compatibility and timeline materialization |
 | `connector_quality.py` | Per-run connector health reports |
 | `runtime_gates.py` | Atomic writes, liveness, retry with backoff |
 | `artifact_api.py` | WebProjection / McpExportItem split |
@@ -47,6 +49,6 @@ python3 -m news_harness mcp
 
 ## Versioned configs
 
-`configs/platform_metrics.v1.json`, `configs/outcome_thresholds.v1.json`.
+`configs/all_source_runner.json`, `configs/hourly_targeting.v1.json`.
 Schemas: `schemas/v1/`. Spec: `docs/superpowers/specs/2026-06-16-harness-v1-design.md`.
 Legacy 12h/24h assets: `LEGACY.md`.

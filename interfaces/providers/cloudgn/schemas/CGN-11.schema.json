@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "type": "integer"
+    },
+    "data": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "type": "number"
+        },
+        "createTime": {
+          "type": "integer"
+        },
+        "creator": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "hotMoneyAmount": {
+          "type": "number"
+        },
+        "hotMoneyNetValue": {
+          "type": "number"
+        },
+        "id": {
+          "type": "string"
+        },
+        "netValue": {
+          "type": "number"
+        },
+        "orgAmount": {
+          "type": "number"
+        },
+        "orgNetValue": {
+          "type": "number"
+        },
+        "status": {
+          "type": "integer"
+        },
+        "updateTime": {
+          "type": "integer"
+        },
+        "updater": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "createTime",
+        "creator",
+        "date",
+        "deleted",
+        "hotMoneyAmount",
+        "hotMoneyNetValue",
+        "id",
+        "netValue",
+        "orgAmount",
+        "orgNetValue",
+        "status",
+        "updateTime",
+        "updater"
+      ],
+      "type": "object"
+    },
+    "msg": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "code",
+    "data",
+    "msg"
+  ],
+  "title": "CGN-11 observed response",
+  "type": "object"
+}

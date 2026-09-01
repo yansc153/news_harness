@@ -17,10 +17,13 @@ COPY pyproject.toml .
 COPY configs/ ./configs/
 COPY fixtures/ ./fixtures/
 COPY schemas/ ./schemas/
+COPY interfaces/providers/kaipanla/news-harness-cases.v1.json ./interfaces/providers/kaipanla/news-harness-cases.v1.json
+COPY interfaces/providers/kaipanla/schemas/ ./interfaces/providers/kaipanla/schemas/
 COPY web/ ./web/
 COPY scripts/docker_entrypoint.sh ./docker_entrypoint.sh
 COPY scripts/reddit_headless_export.mjs ./scripts/reddit_headless_export.mjs
 COPY scripts/xueqiu_headless_export.mjs ./scripts/xueqiu_headless_export.mjs
+COPY scripts/xueqiu_targeted_export.mjs ./scripts/xueqiu_targeted_export.mjs
 
 RUN chmod +x docker_entrypoint.sh \
     && mkdir -p /app/artifacts/manual_smoke/latest /app/web/data/radar-timeline \

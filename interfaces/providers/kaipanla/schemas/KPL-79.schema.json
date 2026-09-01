@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "Day": {
+      "type": "string"
+    },
+    "List1": {
+      "items": {
+        "items": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "type": "array"
+      },
+      "type": "array"
+    },
+    "List2": {
+      "items": {},
+      "type": "array"
+    },
+    "List3": {
+      "items": {},
+      "type": "array"
+    },
+    "State": {
+      "type": "integer"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "Day",
+    "List1",
+    "List2",
+    "List3",
+    "State",
+    "errcode",
+    "ttag"
+  ],
+  "title": "KPL-79 observed response",
+  "type": "object"
+}

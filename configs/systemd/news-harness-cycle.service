@@ -9,7 +9,6 @@ WorkingDirectory=/opt/news_harness
 EnvironmentFile=/run/news-harness/news_harness.env
 ExecStart=/usr/bin/python3 -m news_harness run-cycle \
     --source-config configs/all_source_runner.json \
-    --score-config configs/deepseek_provider.json \
     --fixtures fixtures \
     --out web/data/radar-timeline/timeline_feed.json \
     --mode manual-smoke \
@@ -20,4 +19,4 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/news_harness/artifacts /opt/news_harness/web/radar-timeline /run/news-harness
+ReadWritePaths=/opt/news_harness/artifacts /opt/news_harness/web/data/radar-timeline /run/news-harness

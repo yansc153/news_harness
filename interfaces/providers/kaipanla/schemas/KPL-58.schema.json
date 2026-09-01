@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "errcode": {
+      "type": "string"
+    },
+    "info": {
+      "items": {
+        "anyOf": [
+          {
+            "items": {},
+            "type": "array"
+          },
+          {
+            "type": "string"
+          },
+          {
+            "items": {
+              "items": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "type": "array"
+            },
+            "type": "array"
+          }
+        ]
+      },
+      "type": "array"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "errcode",
+    "info",
+    "ttag"
+  ],
+  "title": "KPL-58 observed response",
+  "type": "object"
+}

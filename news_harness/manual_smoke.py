@@ -480,6 +480,17 @@ def load_manual_timeline_items() -> tuple[list[dict[str, Any]], dict[str, Any]]:
     revisit_schedule = _load_optional_json(REVISIT_SCHEDULE_ARTIFACT, {})
     outcomes = _load_optional_json(OUTCOME_ARTIFACT, {})
     eval_run = _load_optional_json(EVAL_ARTIFACT, {})
+    source_rows = source_run.get("sources", []) if isinstance(source_run, dict) else []
+    xueqiu_only = bool(source_rows) and all(
+        isinstance(row, dict) and row.get("source") == "xueqiu_targeted"
+        for row in source_rows
+    )
+    if xueqiu_only:
+        # Do not let stale legacy DeepSeek/revisit artifacts alter a single-source feed.
+        scoring = {}
+        revisit_schedule = {}
+        outcomes = {}
+        eval_run = {}
     if not isinstance(source_run, dict) or not source_run.get("observations"):
         if isinstance(source_run, dict) and source_run.get("sources"):
             metadata = {
@@ -557,11 +568,18 @@ def load_manual_timeline_items() -> tuple[list[dict[str, Any]], dict[str, Any]]:
         image_refs = observation.get("image_refs", [])
         image_refs = image_refs if isinstance(image_refs, list) else []
         first_image = _manual_first_image_ref(image_refs)
+        stable_item_ref = (
+            observation.get("xueqiu_status_id")
+            or observation.get("observation_id")
+            or observation.get("content_hash", "")[:16]
+            or f"row_{index + 1:03d}"
+        )
+        stable_item_ref = re.sub(r"[^A-Za-z0-9_-]+", "_", str(stable_item_ref))
         items.append(
             {
                 "object_type": "RadarTimelineItem",
                 "item_version": "radar.timeline.item.v1",
-                "id": f"manual_smoke_{index + 1:03d}_{observation.get('content_hash', '')[:12]}",
+                "id": f"manual_smoke_{stable_item_ref}",
                 "source": observation.get("source"),
                 "source_label": observation.get("source_label"),
                 "source_group": _manual_source_group(observation.get("source"), observation.get("source_label")),
@@ -572,6 +590,7 @@ def load_manual_timeline_items() -> tuple[list[dict[str, Any]], dict[str, Any]]:
                 "handle": observation.get("handle"),
                 "avatar_url": observation.get("avatar_url"),
                 "published_at": observation.get("published_at") or observation.get("fetched_at"),
+                "fetched_at": observation.get("fetched_at") or observation.get("published_at"),
                 "copy_text": observation.get("copy_text", ""),
                 "topic_or_hook": score.get("topic_or_hook") or observation.get("topic_or_hook"),
                 "engagement_snapshot": observation.get("engagement_snapshot", {}),
@@ -1937,11 +1956,15 @@ def _source_summary(artifact: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _check_manual_env() -> dict[str, Any]:
+def _check_manual_env(*, xueqiu_only: bool = False) -> dict[str, Any]:
     _load_env_file_if_present(MANUAL_ENV_FILE)
     missing = []
     invalid = []
-    for key, expected in REQUIRED_MANUAL_ENV.items():
+    required = dict(REQUIRED_MANUAL_ENV)
+    if xueqiu_only:
+        # The single-source pipeline has no model/provider dependency.
+        required.pop("NEWS_HARNESS_DEEPSEEK_SMOKE", None)
+    for key, expected in required.items():
         value = os.environ.get(key)
         if not value:
             missing.append(key)

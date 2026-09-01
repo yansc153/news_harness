@@ -67,6 +67,7 @@ def write_liveness_artifact(
     last_success: str | None = None,
     last_error: str | None = None,
     disk_free_bytes: int | None = None,
+    clear_last_error: bool = False,
 ) -> None:
     """Write (or update) the liveness.json artifact."""
     now = datetime.now(timezone.utc).isoformat()
@@ -86,7 +87,7 @@ def write_liveness_artifact(
         "last_cycle_started_at": last_cycle_started or existing.get("last_cycle_started_at"),
         "last_cycle_completed_at": last_cycle_completed or existing.get("last_cycle_completed_at"),
         "last_success_at": last_success or existing.get("last_success_at"),
-        "last_error": last_error or existing.get("last_error"),
+        "last_error": None if clear_last_error else (last_error or existing.get("last_error")),
         "disk_free_bytes": disk_free_bytes if disk_free_bytes is not None else existing.get("disk_free_bytes"),
     }
     atomic_write_json(artifact_dir / LIVENESS_FILENAME, liveness)

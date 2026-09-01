@@ -1,0 +1,88 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "CloudGN upstream research contract",
+    "version": "0.1.0"
+  },
+  "servers": [{"url": "https://prod-web.cloudgn.com"}],
+  "paths": {
+    "/qs_svc/v1/get_qs_home_data_v2": {
+      "get": {
+        "operationId": "cloudgn_home_summary",
+        "responses": {"200": {"description": "HTTP response; business code must be 200"}}
+      }
+    },
+    "/qs_svc/v1/stock_start_rank_pro": {
+      "get": {
+        "operationId": "cloudgn_quant_preferred",
+        "responses": {"200": {"description": "Quant preferred list, possibly encrypted"}}
+      }
+    },
+    "/qs_svc/v1/stock_start_rank_a7_pro": {
+      "get": {
+        "operationId": "cloudgn_quant_selected",
+        "responses": {"200": {"description": "Quant selected list, possibly encrypted"}}
+      }
+    },
+    "/qs_svc/v1/get_salt": {
+      "get": {
+        "operationId": "cloudgn_decryption_salt",
+        "responses": {"200": {"description": "AES-GCM salt"}}
+      }
+    },
+    "/qs_svc/v1/get_market_star": {
+      "get": {
+        "operationId": "cloudgn_market_star",
+        "responses": {"200": {"description": "Star filters selected by query parameters"}}
+      }
+    },
+    "/qs_svc/v1/get_gn_late_select_stock_list": {
+      "get": {
+        "operationId": "cloudgn_late_pool_filters",
+        "responses": {"200": {"description": "Excluded late-pool filter variants"}}
+      }
+    },
+    "/qs_svc/v1/get_gnstock_select_stock_list": {
+      "get": {
+        "operationId": "cloudgn_quant_1430",
+        "responses": {"200": {"description": "14:30 quant230 list"}}
+      }
+    },
+    "/qs_svc/v1/get_other_quotes_home_data": {
+      "get": {
+        "operationId": "cloudgn_hot_money_preview",
+        "responses": {"200": {"description": "Intraday hot-money preview"}}
+      }
+    },
+    "/app-api/stock/hot-money/page": {
+      "get": {
+        "operationId": "cloudgn_hot_money_page",
+        "responses": {"200": {"description": "Paged after-close hot-money data; business code must be 0"}}
+      }
+    },
+    "/app-api/stock/lhb/trade/total": {
+      "get": {
+        "operationId": "cloudgn_lhb_trade_total",
+        "responses": {"200": {"description": "LHB trade calendar marker; business code must be 0"}}
+      }
+    },
+    "/app-api/stock/hot-money/info": {
+      "get": {
+        "operationId": "cloudgn_hot_money_info",
+        "responses": {"200": {"description": "Hot-money descriptive profile; business code must be 0"}}
+      }
+    },
+    "/app-api/stock/hot-money/dept": {
+      "get": {
+        "operationId": "cloudgn_hot_money_department",
+        "responses": {"200": {"description": "Hot-money departments; business code must be 0"}}
+      }
+    },
+    "/app-api/stock/hot-money/operation": {
+      "get": {
+        "operationId": "cloudgn_hot_money_operation",
+        "responses": {"200": {"description": "Paged hot-money operations; business code must be 0"}}
+      }
+    }
+  }
+}

@@ -86,8 +86,7 @@ def _image_refs(item: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 ALLOWED_MCP_KEYS: set[str] = {
-    "object_type", "id", "source", "published_at", "fetched_at", "copy_text",
-    "source_url", "image_refs", "processing_status",
+    "object_type", "id", "source", "published_at", "observed_at", "copy_text", "source_url", "image_refs",
 }
 
 ALLOWED_MCP_IMAGE_REF_KEYS: set[str] = {
@@ -100,17 +99,9 @@ FORBIDDEN_MCP_KEYS: set[str] = {
     "rule_ids", "structure_tags", "outcome_labels", "learning_eligibility",
     "eval_status", "promotion_status", "revisit_status",
     "artifact_refs", "non_investment_advice",
-    "translated_text", "llm_summary", "model_ref",
 }
 
-RAW_COPY_FIELDS = (
-    "raw_copy_text",
-    "original_copy_text",
-    "source_copy_text",
-    "raw_text",
-    "original_text",
-)
-
+RAW_COPY_FIELDS = ("raw_copy_text", "original_copy_text", "source_copy_text", "raw_text", "original_text")
 XUEQIU_DEEPSEEK_PROCESSING_STATUSES = {"translated", "llm_done"}
 
 
@@ -127,30 +118,22 @@ def _mcp_image_refs(item: dict[str, Any]) -> list[dict[str, Any]]:
     return refs
 
 
-def _is_xueqiu_item(item: dict[str, Any]) -> bool:
-    source = str(item.get("source") or item.get("platform") or "").lower()
-    label = str(item.get("source_label") or "").lower()
-    return source.startswith("xueqiu") or "雪球" in label
-
-
 def _xueqiu_raw_policy_problems(source_item: dict[str, Any]) -> list[str]:
-    if not _is_xueqiu_item(source_item):
+    source = str(source_item.get("source") or source_item.get("platform") or "").lower()
+    label = str(source_item.get("source_label") or "").lower()
+    if not (source.startswith("xueqiu") or "雪球" in label):
         return []
-
     problems: list[str] = []
     copy_text = str(source_item.get("copy_text") or "")
     for field in RAW_COPY_FIELDS:
         if field in source_item and source_item.get(field) is not None and copy_text != str(source_item.get(field) or ""):
             problems.append(f"xueqiu_raw_policy:copy_text_mismatch:{field}")
-
     processing_status = str(source_item.get("processing_status") or "").strip().lower()
     if processing_status in XUEQIU_DEEPSEEK_PROCESSING_STATUSES or "deepseek" in processing_status:
         problems.append(f"xueqiu_raw_policy:deepseek_processing_status:{processing_status}")
-
-    model_ref = str(source_item.get("model_ref") or source_item.get("processing_model_ref") or "").strip().lower()
+    model_ref = str(source_item.get("model_ref") or source_item.get("processing_model_ref") or "").lower()
     if "deepseek" in model_ref:
         problems.append("xueqiu_raw_policy:deepseek_model_ref")
-
     if source_item.get("translated_text") or source_item.get("llm_summary"):
         problems.append("xueqiu_raw_policy:processed_text_present")
     return problems
@@ -170,20 +153,18 @@ def validate_mcp_export(item: dict[str, Any], *, source_item: dict[str, Any] | N
 
 
 def project_item_export(item: dict[str, Any]) -> dict[str, Any]:
-    """Return the public export read model: source evidence, freshness, and raw processing state."""
+    """Return the public export read model: only copy, source URL, and image refs."""
     source_url = public_url(item.get("source_url") or item.get("canonical_url"))
     projected = {
         "object_type": "McpExportItem",
         "id": item.get("id"),
         "source": item.get("source"),
         "published_at": item.get("published_at"),
-        "fetched_at": item.get("fetched_at") or item.get("observed_at") or item.get("last_observed_at"),
+        "observed_at": item.get("fetched_at") or item.get("observed_at"),
         "copy_text": item.get("copy_text") or "",
         "source_url": source_url,
         "image_refs": _mcp_image_refs(item),
     }
-    if "processing_status" in item:
-        projected["processing_status"] = item.get("processing_status")
     problems = validate_mcp_export(projected, source_item=item)
     if problems:
         item_id = item.get("id") or "<unknown>"
@@ -239,7 +220,7 @@ def project_item_web(item: dict[str, Any], *, include_private_refs: bool = False
 
 
 def project_item_mcp(item: dict[str, Any]) -> dict[str, Any]:
-    """Return the MCP export read model — evidence/read fields only, no scores or rule internals."""
+    """Return the MCP export read model — evidence/read fields only, no scores/status/refs."""
     return project_item_export(item)
 
 
@@ -337,6 +318,7 @@ def artifact_health(feed_path: Path = DEFAULT_FEED, artifact_dir: Path = DEFAULT
         "revisit_schedule": artifact_dir / "revisit_schedule.json",
         "outcome": artifact_dir / "outcome.json",
         "eval": artifact_dir / "eval.json",
+        "hourly_target_set": artifact_dir / "hourly_target_set.json",
         "timeline_feed": feed_path,
     }
     missing = [name for name, path in artifacts.items() if not path.exists()]
@@ -346,10 +328,21 @@ def artifact_health(feed_path: Path = DEFAULT_FEED, artifact_dir: Path = DEFAULT
         for status in source_run.get("sources", [])
         if isinstance(status, dict) and status.get("status") != "ok"
     ] if isinstance(source_run, dict) else []
+    target_set = load_json(artifacts["hourly_target_set"]) if artifacts["hourly_target_set"].exists() else {}
+    endpoint_results = target_set.get("endpoint_results", []) if isinstance(target_set, dict) else []
+    failed_endpoints = [
+        row.get("endpoint_id") for row in endpoint_results
+        if isinstance(row, dict) and row.get("status") != "ok"
+    ]
+    collection = target_set.get("collection", {}) if isinstance(target_set, dict) else {}
+    collection_status = collection.get("status") if isinstance(collection, dict) else None
+    target_age_minutes = _age_minutes(target_set.get("generated_at")) if isinstance(target_set, dict) else None
+    target_stale = target_age_minutes is None or target_age_minutes > DEFAULT_HEALTH_MAX_AGE_MINUTES
     feed_status = "demo" if is_demo_feed(feed, str(feed_path)) else "live"
     feed_age_minutes = _age_minutes(feed.get("generated_at"))
     feed_stale = feed_age_minutes is None or feed_age_minutes > DEFAULT_HEALTH_MAX_AGE_MINUTES
-    status = "ok" if not missing and feed_status == "live" and not failed_sources and not feed_stale else "degraded"
+    target_ok = not failed_endpoints and collection_status in {"ok_with_candidates", "ok_no_candidates"} and not target_stale
+    status = "ok" if not missing and feed_status == "live" and not failed_sources and not feed_stale and target_ok else "degraded"
     return {
         "object_type": "NewsHarnessWebsiteHealth",
         "status": status,
@@ -362,5 +355,16 @@ def artifact_health(feed_path: Path = DEFAULT_FEED, artifact_dir: Path = DEFAULT
         "item_count": len(feed.get("items", [])),
         "missing_artifacts": missing,
         "failed_sources": failed_sources,
+        "target_cycle_id": target_set.get("cycle_id") if isinstance(target_set, dict) else None,
+        "target_age_minutes": target_age_minutes,
+        "target_stale": target_stale,
+        "target_stock_count": target_set.get("stock_count") if isinstance(target_set, dict) else None,
+        "kaipanla_endpoint_count": len(endpoint_results),
+        "failed_kaipanla_endpoints": failed_endpoints,
+        "targeted_collection_status": collection_status,
+        "xueqiu_raw_row_count": collection.get("raw_row_count") if isinstance(collection, dict) else None,
+        "comment_threshold_pass_count": collection.get("threshold_pass_count") if isinstance(collection, dict) else None,
+        "qualified_observation_count": collection.get("qualified_observation_count") if isinstance(collection, dict) else None,
+        "recent_structured_errors": collection.get("structured_errors", []) if isinstance(collection, dict) else [],
         "artifacts": {name: str(path) for name, path in artifacts.items()},
     }

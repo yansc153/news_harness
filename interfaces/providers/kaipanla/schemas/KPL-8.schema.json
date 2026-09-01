@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "Name": {
+      "type": "string"
+    },
+    "begin_px": {
+      "type": "integer"
+    },
+    "code": {
+      "type": "string"
+    },
+    "day": {
+      "type": "string"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "hprice": {
+      "type": "number"
+    },
+    "lprice": {
+      "type": "number"
+    },
+    "preclose_px": {
+      "type": "number"
+    },
+    "px_change_rate": {
+      "type": "number"
+    },
+    "time": {
+      "type": "string"
+    },
+    "time2": {
+      "type": "integer"
+    },
+    "total_turnover": {
+      "type": "integer"
+    },
+    "trend": {
+      "items": {
+        "items": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "type": "array"
+      },
+      "type": "array"
+    },
+    "ttag": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "Name",
+    "begin_px",
+    "code",
+    "day",
+    "errcode",
+    "hprice",
+    "lprice",
+    "preclose_px",
+    "px_change_rate",
+    "time",
+    "time2",
+    "total_turnover",
+    "trend",
+    "ttag"
+  ],
+  "title": "KPL-8 observed response",
+  "type": "object"
+}

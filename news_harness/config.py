@@ -44,6 +44,8 @@ HASH_VALUE_KEYS = {
     "config_hash",
     "output_hash",
     "prompt_hash",
+    "request_hash",
+    "response_hash",
     "scoring_path_hash",
     "sha256",
 }

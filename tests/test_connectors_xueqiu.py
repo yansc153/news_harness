@@ -32,7 +32,7 @@ XUEQIU_THRESHOLDS = {
     "min_chars": 500,
     "min_likes": 50,
     "min_comments": 10,
-    "require_image": True,
+    "require_image": False,
 }
 
 
@@ -150,11 +150,11 @@ class TestGateB(unittest.TestCase):
         self.assertFalse(passed)
         self.assertEqual(reason, "dropped_low_engagement")
 
-    def test_no_image_dropped(self):
+    def test_no_image_passes(self):
         item = xueqiu_observation_to_content_item(_sample_obs(image_refs=[]))
         passed, reason = apply_gate_b(item, XUEQIU_THRESHOLDS)
-        self.assertFalse(passed)
-        self.assertEqual(reason, "dropped_no_image")
+        self.assertTrue(passed)
+        self.assertEqual(reason, "passed")
 
 
 class TestGateC(unittest.TestCase):
@@ -178,12 +178,11 @@ class TestFilterBatch(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def _mix(self):
-        # 10 合格 + 5 被 Gate B 拦（短/无图/低赞） + 1 被 Gate A 拦
+        # 10 合格 + 5 被 Gate B 拦（短/低赞/低评论） + 1 被 Gate A 拦；无图帖因图片可选而通过
         obs = []
         for i in range(10):
             obs.append(_sample_obs(f"ok_{i}"))
         obs.append(_sample_obs("short", copy_text="太短"))
-        obs.append(_sample_obs("noimg", image_refs=[]))
         obs.append(_sample_obs("lowlike", likes=5))
         obs.append(_sample_obs("lowcomment", comments=1))
         obs.append(_sample_obs("blocked", user_id="u_blocked", screen_name="财联社"))
@@ -198,10 +197,10 @@ class TestFilterBatch(unittest.TestCase):
         self.assertEqual(len(passed), 10)
         self.assertGreaterEqual(len(passed), 5)
         self.assertEqual(stats["gate_a_dropped"], 1)
-        self.assertEqual(sum(stats["gate_b_dropped"].values()), 4)
+        self.assertEqual(sum(stats["gate_b_dropped"].values()), 3)
 
-    def test_relaxation_recovers_below_floor(self):
-        # 仅 3 合格，但需要 5 → 放宽阶梯救回部分
+    def test_relaxation_disabled_below_floor(self):
+        # 3 合格 + 4 低赞拦截；无图帖因图片可选而通过 → 合格 7 条
         obs = [_sample_obs(f"ok_{i}") for i in range(3)]
         obs += [_sample_obs("lowlike", likes=5) for _ in range(4)]
         obs += [_sample_obs("noimg", image_refs=[]) for _ in range(4)]
@@ -209,9 +208,9 @@ class TestFilterBatch(unittest.TestCase):
             obs, load_blocklist(self.path), XUEQIU_THRESHOLDS,
             batch_limit=20, floor=5, relax=True,
         )
-        # 放宽后 lowlike(仅赞不足) 在去掉赞门槛后入选；总数应≥5
-        self.assertGreaterEqual(len(passed), 5)
-        self.assertTrue(stats["relaxation_level"] >= 1)
+        # Threshold is immutable; relaxation disabled
+        self.assertEqual(len(passed), 7)
+        self.assertNotIn("relaxation_level", stats)
 
     def test_batch_limit_caps_input(self):
         obs = [_sample_obs(f"ok_{i}") for i in range(50)]

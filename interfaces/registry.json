@@ -1,0 +1,1741 @@
+{
+  "schema_version": 2,
+  "scope": "first-release P0 contracts only; full 130-endpoint audit remains in the predecessor repository",
+  "providers": {
+    "cloudgn": {
+      "market": "a_share",
+      "base_url": "https://prod-web.cloudgn.com",
+      "openapi_contracts": [
+        "providers/cloudgn/openapi.json"
+      ]
+    },
+    "kaipanla": {
+      "market": "a_share",
+      "base_url": "https://apphwhq.longhuvip.com",
+      "openapi_contracts": [
+        "providers/kaipanla/openapi-api_fupanwang_com.json",
+        "providers/kaipanla/openapi-apparticle_longhuvip_com.json",
+        "providers/kaipanla/openapi-apphis_longhuvip_com.json",
+        "providers/kaipanla/openapi-apphq_longhuvip_com.json",
+        "providers/kaipanla/openapi-apphwhq_longhuvip_com.json",
+        "providers/kaipanla/openapi-apphwshhq_longhuvip_com.json",
+        "providers/kaipanla/openapi-applhb_longhuvip_com.json",
+        "providers/kaipanla/openapi-flash_api_xuangubao_com_cn.json"
+      ]
+    },
+    "pickalphas": {
+      "market": "us_equity",
+      "base_url": "https://pickalphas.com",
+      "openapi_contracts": [
+        "providers/pickalphas/openapi-pa-01.json",
+        "providers/pickalphas/openapi-pa-02.json",
+        "providers/pickalphas/openapi-pa-03.json",
+        "providers/pickalphas/openapi-pa-04.json",
+        "providers/pickalphas/openapi-pa-05.json",
+        "providers/pickalphas/openapi-pa-06.json",
+        "providers/pickalphas/openapi-pa-07.json",
+        "providers/pickalphas/openapi-pa-08.json",
+        "providers/pickalphas/openapi-pa-09.json",
+        "providers/pickalphas/openapi-pa-10.json",
+        "providers/pickalphas/openapi-pa-11.json",
+        "providers/pickalphas/openapi-pa-12.json"
+      ]
+    }
+  },
+  "endpoints": [
+    {
+      "endpoint_id": "CGN-02",
+      "provider": "cloudgn",
+      "name": "量化优选名单",
+      "operation_id": "cloudgn_quant_preferred",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_request_identity",
+      "cadence": {
+        "expected_window": "09:27 Asia/Shanghai",
+        "historical_window_verified": true
+      },
+      "history": {
+        "before_boundary_date": "2025-08-15",
+        "before_boundary_semantics": "http_200_business_0_server_exception",
+        "first_observed_trading_day": "2025-08-18",
+        "future_empty_verified": "2099-01-01",
+        "mode": "date",
+        "tested_from": "2025-08-15",
+        "tested_through": "2026-08-20"
+      },
+      "rate_limit": {
+        "burst_cases_per_target": 10,
+        "burst_run": "cloudgn-p0-rate-burst-20260820T115000Z",
+        "confidence": "observed_safe_not_official_ceiling",
+        "configured_delay_seconds": 0,
+        "http_429_observed": false
+      },
+      "schema_contract": "providers/cloudgn/schemas/CGN-02.schema.json"
+    },
+    {
+      "endpoint_id": "CGN-03",
+      "provider": "cloudgn",
+      "name": "量化精选名单",
+      "operation_id": "cloudgn_quant_selected",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_request_identity",
+      "cadence": {
+        "expected_window": "09:28 Asia/Shanghai",
+        "historical_window_verified": true
+      },
+      "history": {
+        "before_boundary_date": "2026-01-05",
+        "before_boundary_semantics": "business_success_empty",
+        "first_observed_data_date": "2026-01-06",
+        "future_empty_verified": "2099-01-01",
+        "mode": "date",
+        "tested_from": "2026-01-05",
+        "tested_through": "2026-08-20"
+      },
+      "rate_limit": {
+        "burst_cases_per_target": 10,
+        "burst_run": "cloudgn-p0-rate-burst-20260820T115000Z",
+        "confidence": "observed_safe_not_official_ceiling",
+        "configured_delay_seconds": 0,
+        "http_429_observed": false
+      },
+      "schema_contract": "providers/cloudgn/schemas/CGN-03.schema.json"
+    },
+    {
+      "endpoint_id": "CGN-04",
+      "provider": "cloudgn",
+      "name": "AES-GCM 盐",
+      "operation_id": "cloudgn_decryption_salt",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_request_identity",
+      "cadence": {
+        "expected_window": null
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "burst_cases_per_target": 10,
+        "burst_run": "cloudgn-p0-rate-burst-20260820T115000Z",
+        "confidence": "observed_safe_not_official_ceiling",
+        "configured_delay_seconds": 0,
+        "http_429_observed": false
+      },
+      "schema_contract": "providers/cloudgn/schemas/CGN-04.schema.json"
+    },
+    {
+      "endpoint_id": "CGN-08",
+      "provider": "cloudgn",
+      "name": "两点半精选",
+      "operation_id": "cloudgn_quant_1430",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_request_identity",
+      "cadence": {
+        "expected_window": "14:30 Asia/Shanghai",
+        "historical_window_verified": true
+      },
+      "history": {
+        "before_boundary_date": "2026-08-12",
+        "before_boundary_semantics": "business_success_empty",
+        "first_observed_data_date": "2026-08-13",
+        "future_empty_verified": "2099-01-01",
+        "mode": "date",
+        "tested_from": "2026-08-12",
+        "tested_through": "2026-08-20"
+      },
+      "rate_limit": {
+        "burst_cases_per_target": 10,
+        "burst_run": "cloudgn-p0-rate-burst-20260820T115000Z",
+        "confidence": "observed_safe_not_official_ceiling",
+        "configured_delay_seconds": 0,
+        "http_429_observed": false
+      },
+      "schema_contract": "providers/cloudgn/schemas/CGN-08.schema.json"
+    },
+    {
+      "endpoint_id": "CGN-09",
+      "provider": "cloudgn",
+      "name": "游资首页预览",
+      "operation_id": "cloudgn_hot_money_preview",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_request_identity",
+      "cadence": {
+        "expected_window": "intraday Asia/Shanghai"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "burst_cases_per_target": 10,
+        "burst_run": "cloudgn-p0-rate-burst-20260820T115000Z",
+        "confidence": "observed_safe_not_official_ceiling",
+        "configured_delay_seconds": 0,
+        "http_429_observed": false
+      },
+      "schema_contract": "providers/cloudgn/schemas/CGN-09.schema.json"
+    },
+    {
+      "endpoint_id": "CGN-10",
+      "provider": "cloudgn",
+      "name": "游资全量分页",
+      "operation_id": "cloudgn_hot_money_page",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_request_identity",
+      "cadence": {
+        "expected_window": "after_close Asia/Shanghai",
+        "observed_update_time": "2026-08-19T19:19:40+08:00",
+        "verified_via_calendar_endpoint": "CGN-11"
+      },
+      "history": {
+        "before_boundary_date": "2025-01-03",
+        "before_boundary_semantics": "business_success_empty",
+        "first_observed_data_date": "2025-01-06",
+        "future_empty_verified": "2099-01-01",
+        "mode": "date_page"
+      },
+      "rate_limit": {
+        "burst_cases_per_target": 10,
+        "burst_run": "cloudgn-p0-rate-burst-20260820T115000Z",
+        "confidence": "observed_safe_not_official_ceiling",
+        "configured_delay_seconds": 0,
+        "http_429_observed": false
+      },
+      "schema_contract": "providers/cloudgn/schemas/CGN-10.schema.json"
+    },
+    {
+      "endpoint_id": "CGN-11",
+      "provider": "cloudgn",
+      "name": "龙虎榜日历时点",
+      "operation_id": "cloudgn_lhb_trade_total",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_request_identity",
+      "cadence": {
+        "expected_window": "after_close Asia/Shanghai",
+        "observed_update_time": "2026-08-19T19:19:40+08:00"
+      },
+      "history": {
+        "input_date_ignored": true,
+        "mode": "fallback_current",
+        "returned_date": "20260819",
+        "tested_inputs": [
+          "2026-08-19",
+          "2026-08-22",
+          "2025-01-01",
+          "2020-01-02",
+          "2099-01-01",
+          "bad-date"
+        ]
+      },
+      "rate_limit": {
+        "burst_cases_per_target": 10,
+        "burst_run": "cloudgn-p0-rate-burst-20260820T115000Z",
+        "confidence": "observed_safe_not_official_ceiling",
+        "configured_delay_seconds": 0,
+        "http_429_observed": false
+      },
+      "schema_contract": "providers/cloudgn/schemas/CGN-11.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-10",
+      "provider": "kaipanla",
+      "name": "涨停、跌停、炸板 - 实时 / 涨停实时",
+      "operation_id": "kaipanla_flash_api_xuangubao_com_cn_api_pool_detail_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-10.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-11",
+      "provider": "kaipanla",
+      "name": "涨停、跌停、炸板 - 实时 / 炸板实时",
+      "operation_id": "kaipanla_flash_api_xuangubao_com_cn_api_pool_detail_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-11.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-115",
+      "provider": "kaipanla",
+      "name": "竞价数据 / 竞价涨停委买额-实时接口",
+      "operation_id": "kaipanla_apphwhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-115.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-12",
+      "provider": "kaipanla",
+      "name": "涨停、跌停、炸板 - 实时 / 跌停实时",
+      "operation_id": "kaipanla_flash_api_xuangubao_com_cn_api_pool_detail_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2018-10-11",
+        "before_boundary_semantics": "business_success_data_null",
+        "first_observed_data_date": "2018-12-28",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-12.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-16",
+      "provider": "kaipanla",
+      "name": "市场情绪评分 / 涨停跌停-数量",
+      "operation_id": "kaipanla_apphwshhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-16.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-18",
+      "provider": "kaipanla",
+      "name": "市场情绪评分 / 上涨/下跌家数",
+      "operation_id": "kaipanla_apphwshhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-18.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-19",
+      "provider": "kaipanla",
+      "name": "市场情绪评分 / 昨日涨停今表现",
+      "operation_id": "kaipanla_apphwshhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "input_date_ignored": true,
+        "mode": "fallback_current"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-19.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-20",
+      "provider": "kaipanla",
+      "name": "市场情绪评分 / 昨日连板今表现",
+      "operation_id": "kaipanla_apphwshhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "input_date_ignored": true,
+        "mode": "fallback_current"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-20.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-21",
+      "provider": "kaipanla",
+      "name": "市场情绪评分 / 昨日破板今日表现",
+      "operation_id": "kaipanla_apphwshhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "input_date_ignored": true,
+        "mode": "fallback_current"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-21.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-25",
+      "provider": "kaipanla",
+      "name": "涨停、跌停、炸板 - 历史 / 涨停历史",
+      "operation_id": "kaipanla_flash_api_xuangubao_com_cn_api_pool_detail_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2018-10-11",
+        "before_boundary_semantics": "business_success_data_null",
+        "first_observed_data_date": "2018-12-28",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-25.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-26",
+      "provider": "kaipanla",
+      "name": "涨停、跌停、炸板 - 历史 / 炸板历史",
+      "operation_id": "kaipanla_flash_api_xuangubao_com_cn_api_pool_detail_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2018-10-11",
+        "before_boundary_semantics": "business_success_data_null",
+        "first_observed_data_date": "2018-12-28",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-26.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-27",
+      "provider": "kaipanla",
+      "name": "涨停、跌停、炸板 - 历史 / 跌停历史",
+      "operation_id": "kaipanla_flash_api_xuangubao_com_cn_api_pool_detail_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2018-10-11",
+        "before_boundary_semantics": "business_success_data_null",
+        "first_observed_data_date": "2018-12-28",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-27.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-28",
+      "provider": "kaipanla",
+      "name": "涨停、跌停、炸板 - 历史 / 昨日涨停",
+      "operation_id": "kaipanla_flash_api_xuangubao_com_cn_api_pool_detail_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2018-10-11",
+        "before_boundary_semantics": "business_success_data_null",
+        "first_observed_data_date": "2018-12-28",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-28.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-30",
+      "provider": "kaipanla",
+      "name": "竞价数据 / 竞价涨停委买额-历史接口",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2024-05-31",
+        "before_boundary_semantics": "business_success_empty",
+        "first_observed_data_date": "2024-06-03",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-30.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-31",
+      "provider": "kaipanla",
+      "name": "竞价数据 / 竞价-个股竞价分时",
+      "operation_id": "kaipanla_apphwhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "burst_cases": 10,
+        "burst_run": "kaipanla-p0-rate-burst-20260820T112100Z",
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-31.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-41",
+      "provider": "kaipanla",
+      "name": "板块强度排行 / 精选板块列表-实时",
+      "operation_id": "kaipanla_apphq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "burst_cases": 10,
+        "burst_run": "kaipanla-p0-rate-burst-20260820T112100Z",
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-41.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-46",
+      "provider": "kaipanla",
+      "name": "板块成分股 / 板块成分股",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2024-11-18",
+        "before_boundary_semantics": "business_success_empty",
+        "first_observed_data_date": "2024-11-25",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-46.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-47",
+      "provider": "kaipanla",
+      "name": "涨停原因 / 当天涨停原因",
+      "operation_id": "kaipanla_apphq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-47.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-48",
+      "provider": "kaipanla",
+      "name": "历史涨停原因 / 历史涨停原因",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "earliest_observed": "2024-03-07",
+        "latest_observed": "2026-08-05",
+        "mode": "embedded_series_by_stock",
+        "observed_points": 20,
+        "sample_stock": "001337"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-48.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-49",
+      "provider": "kaipanla",
+      "name": "实时连板涨停 / 1，涨停的首板",
+      "operation_id": "kaipanla_apphwhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-49.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-50",
+      "provider": "kaipanla",
+      "name": "实时连板涨停 / 2，涨停的2板",
+      "operation_id": "kaipanla_apphwhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-50.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-51",
+      "provider": "kaipanla",
+      "name": "实时连板涨停 / 3，涨停的3板",
+      "operation_id": "kaipanla_apphwhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-51.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-52",
+      "provider": "kaipanla",
+      "name": "实时连板涨停 / 4，涨停的4板",
+      "operation_id": "kaipanla_apphwhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-52.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-53",
+      "provider": "kaipanla",
+      "name": "实时连板涨停 / 5，涨停的更高",
+      "operation_id": "kaipanla_apphwhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-53.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-54",
+      "provider": "kaipanla",
+      "name": "历史涨停接口 / 历史涨停的首板",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2017-12-29",
+        "before_boundary_semantics": "business_success_empty",
+        "first_observed_data_date": "2018-01-02",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-54.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-55",
+      "provider": "kaipanla",
+      "name": "历史涨停接口 / 历史涨停的2板",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2018-01-02",
+        "before_boundary_semantics": "business_success_empty",
+        "first_observed_data_date": "2018-12-28",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-55.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-56",
+      "provider": "kaipanla",
+      "name": "历史涨停接口 / 历史涨停的3板",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2018-01-02",
+        "before_boundary_semantics": "business_success_empty",
+        "first_observed_data_date": "2018-12-28",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-56.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-57",
+      "provider": "kaipanla",
+      "name": "历史涨停接口 / 历史涨停的4板",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2018-12-28",
+        "before_boundary_semantics": "business_success_empty",
+        "first_observed_data_date": "2019-01-02",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-57.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-58",
+      "provider": "kaipanla",
+      "name": "历史涨停接口 / 历史涨停的更高",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2018-01-02",
+        "before_boundary_semantics": "business_success_empty",
+        "first_observed_data_date": "2018-12-28",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-58.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-7",
+      "provider": "kaipanla",
+      "name": "日k线与分时 / k线-个股",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "earliest_observed": "2026-03-12",
+        "latest_observed": "2026-08-20",
+        "mode": "embedded_series",
+        "observed_points": 111
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-7.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-70",
+      "provider": "kaipanla",
+      "name": "其他 / 短线精灵",
+      "operation_id": "kaipanla_apphq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "burst_cases": 10,
+        "burst_run": "kaipanla-p0-rate-burst-20260820T112100Z",
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-70.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-72",
+      "provider": "kaipanla",
+      "name": "其他 / 全球指数",
+      "operation_id": "kaipanla_apphwshhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-72.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-77",
+      "provider": "kaipanla",
+      "name": "其他 / 大面股",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "before_boundary_date": "2019-01-02",
+        "before_boundary_semantics": "business_error_1130",
+        "first_observed_data_date": "2019-12-31",
+        "mode": "date"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-77.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-78",
+      "provider": "kaipanla",
+      "name": "其他 / 板块内涨停数",
+      "operation_id": "kaipanla_apphwhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "input_date_ignored": true,
+        "mode": "fallback_current"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-78.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-79",
+      "provider": "kaipanla",
+      "name": "其他 / 板块竞价异动",
+      "operation_id": "kaipanla_apphwhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "burst_cases": 10,
+        "burst_run": "kaipanla-p0-rate-burst-20260820T112100Z",
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-79.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-8",
+      "provider": "kaipanla",
+      "name": "日k线与分时 / 分时与、实时涨幅",
+      "operation_id": "kaipanla_apphwhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "burst_cases": 10,
+        "burst_run": "kaipanla-p0-rate-burst-20260820T112100Z",
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-8.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-80",
+      "provider": "kaipanla",
+      "name": "其他 / 异动板块的个股",
+      "operation_id": "kaipanla_apphwhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-80.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-82",
+      "provider": "kaipanla",
+      "name": "区间涨幅统计 / 全市场个股区间统计（end为当日）",
+      "operation_id": "kaipanla_apphwshhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "arbitrary_old_end_returns_empty": true,
+        "mode": "date_range_end_sensitive",
+        "recent_valid_range_verified": "2026-08-12/2026-08-19"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-82.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-83",
+      "provider": "kaipanla",
+      "name": "机构增仓 / 实时接口（最新季度）:",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "kaipanla_query_identity_required",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "available_quarters": 7,
+        "earliest_available": "2024-12-31",
+        "latest_available": "2026-06-30",
+        "mode": "quarter_date_list"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-83.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-84",
+      "provider": "kaipanla",
+      "name": "机构增仓 / 历史",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "kaipanla_query_identity_required",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "available_quarters": 7,
+        "earliest_available": "2024-12-31",
+        "latest_available": "2026-06-30",
+        "mode": "quarter_date_list"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-84.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-85",
+      "provider": "kaipanla",
+      "name": "机构增仓_个股-接口 / 实时接口（最新季度）、历史接口",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "kaipanla_query_identity_required",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "available_quarters": 7,
+        "earliest_available": "2024-12-31",
+        "latest_available": "2026-06-30",
+        "mode": "quarter_date_list"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-85.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-86",
+      "provider": "kaipanla",
+      "name": "沪深港通_北向资金_按板块 / 实时接口：（最新季度）",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "available_quarters": 7,
+        "earliest_available": "2024-12-31",
+        "latest_available": "2026-06-30",
+        "mode": "quarter_date_list"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-86.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-87",
+      "provider": "kaipanla",
+      "name": "沪深港通_北向资金_按板块 / 历史",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "available_quarters": 7,
+        "earliest_available": "2024-12-31",
+        "latest_available": "2026-06-30",
+        "mode": "quarter_date_list"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-87.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-88",
+      "provider": "kaipanla",
+      "name": "沪深港通_北向资金_按板块-个股 / 实时接口：（最新季度）",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "available_quarters": 7,
+        "earliest_available": "2024-12-31",
+        "latest_available": "2026-06-30",
+        "mode": "quarter_date_list"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-88.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-89",
+      "provider": "kaipanla",
+      "name": "沪深港通_北向资金_按板块-个股 / 历史",
+      "operation_id": "kaipanla_apphis_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "available_quarters": 7,
+        "earliest_available": "2024-12-31",
+        "latest_available": "2026-06-30",
+        "mode": "quarter_date_list"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-89.schema.json"
+    },
+    {
+      "endpoint_id": "KPL-94",
+      "provider": "kaipanla",
+      "name": "其他 / 个股 - 全部相关 概念板块",
+      "operation_id": "kaipanla_apphwshhq_longhuvip_com_w1_api_index_php_get",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "none_optional_identity_ignored",
+      "cadence": {
+        "expected_window": null,
+        "source_timestamp_policy": "use_upstream_timestamp_when_present_else_received_at"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "http_429_observed": false,
+        "zero_delay_run": "kaipanla-p0-zero-delay-20260820T112000Z",
+        "zero_delay_total_cases": 46
+      },
+      "schema_contract": "providers/kaipanla/schemas/KPL-94.schema.json"
+    },
+    {
+      "endpoint_id": "PA-01",
+      "provider": "pickalphas",
+      "name": "密码登录与会话建立",
+      "operation_id": "pickalphas_password_login",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "anonymous_form_then_session_cookie",
+      "cadence": {
+        "expected_window": "before collector session expires",
+        "source_timestamp_policy": "not_applicable"
+      },
+      "history": {
+        "mode": "none"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "first_throttle_observation": null,
+        "http_429_observed": false,
+        "observed_safe_floor": {
+          "sample_count": 10,
+          "scope": "representative HTML page categories",
+          "window": "zero-delay sequential navigation"
+        },
+        "official_limit": null
+      }
+    },
+    {
+      "endpoint_id": "PA-02",
+      "provider": "pickalphas",
+      "name": "魔眼版本发现",
+      "operation_id": "pickalphas_massive_radar_versions",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "pickalphas_session_cookie",
+      "cadence": {
+        "expected_window": "trading-day morning, observed around 09:30 Asia/Shanghai",
+        "source_timestamp_policy": "filename generated time plus workbook data date"
+      },
+      "history": {
+        "earliest_verified": "2026-05-23",
+        "latest_verified": "2026-08-20",
+        "mode": "version_list",
+        "verified_version_count": 61
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "first_throttle_observation": null,
+        "http_429_observed": false,
+        "observed_safe_floor": {
+          "sample_count": 10,
+          "scope": "representative HTML page categories",
+          "window": "zero-delay sequential navigation"
+        },
+        "official_limit": null
+      }
+    },
+    {
+      "endpoint_id": "PA-03",
+      "provider": "pickalphas",
+      "name": "Citrini 研报列表",
+      "operation_id": "pickalphas_citrini_report_list",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "pickalphas_session_cookie",
+      "cadence": {
+        "expected_window": "daily incremental scan",
+        "source_timestamp_policy": "report published date"
+      },
+      "history": {
+        "earliest_verified": "2023-01-27",
+        "latest_verified": "2026-08-13",
+        "mode": "page",
+        "verified_record_count": 129
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "first_throttle_observation": null,
+        "http_429_observed": false,
+        "observed_safe_floor": {
+          "sample_count": 10,
+          "scope": "representative HTML page categories",
+          "window": "zero-delay sequential navigation"
+        },
+        "official_limit": null
+      }
+    },
+    {
+      "endpoint_id": "PA-04",
+      "provider": "pickalphas",
+      "name": "Citrini 英文研报正文",
+      "operation_id": "pickalphas_citrini_report_body",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "pickalphas_session_cookie",
+      "cadence": {
+        "expected_window": "on new report discovery",
+        "source_timestamp_policy": "report published date"
+      },
+      "history": {
+        "earliest_verified": "2023-01-27",
+        "latest_verified": "2026-08-13",
+        "mode": "report_id"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "first_throttle_observation": null,
+        "http_429_observed": false,
+        "observed_safe_floor": {
+          "sample_count": 10,
+          "scope": "representative HTML page categories",
+          "window": "zero-delay sequential navigation"
+        },
+        "official_limit": null
+      }
+    },
+    {
+      "endpoint_id": "PA-05",
+      "provider": "pickalphas",
+      "name": "Citrini PDF 下载",
+      "operation_id": "pickalphas_citrini_report_pdf",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "pickalphas_session_cookie",
+      "cadence": {
+        "expected_window": "on new report discovery",
+        "source_timestamp_policy": "inherit report published date"
+      },
+      "history": {
+        "earliest_verified": "2023-01-27",
+        "latest_verified": "2026-08-13",
+        "mode": "report_id"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "first_throttle_observation": null,
+        "http_429_observed": false,
+        "observed_safe_floor": {
+          "sample_count": 10,
+          "scope": "representative HTML page categories",
+          "window": "zero-delay sequential navigation"
+        },
+        "official_limit": null
+      }
+    },
+    {
+      "endpoint_id": "PA-06",
+      "provider": "pickalphas",
+      "name": "Citrini 英文聊天室",
+      "operation_id": "pickalphas_citrini_chat",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "pickalphas_session_cookie",
+      "cadence": {
+        "expected_window": "daily incremental scan",
+        "source_timestamp_policy": "message timestamp"
+      },
+      "history": {
+        "mode": "page",
+        "verified_page_count": 8,
+        "verified_record_count": 238
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "first_throttle_observation": null,
+        "http_429_observed": false,
+        "observed_safe_floor": {
+          "sample_count": 10,
+          "scope": "representative HTML page categories",
+          "window": "zero-delay sequential navigation"
+        },
+        "official_limit": null
+      }
+    },
+    {
+      "endpoint_id": "PA-07",
+      "provider": "pickalphas",
+      "name": "The Citrindex 版本与持仓 Excel",
+      "operation_id": "pickalphas_citrindex_versions",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "pickalphas_session_cookie",
+      "cadence": {
+        "expected_window": "weekly",
+        "source_timestamp_policy": "dataset version date"
+      },
+      "history": {
+        "earliest_verified": "2026-05-17",
+        "latest_verified": "2026-08-16",
+        "mode": "dataset_version",
+        "verified_version_count": 14
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "first_throttle_observation": null,
+        "http_429_observed": false,
+        "observed_safe_floor": {
+          "sample_count": 10,
+          "scope": "representative HTML page categories",
+          "window": "zero-delay sequential navigation"
+        },
+        "official_limit": null
+      }
+    },
+    {
+      "endpoint_id": "PA-08",
+      "provider": "pickalphas",
+      "name": "Excel 网页直读 JSON",
+      "operation_id": "pickalphas_excel_data",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "pickalphas_session_cookie",
+      "cadence": {
+        "expected_window": "on version discovery",
+        "source_timestamp_policy": "workbook generated time and data date"
+      },
+      "history": {
+        "earliest_verified": "2026-05-23",
+        "latest_verified": "2026-08-20",
+        "mode": "dataset_or_report_id",
+        "verified_version_count": 61
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "first_throttle_observation": null,
+        "http_429_observed": false,
+        "observed_safe_floor": {
+          "sample_count": 10,
+          "scope": "representative HTML page categories",
+          "window": "zero-delay sequential navigation"
+        },
+        "official_limit": null
+      }
+    },
+    {
+      "endpoint_id": "PA-09",
+      "provider": "pickalphas",
+      "name": "新版 dataset Excel 下载",
+      "operation_id": "pickalphas_dataset_file",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "pickalphas_session_cookie",
+      "cadence": {
+        "expected_window": "on version discovery",
+        "source_timestamp_policy": "filename generated time and workbook data date"
+      },
+      "history": {
+        "latest_verified": "2026-08-20",
+        "mode": "dataset_id",
+        "verified_recent_versions": 7
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "first_throttle_observation": null,
+        "http_429_observed": false,
+        "observed_safe_floor": {
+          "sample_count": 10,
+          "scope": "representative HTML page categories",
+          "window": "zero-delay sequential navigation"
+        },
+        "official_limit": null
+      }
+    },
+    {
+      "endpoint_id": "PA-10",
+      "provider": "pickalphas",
+      "name": "旧版 report Excel 下载",
+      "operation_id": "pickalphas_report_attachment",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "pickalphas_session_cookie",
+      "cadence": {
+        "expected_window": "historical backfill only",
+        "source_timestamp_policy": "report version date"
+      },
+      "history": {
+        "earliest_verified": "2026-05-23",
+        "latest_verified": "2026-08-11",
+        "mode": "report_id",
+        "verified_legacy_versions": 54
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "first_throttle_observation": null,
+        "http_429_observed": false,
+        "observed_safe_floor": {
+          "sample_count": 10,
+          "scope": "representative HTML page categories",
+          "window": "zero-delay sequential navigation"
+        },
+        "official_limit": null
+      }
+    },
+    {
+      "endpoint_id": "PA-11",
+      "provider": "pickalphas",
+      "name": "Quant GT Weekly Watchlist",
+      "operation_id": "pickalphas_quant_weekly_watchlist",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "pickalphas_session_cookie",
+      "cadence": {
+        "expected_window": "weekly",
+        "source_timestamp_policy": "Updated on label"
+      },
+      "history": {
+        "known_gaps": [
+          "no historical version selector observed"
+        ],
+        "latest_verified": "2026-08-14",
+        "mode": "current_snapshot"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "first_throttle_observation": null,
+        "http_429_observed": false,
+        "observed_safe_floor": {
+          "sample_count": 10,
+          "scope": "representative HTML page categories",
+          "window": "zero-delay sequential navigation"
+        },
+        "official_limit": null
+      }
+    },
+    {
+      "endpoint_id": "PA-12",
+      "provider": "pickalphas",
+      "name": "Quant GT AI Winners",
+      "operation_id": "pickalphas_quant_ai_winners",
+      "priority": "p0",
+      "readiness": "pass",
+      "auth_profile": "pickalphas_session_cookie",
+      "cadence": {
+        "expected_window": "weekly scan for content hash change",
+        "source_timestamp_policy": "observed_at when upstream publish timestamp absent"
+      },
+      "history": {
+        "known_gaps": [
+          "no historical version selector observed"
+        ],
+        "mode": "current_snapshot"
+      },
+      "rate_limit": {
+        "confidence": "observed_safe_not_official_ceiling",
+        "first_throttle_observation": null,
+        "http_429_observed": false,
+        "observed_safe_floor": {
+          "sample_count": 10,
+          "scope": "representative HTML page categories",
+          "window": "zero-delay sequential navigation"
+        },
+        "official_limit": null
+      }
+    }
+  ]
+}

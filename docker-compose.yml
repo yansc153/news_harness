@@ -1,8 +1,8 @@
 # News Harness V1 — Docker Compose
 #
 # Secrets: place files in ./docker/secrets/ before starting:
-#   ./docker/secrets/deepseek-api-key
 #   ./docker/secrets/xueqiu-storage-state.json
+#   ./docker/secrets/kpl-device-id
 #
 # Start:  docker compose up -d
 # Stop:   docker compose down
@@ -12,6 +12,7 @@ services:
     build: .
     container_name: news-harness
     restart: unless-stopped
+    init: true
     read_only: true
     cap_drop:
       - ALL
@@ -35,12 +36,11 @@ services:
       - NEWS_HARNESS_JANITOR_TTL_DAYS=7
       - NEWS_HARNESS_MANUAL_SMOKE_ACK=1
       - NEWS_HARNESS_REAL_SOURCE_SMOKE=1
-      - NEWS_HARNESS_DEEPSEEK_SMOKE=1
       - NEWS_HARNESS_XUEQIU_HEADLESS=1
       - NEWS_HARNESS_XUEQIU_STORAGE_STATE_FILE=/run/news-harness/secrets/xueqiu-storage-state.json
+      - NEWS_HARNESS_KPL_DEVICE_ID_FILE=/run/news-harness/secrets/kpl-device-id
       - NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MIN_MS=400
       - NEWS_HARNESS_XUEQIU_DETAIL_DELAY_MAX_MS=1200
-      - DEEPSEEK_API_KEY_FILE=/run/news-harness/secrets/deepseek-api-key
     healthcheck:
       test: ["CMD", "python3", "-c", "import json, sys, urllib.request; sys.exit(0 if json.load(urllib.request.urlopen('http://127.0.0.1:8765/api/health')).get('status') == 'ok' else 1)"]
       interval: 60s

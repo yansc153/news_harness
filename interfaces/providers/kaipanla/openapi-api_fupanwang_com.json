@@ -1,0 +1,29 @@
+{
+  "info": {
+    "title": "Kaipanla upstream contract: api.fupanwang.com",
+    "version": "2026-08-20"
+  },
+  "openapi": "3.1.2",
+  "paths": {
+    "/kpl/zhibo": {
+      "get": {
+        "operationId": "kaipanla_api_fupanwang_com_kpl_zhibo_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Observed upstream response; capability-specific schema is validated by cases"
+          }
+        },
+        "summary": "Kaipanla physical GET operation on api.fupanwang.com",
+        "x-huajiao-capability-ids": [
+          "KPL-32"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.fupanwang.com"
+    }
+  ]
+}

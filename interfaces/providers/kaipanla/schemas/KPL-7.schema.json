@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "CQ": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "StockID": {
+      "type": "string"
+    },
+    "Time": {
+      "type": "integer"
+    },
+    "bal": {
+      "items": {
+        "type": "integer"
+      },
+      "type": "array"
+    },
+    "errcode": {
+      "type": "string"
+    },
+    "firstPre": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "state": {
+      "items": {
+        "type": "integer"
+      },
+      "type": "array"
+    },
+    "state1": {
+      "items": {
+        "type": "integer"
+      },
+      "type": "array"
+    },
+    "stateZT": {
+      "items": {
+        "type": "integer"
+      },
+      "type": "array"
+    },
+    "ttag": {
+      "type": "number"
+    },
+    "turnover": {
+      "items": {
+        "type": "number"
+      },
+      "type": "array"
+    },
+    "vol": {
+      "items": {
+        "type": "integer"
+      },
+      "type": "array"
+    },
+    "x": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "y": {
+      "items": {
+        "items": {
+          "type": "number"
+        },
+        "type": "array"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "CQ",
+    "StockID",
+    "Time",
+    "bal",
+    "errcode",
+    "firstPre",
+    "name",
+    "state",
+    "state1",
+    "stateZT",
+    "ttag",
+    "turnover",
+    "vol",
+    "x",
+    "y"
+  ],
+  "title": "KPL-7 observed response",
+  "type": "object"
+}
