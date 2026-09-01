@@ -12,6 +12,7 @@ services:
     build: .
     container_name: news-harness
     restart: unless-stopped
+    init: true
     read_only: true
     cap_drop:
       - ALL

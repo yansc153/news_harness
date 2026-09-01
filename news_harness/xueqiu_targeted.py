@@ -10,9 +10,11 @@ from __future__ import annotations
 import hashlib
 import os
 import re
+import signal
 import shutil
 import subprocess
 import time
+import types
 from datetime import datetime, timezone
 from typing import Any
 
@@ -20,6 +22,14 @@ from pathlib import Path
 
 
 OPENCLI_TIMEOUT_SECONDS = 60
+
+
+def _kill_process_group(process: subprocess.Popen) -> None:
+    """SIGKILL the whole process group so chromium/crashpad never survive a timeout."""
+    try:
+        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+    except (ProcessLookupError, PermissionError, OSError):
+        process.kill()
 
 
 def apply_comment_filter(rows: list[dict], *, min_comments: int) -> list[dict]:
@@ -400,10 +410,25 @@ def _fetch_via_headless(symbol: str, limit: int, min_comments: int = 10, max_age
             return [], [{"error_code": "storage_state_unreadable", "message": str(storage_path)}]
         args.extend(["--storage-state", storage_state])
 
+    process = subprocess.Popen(
+        args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        start_new_session=True,
+    )
     try:
-        result = subprocess.run(args, capture_output=True, text=True, timeout=120)
+        stdout, stderr = process.communicate(timeout=120)
     except subprocess.TimeoutExpired:
+        _kill_process_group(process)
+        process.communicate()
         return [], [{"error_code": "headless_timeout", "message": "Timed out after 120s"}]
+
+    result = types.SimpleNamespace(
+        returncode=process.returncode,
+        stdout=stdout or "",
+        stderr=stderr or "",
+    )
 
     if result.returncode != 0:
         stdout = result.stdout.strip()

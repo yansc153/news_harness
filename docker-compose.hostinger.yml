@@ -9,6 +9,7 @@ services:
     # Hostinger provisions /run/news-harness/secrets as root:root 0600.
     user: "0:0"
     restart: unless-stopped
+    init: true
     ports:
       - "8765:8765"
     volumes:

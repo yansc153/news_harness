@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import signal
 import shutil
 import socket
 import subprocess
@@ -1088,30 +1089,46 @@ def _run_command(args: list[str], *, timeout: int, env: dict[str, str] | None = 
     command_env = os.environ.copy()
     if env:
         command_env.update(env)
+    # Run export scripts in their own process group so a timeout can kill the
+    # whole tree (node script + chromium + crashpad). Killing only the direct
+    # child orphans browser processes; over days this exhausts the container's
+    # PID budget and every later cycle fails to fork (observed on the VPS).
+    process = subprocess.Popen(
+        args,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=command_env,
+        start_new_session=True,
+    )
     try:
-        completed = subprocess.run(args, text=True, capture_output=True, check=False, timeout=timeout, env=command_env)
-        status = "ok" if completed.returncode == 0 else "failed"
+        stdout, stderr = process.communicate(timeout=timeout)
+        returncode = process.returncode
+        status = "ok" if returncode == 0 else "failed"
         return {
             "status": status,
             "argv": _redacted_argv(args),
-            "returncode": completed.returncode,
-            "stdout": _redact_text(completed.stdout),
-            "stderr": _redact_text(completed.stderr)[-4000:],
+            "returncode": returncode,
+            "stdout": _redact_text(stdout),
+            "stderr": _redact_text(stderr)[-4000:],
             "duration_seconds": round(time.monotonic() - started, 3),
-            "message": "command completed" if status == "ok" else f"command returned {completed.returncode}",
+            "message": "command completed" if status == "ok" else f"command returned {returncode}",
         }
-    except subprocess.TimeoutExpired as exc:
+    except subprocess.TimeoutExpired:
+        _terminate_process_group(process)
+        stdout, stderr = process.communicate()
         return {
             "status": "failed",
             "argv": _redacted_argv(args),
             "returncode": None,
-            "stdout": _redact_text((exc.stdout or "") if isinstance(exc.stdout, str) else ""),
-            "stderr": _redact_text((exc.stderr or "") if isinstance(exc.stderr, str) else ""),
+            "stdout": _redact_text(stdout or ""),
+            "stderr": _redact_text(stderr or ""),
             "duration_seconds": round(time.monotonic() - started, 3),
             "message": f"command timed out after {timeout}s",
             "timeout": True,
         }
     except OSError as exc:
+        _terminate_process_group(process)
         return {
             "status": "failed",
             "argv": _redacted_argv(args),
@@ -1121,6 +1138,14 @@ def _run_command(args: list[str], *, timeout: int, env: dict[str, str] | None = 
             "duration_seconds": round(time.monotonic() - started, 3),
             "message": str(exc),
         }
+
+
+def _terminate_process_group(process: "subprocess.Popen[str]") -> None:
+    """SIGKILL the whole process group so chromium/crashpad never survive a timeout."""
+    try:
+        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+    except (ProcessLookupError, PermissionError, OSError):
+        process.kill()
 
 
 def _observations_from_cli_result(
